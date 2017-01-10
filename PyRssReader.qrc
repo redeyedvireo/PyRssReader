@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="/RssReader">
+    <file>Resources/RssReader.ico</file>
+    <file>Resources/edit.png</file>
+    <file>Resources/minus.png</file>
+    <file>Resources/plus.png</file>
+    <file>Resources/Audio Enclosure.png</file>
+    <file>Resources/Paper Clip.png</file>
+    <file>Resources/pagestyle.css</file>
+    <file>Resources/star.png</file>
+    <file>Resources/feedHeader.html</file>
+  </qresource>
+</RCC>
