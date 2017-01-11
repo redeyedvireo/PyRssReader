@@ -1,7 +1,8 @@
 import os, sys, datetime
-from PyQt5 import QtCore, QtNetwork, QtWidgets, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
+from feed_tree import FeedTree
 
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
@@ -17,6 +18,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         dbDir = self.getDatabasePath()
         print("DB dir: {}".format(dbDir))
         self.db.open(dbDir)
+
+        self.feedTree = FeedTree(self.feedTree)
+        self.feedTree.addFeedToTopLevel("New Feed", 333, QtGui.QIcon())
 
     def getDatabasePath(self):
         return "{}\\{}".format(self.getDatabaseDirectory(), kDatabaseName)
