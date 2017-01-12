@@ -15,12 +15,22 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.db = Database()
 
+        self.feedTree = FeedTree(self.feedTree)
+
+        QtCore.QTimer.singleShot(0, self.initialize)
+
+    def initialize(self):
+        print("Initializing application...")
+
         dbDir = self.getDatabasePath()
         print("DB dir: {}".format(dbDir))
         self.db.open(dbDir)
 
-        self.feedTree = FeedTree(self.feedTree)
-        self.feedTree.addFeedToTopLevel("New Feed", 333, QtGui.QIcon())
+        feedList = self.db.getFeeds()
+        #print("Feeds: {}".format(feedList))
+        for feed in feedList:
+            self.feedTree.addFeedToTopLevel(feed.m_feedTitle, feed.m_feedId, QtGui.QIcon(feed.m_feedFavicon))
+
 
     def getDatabasePath(self):
         return "{}\\{}".format(self.getDatabaseDirectory(), kDatabaseName)
