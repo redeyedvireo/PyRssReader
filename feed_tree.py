@@ -1,3 +1,4 @@
+import logging
 from PyQt5 import QtCore, QtNetwork, QtWidgets
 
 
@@ -7,6 +8,7 @@ class FeedTree(object):
     def __init__(self, treeWidget):
         super(FeedTree).__init__()
         self.feedTree = treeWidget
+        self.feedTree.itemClicked.connect(self.onItemClicked)
 
     def addFeedToTopLevel(self, feedName, feedId, feedIcon):
         pNewItem = QtWidgets.QTreeWidgetItem()
@@ -25,3 +27,7 @@ class FeedTree(object):
 
             self.feedTree.addTopLevelItem(pNewItem)
             self.feedTree.setCurrentItem(pNewItem)
+
+    def onItemClicked(self, item, column):
+        print("Item clicked: {}".format(item.text(column)))
+        #logging.info("Item clicked: {}".format(item.text(column)))
