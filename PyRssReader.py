@@ -1,4 +1,4 @@
-import os, sys, datetime
+import os, sys, datetime, logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
@@ -12,6 +12,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(PyRssReaderWindow, self).__init__()
         uic.loadUi('PyRssReaderWindow.ui', self)
+
+        logging.basicConfig(filename="RsReader.log", level=logging.INFO)
+        logging.info('Started')
 
         self.db = Database()
 
@@ -59,7 +62,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         print("Closing database...")
         self.db.close()
-
+        logging.info("Program exiting")
 
 # ---------------------------------------------------------------
 if __name__ == "__main__":

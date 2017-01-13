@@ -1,3 +1,4 @@
+import logging
 from PyQt5 import QtCore, QtSql
 from pathlib import Path
 from feed import Feed
@@ -18,11 +19,14 @@ class Database(object):
         if self.db.open():
             if dbExists:
                 print("Database open")
+                logging.info("Database opened")
             else:
                 # TODO: Create the database, and all tables
                 print("Database {} does not exist.".format(pathName))
+                logging.info("Database doesn't exist")
         else:
             print("Error: could not open database.")
+            logging.error("Could not open database")
 
     def close(self):
         if self.db is not None:
