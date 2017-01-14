@@ -31,9 +31,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         feedList = self.db.getFeeds()
         #print("Feeds: {}".format(feedList))
-        for feed in feedList:
-            self.feedTree.addFeedToTopLevel(feed.m_feedTitle, feed.m_feedId, QtGui.QIcon(feed.m_feedFavicon))
-
+        self.feedTree.addFeeds(feedList)
 
     def getDatabasePath(self):
         return "{}\\{}".format(self.getDatabaseDirectory(), kDatabaseName)

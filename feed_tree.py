@@ -1,5 +1,5 @@
 import logging
-from PyQt5 import QtCore, QtNetwork, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 kRowHeight = 20
@@ -8,14 +8,21 @@ class FeedTree(object):
     def __init__(self, treeWidget):
         super(FeedTree).__init__()
         self.feedTree = treeWidget
-        self.feedTree.itemClicked.connect(self.onItemClicked)
+        self.feedTree.currentItemChanged.connect(self.onItemActivated)
 
-    def addFeedToTopLevel(self, feedName, feedId, feedIcon):
+    def addFeeds(self, feedList):
+        self.feedTree.currentItemChanged.disconnect(self.onItemActivated)
+        for feed in feedList:
+            self.addFeedToTopLevel(feed)
+        self.feedTree.currentItemChanged.connect(self.onItemActivated)
+
+    def addFeedToTopLevel(self, feed):
+        feedIcon = QtGui.QIcon(feed.m_feedFavicon)
         pNewItem = QtWidgets.QTreeWidgetItem()
 
-        if feedName:
-            pNewItem.setText(0, feedName)
-            pNewItem.setData(0, QtCore.Qt.UserRole, feedId)
+        if feed.m_feedName:
+            pNewItem.setText(0, feed.m_feedName)
+            pNewItem.setData(0, QtCore.Qt.UserRole, feed.m_feedId)
 
             if not feedIcon.isNull():
                 pNewItem.setIcon(0, feedIcon)
@@ -28,6 +35,7 @@ class FeedTree(object):
             self.feedTree.addTopLevelItem(pNewItem)
             self.feedTree.setCurrentItem(pNewItem)
 
-    def onItemClicked(self, item, column):
-        print("Item clicked: {}".format(item.text(column)))
+    def onItemActivated(self, current, previous):
+        feedId = current.data(0, QtCore.Qt.UserRole)
+        print("Item clicked: {}, feed ID: {}".format(current.text(0), feedId))
         #logging.info("Item clicked: {}".format(item.text(column)))
