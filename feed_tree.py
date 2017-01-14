@@ -4,9 +4,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 kRowHeight = 20
 
-class FeedTree(object):
+class FeedTree(QtCore.QObject):
+    feedSelectedSignal = QtCore.pyqtSignal(int)
+
     def __init__(self, treeWidget):
-        super(FeedTree).__init__()
+        super(FeedTree, self).__init__()
         self.feedTree = treeWidget
         self.feedTree.currentItemChanged.connect(self.onItemActivated)
 
@@ -39,3 +41,4 @@ class FeedTree(object):
         feedId = current.data(0, QtCore.Qt.UserRole)
         print("Item clicked: {}, feed ID: {}".format(current.text(0), feedId))
         #logging.info("Item clicked: {}".format(item.text(column)))
+        self.feedSelectedSignal.emit(feedId)

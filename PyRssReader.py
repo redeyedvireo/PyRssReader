@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
 from feed_tree import FeedTree
+from title_tree import TitleTree
 
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
@@ -18,7 +19,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.db = Database()
 
-        self.feedTree = FeedTree(self.feedTree)
+        self.feedTreeObj = FeedTree(self.feedTree)
+        self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
+
+        self.titleTreeObj = TitleTree(self.titleTree)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -30,12 +34,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.open(dbDir)
 
         feedList = self.db.getFeeds()
-        #print("Feeds: {}".format(feedList))
-        self.feedTree.addFeeds(feedList)
+        self.feedTreeObj.addFeeds(feedList)
 
+    # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
         return "{}\\{}".format(self.getDatabaseDirectory(), kDatabaseName)
 
+    # TODO: This should be a static method (or class method?) of Database
     def getDatabaseDirectory(self):
         procEnv = QtCore.QProcessEnvironment.systemEnvironment()
 
@@ -56,6 +61,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                     return ""
 
             return databasePath
+
+    def onFeedSelected(self, feedId):
+        print("onFeedSelected: {} was selected.".format(feedId))
+        self.populateFeedItemView(feedId)
+
+    def populateFeedItemView(self, feedId):
+        feedItemList = self.db.getFeedItems(feedId)
+        self.titleTreeObj.addFeedItems(feedItemList)
 
     def closeEvent(self, event):
         print("Closing database...")
