@@ -4,6 +4,8 @@ from pathlib import Path
 from database import Database
 from feed_tree import FeedTree
 from title_tree import TitleTree
+from content_view import RssContentView
+
 
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
@@ -23,6 +25,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
 
         self.titleTreeObj = TitleTree(self.titleTree)
+        self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
+
+        self.rssContentViewObj = RssContentView(self.rssContentView)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -64,11 +69,19 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
+        feed = self.db.getFeed(feedId)
+        self.feedNameLabel.setText(feed.m_feedName)
+        self.feedImageLabel.setPixmap(feed.m_feedFavicon)
         self.populateFeedItemView(feedId)
 
     def populateFeedItemView(self, feedId):
         feedItemList = self.db.getFeedItems(feedId)
         self.titleTreeObj.addFeedItems(feedItemList)
+
+    def onFeedItemSelected(self, feedItemGuid, feedId):
+        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
+        feedItem = self.db.getFeedItem(feedItemGuid, feedId)
+        self.rssContentViewObj.setContents(feedItem)
 
     def closeEvent(self, event):
         print("Closing database...")

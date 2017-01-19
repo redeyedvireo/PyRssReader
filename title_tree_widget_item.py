@@ -21,6 +21,7 @@ class TitleTreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
         self.m_date = feedItem.m_publicationDatetime    # Current datetime
         self.m_guid = feedItem.m_guid                   # Feed item's GUID, as a string
+        self.m_feedId = feedItem.m_parentFeedId           # Feed to which this feed item belongs
         self.m_bRead = feedItem.m_bRead                 # True if the item has been read
 
         self.setText(kEnclosureColumn, "")
@@ -46,3 +47,9 @@ class TitleTreeWidgetItem(QtWidgets.QTreeWidgetItem):
             itemFont = self.font(i)
             itemFont.setBold(not isRead)
             self.setFont(i, itemFont)
+
+    def guid(self):
+        return self.m_guid
+
+    def feedId(self):
+        return self.m_feedId

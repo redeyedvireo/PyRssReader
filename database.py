@@ -73,6 +73,49 @@ class Database(object):
         return feedList
 
 
+    def getFeed(self, feedId):
+        """ Returns data for a single feed. """
+        feed = Feed()
+        
+        queryObj = QtSql.QSqlQuery(self.db)
+        
+        queryStr = "select feedid, parentid, name, title, description, language, url, added, lastupdated, "
+        queryStr += "webpagelink, favicon, image, lastpurged from feeds where feedid=?"
+        
+        queryObj.prepare(queryStr)
+        
+        queryObj.addBindValue(feedId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            logging.error("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
+            print("getFeed: error: {}".format(sqlErr.text()))
+            return feed
+        
+        while queryObj.next():
+            feed.m_feedId = queryObj.record().value(0)
+            feed.m_parentId = queryObj.record().value(1)
+            feed.m_feedName = queryObj.record().value(2)
+            feed.m_feedTitle = queryObj.record().value(3)
+            feed.m_feedDescription = queryObj.record().value(4)
+            feed.m_feedLanguage = queryObj.record().value(5)
+            feed.m_feedUrl = queryObj.record().value(6)
+            feed.m_feedDateAdded = queryObj.record().value(7)    # TODO: Convert to time
+            feed.m_feedLastUpdated = queryObj.record().value(8)  # TODO: Convert to time
+            feed.m_feedWebPageLink = queryObj.record().value(9)
+            favicon = queryObj.record().value(10)
+            if isinstance(favicon, QtCore.QByteArray):
+                feed.m_feedFavicon.loadFromData(favicon)
+
+            feed.m_feedImage = queryObj.record().value(11)
+            feed.m_feedLastPurged = queryObj.record().value(12)  # TODO: Convert to time
+            
+        return feed
+
     def getFeedItems(self, feedId):
         """ Returns a list of feed items for the given feed ID. """
         feedItemList = []
@@ -129,6 +172,60 @@ class Database(object):
 
         return feedItemList
 
+    def getFeedItem(self, guid, feedId):
+        """ Retrieves a single feed item."""
+        feedItem = FeedItem()
+
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select "
+        queryStr += "title, author, link, description, categories, pubdatetime, "
+        queryStr += "thumbnaillink, thumbnailwidth, thumbnailheight, "
+        queryStr += "guid, feedburneroriglink, readflag, "
+        queryStr += "enclosurelink, enclosurelength, enclosuretype, contentencoded "
+        queryStr += "from {} where guid=?".format(feedTableName)
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            logging.error("Error when attempting to retrieve a single feed item: {}".format(sqlErr.text()))
+            return feedItem
+
+        while queryObj.next():
+            feedItem.m_title = queryObj.record().value(0)
+            feedItem.m_author = queryObj.record().value(1)
+            feedItem.m_link = queryObj.record().value(2)
+            feedItem.m_description = queryObj.record().value(3)
+
+            categoriesStr = queryObj.record().value(4)
+            feedItem.m_categories = list(filter(None, categoriesStr.split(",")))    # Filter out empty strings
+
+            feedItem.m_publicationDatetime = queryObj.record().value(5)     # Convert to datetime
+            feedItem.m_thumbnailLink = queryObj.record().value(6)
+            thumbnailWidth = queryObj.record().value(7)
+            thumbnailHeight = queryObj.record().value(8)
+            feedItem.m_thumbnailSize = QtCore.QSize(thumbnailWidth, thumbnailHeight)
+
+            feedItem.m_guid = queryObj.record().value(9)
+            feedItem.m_feedburnerOrigLink = queryObj.record().value(10)
+            feedItem.m_bRead = True if queryObj.record().value(11) == 1 else False
+
+            feedItem.m_enclosureLink = queryObj.record().value(12)
+            feedItem.m_enclosureLength = queryObj.record().value(13)
+            feedItem.m_enclosureType = queryObj.record().value(14)
+            feedItem.m_encodedContent = queryObj.record().value(15)
+
+            feedItem.m_parentFeedId = feedId
+
+        return feedItem
 
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)

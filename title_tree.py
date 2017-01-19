@@ -7,6 +7,8 @@ kEnclosureColumnWidth = 40
 
 
 class TitleTree(QtCore.QObject):
+    feedItemSelectedSignal = QtCore.pyqtSignal(str, int)
+
     def __init__(self, treeWidget):
         super(TitleTree, self).__init__()
 
@@ -15,7 +17,10 @@ class TitleTree(QtCore.QObject):
         self.m_Grouper = None
 
     def onItemChanged(self, current, previous):
-        pass
+        feedItemGuid = current.guid()
+        feedId = current.feedId()
+        #print("Item clicked: {}, feed Item ID: {}".format(current.text(0), feedItemGuid))
+        self.feedItemSelectedSignal.emit(feedItemGuid, feedId)
 
     def addFeedItem(self, feedItem):
         treeWidgetItem = TitleTreeWidgetItem(feedItem, self.titleTreeWidget)
