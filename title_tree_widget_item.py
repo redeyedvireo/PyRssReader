@@ -32,8 +32,7 @@ class TitleTreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
         #self.setText(kTitleColumn, CLanguageFilter::Instance()->FilterString(plainTitle))
         self.setText(kTitleColumn, feedItem.m_title)        # TODO: Use language filter, filter out HTML, etc.
-        #self.setText(kDateColumn, feedItem.m_publicationDatetime.toString("M/d/yyyy, h:mm AP"))
-        self.setText(kDateColumn, "{}".format(feedItem.m_publicationDatetime))      # TODO: Format as datetime
+        self.setText(kDateColumn, "{}".format(feedItem.m_publicationDatetime.strftime("%Y-%m-%d")))
         self.setText(kCreatorColumn, feedItem.m_author)
         self.setText(kTagsColumn, ",".join(feedItem.m_categories))
 

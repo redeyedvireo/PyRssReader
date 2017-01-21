@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtSql
 from pathlib import Path
 from feed import Feed
 from feed_item import FeedItem
-
+from utility import julianDayToDate
 
 class Database(object):
     def __init__(self):
@@ -59,15 +59,15 @@ class Database(object):
             feedObj.m_feedDescription = queryObj.record().value(4)
             feedObj.m_feedLanguage = queryObj.record().value(5)
             feedObj.m_feedUrl = queryObj.record().value(6)
-            feedObj.m_feedDateAdded = queryObj.record().value(7)    # TODO: Convert to time
-            feedObj.m_feedLastUpdated = queryObj.record().value(8)  # TODO: Convert to time
+            feedObj.m_feedDateAdded = julianDayToDate(queryObj.record().value(7))    # Convert to time
+            feedObj.m_feedLastUpdated = julianDayToDate(queryObj.record().value(8))  # Convert to time
             feedObj.m_feedWebPageLink = queryObj.record().value(9)
             favicon = queryObj.record().value(10)
             if isinstance(favicon, QtCore.QByteArray):
                 feedObj.m_feedFavicon.loadFromData(favicon)
 
             feedObj.m_feedImage = queryObj.record().value(11)
-            feedObj.m_feedLastPurged = queryObj.record().value(12)  # TODO: Convert to time
+            feedObj.m_feedLastPurged = julianDayToDate(queryObj.record().value(12))  # Convert to time
             feedList.append(feedObj)
 
         return feedList
@@ -104,15 +104,15 @@ class Database(object):
             feed.m_feedDescription = queryObj.record().value(4)
             feed.m_feedLanguage = queryObj.record().value(5)
             feed.m_feedUrl = queryObj.record().value(6)
-            feed.m_feedDateAdded = queryObj.record().value(7)    # TODO: Convert to time
-            feed.m_feedLastUpdated = queryObj.record().value(8)  # TODO: Convert to time
+            feed.m_feedDateAdded = julianDayToDate(queryObj.record().value(7))    # Convert to time
+            feed.m_feedLastUpdated = julianDayToDate(queryObj.record().value(8))  # Convert to time
             feed.m_feedWebPageLink = queryObj.record().value(9)
             favicon = queryObj.record().value(10)
             if isinstance(favicon, QtCore.QByteArray):
                 feed.m_feedFavicon.loadFromData(favicon)
 
             feed.m_feedImage = queryObj.record().value(11)
-            feed.m_feedLastPurged = queryObj.record().value(12)  # TODO: Convert to time
+            feed.m_feedLastPurged = julianDayToDate(queryObj.record().value(12))  # Convert to time
             
         return feed
 
@@ -151,7 +151,7 @@ class Database(object):
             categoriesStr = queryObj.record().value(4)
             feedItem.m_categories = list(filter(None, categoriesStr.split(",")))    # Filter out empty strings
 
-            feedItem.m_publicationDatetime = queryObj.record().value(5)     # Convert to datetime
+            feedItem.m_publicationDatetime = julianDayToDate(queryObj.record().value(5))     # Convert to datetime
             feedItem.m_thumbnailLink = queryObj.record().value(6)
             thumbnailWidth = queryObj.record().value(7)
             thumbnailHeight = queryObj.record().value(8)
@@ -208,7 +208,7 @@ class Database(object):
             categoriesStr = queryObj.record().value(4)
             feedItem.m_categories = list(filter(None, categoriesStr.split(",")))    # Filter out empty strings
 
-            feedItem.m_publicationDatetime = queryObj.record().value(5)     # Convert to datetime
+            feedItem.m_publicationDatetime = julianDayToDate(queryObj.record().value(5))     # Convert to datetime
             feedItem.m_thumbnailLink = queryObj.record().value(6)
             thumbnailWidth = queryObj.record().value(7)
             thumbnailHeight = queryObj.record().value(8)
