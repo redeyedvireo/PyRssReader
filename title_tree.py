@@ -1,6 +1,6 @@
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
-from title_tree_widget_item import TitleTreeWidgetItem, kTitleColumn
+from title_tree_widget_item import TitleTreeWidgetItem, kTitleColumn, kNumColumns
 
 kRowHeight = 17
 kEnclosureColumnWidth = 40
@@ -45,3 +45,16 @@ class TitleTree(QtCore.QObject):
             self.addFeedItem(feedItem)
 
         self.titleTreeWidget.currentItemChanged.connect(self.onItemChanged)
+
+    def GetColumnWidths(self):
+        """ Returns the widths of all columns """
+        columnList = []
+        for i in range(kNumColumns):
+            columnList.append(self.titleTreeWidget.columnWidth(i))
+
+        return columnList
+
+    def SetColumnWidths(self, columnList):
+        """ Sets all column widths """
+        for index, item in enumerate(columnList, start=0):
+            self.titleTreeWidget.setColumnWidth(index, int(item))

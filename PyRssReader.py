@@ -9,6 +9,19 @@ from content_view import RssContentView
 
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
+kAppNameForSettings = "PyRssReader" # Used for saving settings
+
+# Settings groups
+kWindowSettingsGroup = "window"
+kSize = "size"
+kPos = "pos"
+kHorizSplitterSizes = "horizsplitterSizes"
+kVertSplitterSizes = "vertsplitterSizes"
+kTitleTreeSettingsGroup = "titletree"
+kColumnWidths = "columnwidths"
+kFeedSettingsGroup = "feed"
+kLastViewedFeedId = "lastviewedfeedid"
+
 
 # ---------------------------------------------------------------
 class PyRssReaderWindow(QtWidgets.QMainWindow):
@@ -17,9 +30,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         uic.loadUi('PyRssReaderWindow.ui', self)
 
         logging.basicConfig(filename="RsReader.log", level=logging.INFO)
-        logging.info('Started')
+        logging.info('Application Started')
 
         self.db = Database()
+
+        self.m_currentFeedId = -1
 
         self.feedTreeObj = FeedTree(self.feedTree)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
@@ -33,6 +48,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def initialize(self):
         print("Initializing application...")
+        self.loadSettings()
 
         dbDir = self.getDatabasePath()
         print("DB dir: {}".format(dbDir))
@@ -40,6 +56,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         feedList = self.db.getFeeds()
         self.feedTreeObj.addFeeds(feedList)
+
+        if self.m_currentFeedId >= 0:
+            self.onFeedSelected(self.m_currentFeedId)
 
     # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
@@ -67,8 +86,64 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             return databasePath
 
+    def loadSettings(self):
+        """ Loads application settings. """
+        settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
+
+        # Window size and position
+        settingsObj.beginGroup(kWindowSettingsGroup)
+        if settingsObj.contains(kSize):
+            self.resize(settingsObj.value(kSize))
+
+        if settingsObj.contains(kPos):
+            self.move(settingsObj.value(kPos))
+
+        if settingsObj.contains(kHorizSplitterSizes):
+            self.horizSplitter.restoreState(settingsObj.value(kHorizSplitterSizes))
+
+        if settingsObj.contains(kVertSplitterSizes):
+            self.vertSplitter.restoreState(settingsObj.value(kVertSplitterSizes))
+
+        settingsObj.endGroup()
+
+        # Title tree data
+        settingsObj.beginGroup(kTitleTreeSettingsGroup)
+        if settingsObj.contains(kColumnWidths):
+            columnList = settingsObj.value(kColumnWidths)
+            self.titleTreeObj.SetColumnWidths(columnList)
+        settingsObj.endGroup()
+
+        # Last-viewed feed
+        settingsObj.beginGroup(kFeedSettingsGroup)
+        self.m_currentFeedId = int(settingsObj.value(kLastViewedFeedId, 0))
+        settingsObj.endGroup()
+
+    def saveSettings(self):
+        """ Saves application settings. """
+        settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
+
+        # Window size and position
+        settingsObj.beginGroup(kWindowSettingsGroup)
+        settingsObj.setValue(kSize, self.size())
+        settingsObj.setValue(kPos, self.pos())
+        settingsObj.setValue(kHorizSplitterSizes, self.horizSplitter.saveState())
+        settingsObj.setValue(kVertSplitterSizes, self.vertSplitter.saveState())
+        settingsObj.endGroup()
+
+        # Title tree data
+        settingsObj.beginGroup(kTitleTreeSettingsGroup)
+        columnList = self.titleTreeObj.GetColumnWidths()
+        settingsObj.setValue(kColumnWidths, columnList)
+        settingsObj.endGroup()
+
+        #  Last-viewed feed
+        settingsObj.beginGroup(kFeedSettingsGroup)
+        settingsObj.setValue(kLastViewedFeedId, self.m_currentFeedId)
+        settingsObj.endGroup()
+
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
+        self.m_currentFeedId = feedId
         feed = self.db.getFeed(feedId)
         self.feedNameLabel.setText(feed.m_feedName)
         self.feedImageLabel.setPixmap(feed.m_feedFavicon)
@@ -86,6 +161,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         print("Closing database...")
         self.db.close()
+        self.saveSettings()
         logging.info("Program exiting")
 
 # ---------------------------------------------------------------
