@@ -1,6 +1,8 @@
 import logging
 import os, os.path
+from resource_fetcher import ResourceFetcher
 from PyQt5 import QtCore, QtGui, QtWidgets
+from img_finder import ImgFinder
 
 
 class RssContentView(QtCore.QObject):
@@ -10,6 +12,7 @@ class RssContentView(QtCore.QObject):
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
+        self.imageList = []
 
         self.textBrowser = textBrowser
         QtCore.QTimer.singleShot(0, self.initialize)
@@ -22,9 +25,7 @@ class RssContentView(QtCore.QObject):
         self.m_css = self.m_css.replace("\r", "").replace("\n", "")
         self.m_feedHeaderHtml = self.m_feedHeaderHtml.replace("\r", "").replace("\n", "")
 
-        doc = self.textBrowser.document()
-
-        doc.setDefaultStyleSheet(self.m_css)
+        doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
 
         # InitAdBlockList()
 
@@ -52,7 +53,28 @@ class RssContentView(QtCore.QObject):
         else:
             htmlBody = feedItem.m_description
 
-        # TODO: Find image names
+        # Find image names, within <img> tags
         self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
+        imgFinder = ImgFinder(self.m_processedFeedContents)
+        if imgFinder.hasImages():
+            self.imageList = imgFinder.getImages()
+            print("Images: {}".format(self.imageList))
+            self.fetchImages()
 
+        # TODO: might need to set some image placeholders before setting the HTML contents into the text browser
+        # With the placeholders in place, the text browser can lay out the entire document.  The images can
+        # be added later (I hope).
         self.textBrowser.setHtml(self.m_processedFeedContents)
+
+    # TODO: This should be done in a thread.
+    def fetchImages(self):
+        """ Fetches all images. """
+        # TODO: Maybe this should be in a separate file or class
+        document = self.textBrowser.document()
+        for imgUrl in self.imageList:
+            resourceFetcher = ResourceFetcher(imgUrl)
+            image = resourceFetcher.getData()
+            print("Image downloaded: {}".format(imgUrl))
+            pixmap = QtGui.QPixmap()
+            pixmap.loadFromData(image)
+            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), pixmap)

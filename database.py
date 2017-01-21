@@ -20,11 +20,11 @@ class Database(object):
         if self.db.open():
             if dbExists:
                 print("Database open")
-                logging.info("Database opened")
             else:
                 # TODO: Create the database, and all tables
-                print("Database {} does not exist.".format(pathName))
-                logging.info("Database doesn't exist")
+                errMsg = "Database {} does not exist.".format(pathName)
+                print(errMsg)
+                logging.info(errMsg)
         else:
             print("Error: could not open database.")
             logging.error("Could not open database")
