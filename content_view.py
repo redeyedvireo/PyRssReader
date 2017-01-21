@@ -1,8 +1,9 @@
 import logging
-import os, os.path
+import webbrowser
 from resource_fetcher import ResourceFetcher
 from PyQt5 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
+from utility import getResourceFileText
 
 
 class RssContentView(QtCore.QObject):
@@ -15,11 +16,16 @@ class RssContentView(QtCore.QObject):
         self.imageList = []
 
         self.textBrowser = textBrowser
+        self.textBrowser.setMouseTracking(True)
+        self.textBrowser.setOpenLinks(False)
+        self.textBrowser.installEventFilter(self)
+        self.textBrowser.anchorClicked.connect(self.linkClicked)
+
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
-        self.m_css = self.getResourceFileText("pagestyle.css")
-        self.m_feedHeaderHtml = self.getResourceFileText("feedHeader.html")
+        self.m_css = getResourceFileText("pagestyle.css")
+        self.m_feedHeaderHtml = getResourceFileText("feedHeader.html")
 
         # Replace carriage returns and line feeds with spaces
         self.m_css = self.m_css.replace("\r", "").replace("\n", "")
@@ -29,16 +35,15 @@ class RssContentView(QtCore.QObject):
 
         # InitAdBlockList()
 
-    # TODO: This should go in a utility file.
-    def getResourceFileText(self, filename):
-        scriptDir = os.getcwd()
-        filePath = os.path.join(scriptDir, "Resources", filename)
+    # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
+    def eventFilter(self, obj, event):
+        #if obj == self.textBrowser:
+        if isinstance(event, QtGui.QMouseEvent):
+            print("Mouse event: {} pos: {}".format(event, event.pos()))
+            #linkStr = PointOverLink(ev->pos())
+            return False
 
-        file = open(filePath, 'r')
-        contents = file.read()
-        file.close()
-
-        return contents
+        return QtWidgets.QTextBrowser.eventFilter(self.textBrowser, obj, event)
 
     def setContents(self, feedItem):
         """ Sets a feed item's HTML into the text browser. """
@@ -78,3 +83,7 @@ class RssContentView(QtCore.QObject):
             pixmap = QtGui.QPixmap()
             pixmap.loadFromData(image)
             document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), pixmap)
+
+    def linkClicked(self, url):
+        print("Link clicked: {}".format(url))
+        webbrowser.open(url.toString())
