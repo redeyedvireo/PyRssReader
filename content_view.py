@@ -37,11 +37,13 @@ class RssContentView(QtCore.QObject):
 
     # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
     def eventFilter(self, obj, event):
-        #if obj == self.textBrowser:
-        if isinstance(event, QtGui.QMouseEvent):
-            print("Mouse event: {} pos: {}".format(event, event.pos()))
-            #linkStr = PointOverLink(ev->pos())
-            return False
+        if obj == self.textBrowser:
+            print("Event type: {}".format(event.type()))
+            #if isinstance(event, QtGui.QMouseEvent):
+            if event.type() == QtCore.QEvent.MouseMove:
+                print("pos: {}".format(event.pos()))
+                #linkStr = PointOverLink(ev->pos())
+                return False
 
         return QtWidgets.QTextBrowser.eventFilter(self.textBrowser, obj, event)
 
