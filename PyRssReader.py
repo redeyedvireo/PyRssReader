@@ -153,9 +153,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         feedItemList = self.db.getFeedItems(feedId)
         self.titleTreeObj.addFeedItems(feedItemList)
 
-    def onFeedItemSelected(self, feedItemGuid, feedId):
-        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
-        feedItem = self.db.getFeedItem(feedItemGuid, feedId)
+    def onFeedItemSelected(self, feedItemGuid):
+        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, self.m_currentFeedId))
+        feedItem = self.db.getFeedItem(feedItemGuid, self.m_currentFeedId)
         self.rssContentViewObj.setContents(feedItem)
 
     def closeEvent(self, event):
