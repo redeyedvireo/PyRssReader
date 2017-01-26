@@ -2,6 +2,7 @@ import os, sys, datetime, logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
+from language_filter import LanguageFilter
 from feed_tree import FeedTree
 from title_tree import TitleTree
 from content_view import RssContentView
@@ -33,16 +34,17 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         logging.info('Application Started')
 
         self.db = Database()
+        self.languageFilter = LanguageFilter(self.db)
 
         self.m_currentFeedId = -1
 
         self.feedTreeObj = FeedTree(self.feedTree)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
 
-        self.titleTreeObj = TitleTree(self.titleTree)
+        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView)
+        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -53,6 +55,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         dbDir = self.getDatabasePath()
         print("DB dir: {}".format(dbDir))
         self.db.open(dbDir)
+
+        self.languageFilter.initialize()
 
         feedList = self.db.getFeeds()
         self.feedTreeObj.addFeeds(feedList)

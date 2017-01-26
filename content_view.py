@@ -7,9 +7,10 @@ from utility import getResourceFileText
 
 
 class RssContentView(QtCore.QObject):
-    def __init__(self, textBrowser):
+    def __init__(self, textBrowser, languageFilter):
         super(RssContentView, self).__init__()
 
+        self.languageFilter = languageFilter
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
@@ -50,15 +51,14 @@ class RssContentView(QtCore.QObject):
     def setContents(self, feedItem):
         """ Sets a feed item's HTML into the text browser. """
         # Title
-        # TODO: use language filter on the title
-        strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", feedItem.m_title)
+        filteredTitle = self.languageFilter.filterString(feedItem.m_title)
+        strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
 
-        # TODO: use language filter on the body
         htmlBody = ""
         if feedItem.m_encodedContent:
-            htmlBody = feedItem.m_encodedContent
+            htmlBody = self.languageFilter.filterString(feedItem.m_encodedContent)
         else:
-            htmlBody = feedItem.m_description
+            htmlBody = self.languageFilter.filterString(feedItem.m_description)
 
         # Find image names, within <img> tags
         self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)

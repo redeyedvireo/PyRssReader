@@ -1,5 +1,6 @@
 import logging
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui
+from language_filter import LanguageFilter
 from title_tree_view_item import TitleTreeViewItem, kEnclosureColumn, kTitleColumn, kDateColumn, kCreatorColumn, kTagsColumn, kNumColumns
 from title_tree_date_item import TitleTreeDateItem
 from title_tree_title_item import TitleTreeTitleItem
@@ -11,9 +12,10 @@ kEnclosureColumnWidth = 40
 class TitleTree(QtCore.QObject):
     feedItemSelectedSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self, treeView):
+    def __init__(self, treeView, languageFilter):
         super(TitleTree, self).__init__()
 
+        self.languageFilter = languageFilter
         self.titleTreeView = treeView
         self.configureTree()
         self.titleTreeView.clicked.connect(self.onItemChanged)
@@ -41,7 +43,7 @@ class TitleTree(QtCore.QObject):
         itemList.append(enclosureItem)
 
         # Title
-        displayText = feedItem.m_title      # TODO: Put through the language filter first
+        displayText = self.languageFilter.filterString(feedItem.m_title)
         titleItem = TitleTreeTitleItem(feedItem.m_title, displayText, bRead, guid)
         itemList.append(titleItem)
 

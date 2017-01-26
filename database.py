@@ -1,6 +1,7 @@
 import logging
 from PyQt5 import QtCore, QtSql
 from pathlib import Path
+from exceptions import DbError
 from feed import Feed
 from feed_item import FeedItem
 from utility import julianDayToDate
@@ -22,6 +23,7 @@ class Database(object):
                 print("Database open")
             else:
                 # TODO: Create the database, and all tables
+                #       Note: when creating the language filter database, add some hard-coded words
                 errMsg = "Database {} does not exist.".format(pathName)
                 print(errMsg)
                 logging.info(errMsg)
@@ -47,6 +49,7 @@ class Database(object):
         if sqlErr.type() != QtSql.QSqlError.NoError:
             logging.error("Error when attempting to retrieve all feeds: {}".format(sqlErr.text()))
             print("getFeeds: error: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
             return []
 
         while queryObj.next():
@@ -94,6 +97,7 @@ class Database(object):
         if sqlErr.type() != QtSql.QSqlError.NoError:
             logging.error("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
             print("getFeed: error: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
             return feed
         
         while queryObj.next():
@@ -138,6 +142,7 @@ class Database(object):
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
             logging.error("Error when attempting to retrieve all feed items: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
             return []
 
         while queryObj.next():
@@ -197,6 +202,7 @@ class Database(object):
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
             logging.error("Error when attempting to retrieve a single feed item: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
             return feedItem
 
         while queryObj.next():
@@ -230,3 +236,30 @@ class Database(object):
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)
         return tableName
+
+    def getFilteredWords(self):
+        """ Reads the filtered words from the database, and returns them as a list. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select word from filteredwords"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error when attempting to retrieve all filtered words: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            raise DbError(errMsg)
+
+        allFilteredWords = []
+
+        while queryObj.next():
+            filteredWord = queryObj.record().value(0)
+
+            if filteredWord:
+                allFilteredWords.append(filteredWord)
+
+        return allFilteredWords
