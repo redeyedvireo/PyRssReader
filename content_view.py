@@ -56,9 +56,9 @@ class RssContentView(QtCore.QObject):
 
         htmlBody = ""
         if feedItem.m_encodedContent:
-            htmlBody = self.languageFilter.filterString(feedItem.m_encodedContent)
+            htmlBody = self.languageFilter.filterHtml(feedItem.m_encodedContent)
         else:
-            htmlBody = self.languageFilter.filterString(feedItem.m_description)
+            htmlBody = self.languageFilter.filterHtml(feedItem.m_description)
 
         # Find image names, within <img> tags
         self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
@@ -77,6 +77,8 @@ class RssContentView(QtCore.QObject):
     def fetchImages(self):
         """ Fetches all images. """
         # TODO: Maybe this should be in a separate file or class
+        # This should be done with a ThreadPoolExecutor.  Use the as_completed() function to add images to the
+        # document as they come in.
         document = self.textBrowser.document()
         for imgUrl in self.imageList:
             resourceFetcher = ResourceFetcher(imgUrl)
