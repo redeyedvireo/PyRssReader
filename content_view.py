@@ -60,7 +60,8 @@ class RssContentView(QtCore.QObject):
         else:
             htmlBody = self.languageFilter.filterHtml(feedItem.m_description)
 
-        # Find image names, within <img> tags
+        # Find image source URLs, within <img> tags.  The image source URLs will be used as the image "names"
+        # in the content view document.
         self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
         imgFinder = ImgFinder(self.m_processedFeedContents)
         if imgFinder.hasImages():

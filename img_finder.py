@@ -1,33 +1,21 @@
+from bs4 import BeautifulSoup, NavigableString
+
 # Finds all <img> tags in a block of HTML.
 from html.parser import HTMLParser
 
-
-class ImgFinder(HTMLParser):
+class ImgFinder:
     def __init__(self, htmlText):
         super(ImgFinder, self).__init__()
 
         self.imgList = []
-        self.feed(htmlText)
+        self.soup = BeautifulSoup(htmlText, 'html.parser')
+
+        imageTags = self.soup.find_all('img')
+        for tag in imageTags:
+            self.imgList.append(tag.get('src'))
 
     def hasImages(self):
         return len(self.imgList) > 0
 
     def getImages(self):
         return self.imgList
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "img":
-            #print("Found an image tag with attrs: {}".format(attrs))
-            src = self.getImgSource(attrs)
-            if len(src) > 0:
-                self.imgList.append(src)
-
-    def getImgSource(self, attrs):
-        """ Returns the URL of an image, from its 'src' attribute. """
-        src = ""
-        for attr in attrs:
-            if attr[0] == "src":
-                src = attr[1]
-
-        return src
-
