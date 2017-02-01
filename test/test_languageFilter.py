@@ -19,3 +19,5 @@ class TestLanguageFilter(TestCase):
         languageFilter.filteredWords = ['quick', 'fox', 'the']
         filteredString = languageFilter.filterString(FILTER_STRING_1)
         self.assertEqual(filteredString, "**** **** brown **** jumps over **** lazy dog.")
+
+    # TODO: Add some tests of filterHtml

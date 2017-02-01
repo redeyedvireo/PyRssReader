@@ -263,3 +263,30 @@ class Database(object):
                 allFilteredWords.append(filteredWord)
 
         return allFilteredWords
+
+    def getAdFilters(self):
+        """ Reads the URLS/domains for filtering ads, and returns them as a list. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select word from adfilters"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error when attempting to retrieve all ad filters: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            raise DbError(errMsg)
+
+        allFilters = []
+
+        while queryObj.next():
+            filteredWord = queryObj.record().value(0)
+
+            if filteredWord:
+                allFilters.append(filteredWord)
+
+        return allFilters

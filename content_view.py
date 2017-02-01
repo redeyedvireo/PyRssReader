@@ -7,10 +7,11 @@ from utility import getResourceFileText
 
 
 class RssContentView(QtCore.QObject):
-    def __init__(self, textBrowser, languageFilter):
+    def __init__(self, textBrowser, languageFilter, adFilter):
         super(RssContentView, self).__init__()
 
         self.languageFilter = languageFilter
+        self.adFilter = adFilter
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
@@ -33,8 +34,6 @@ class RssContentView(QtCore.QObject):
         self.m_feedHeaderHtml = self.m_feedHeaderHtml.replace("\r", "").replace("\n", "")
 
         doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
-
-        # InitAdBlockList()
 
     # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
     def eventFilter(self, obj, event):
@@ -68,6 +67,8 @@ class RssContentView(QtCore.QObject):
             self.imageList = imgFinder.getImages()
             print("Images: {}".format(self.imageList))
             self.fetchImages()
+
+        self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
 
         # TODO: might need to set some image placeholders before setting the HTML contents into the text browser
         # With the placeholders in place, the text browser can lay out the entire document.  The images can

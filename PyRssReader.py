@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
 from language_filter import LanguageFilter
+from ad_filter import AdFilter
 from feed_tree import FeedTree
 from title_tree import TitleTree
 from content_view import RssContentView
@@ -35,6 +36,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.db = Database()
         self.languageFilter = LanguageFilter(self.db)
+        self.adFilter = AdFilter(self.db)
 
         self.m_currentFeedId = -1
 
@@ -44,7 +46,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter)
+        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -57,6 +59,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.open(dbDir)
 
         self.languageFilter.initialize()
+        self.adFilter.initialize()
 
         feedList = self.db.getFeeds()
         self.feedTreeObj.addFeeds(feedList)
