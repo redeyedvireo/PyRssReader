@@ -7,6 +7,8 @@ from ad_filter import AdFilter
 from feed_tree import FeedTree
 from title_tree import TitleTree
 from content_view import RssContentView
+from resource_fetcher import ResourceFetcher
+from feed_item_parser import parseFeed
 
 
 kDatabaseName = "Feeds.db"
@@ -164,6 +166,28 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, self.m_currentFeedId))
         feedItem = self.db.getFeedItem(feedItemGuid, self.m_currentFeedId)
         self.rssContentViewObj.setContents(feedItem)
+
+    @QtCore.pyqtSlot()
+    def on_actionUpdate_Feeds_triggered(self):
+        feeds = self.db.getFeeds()
+
+        # For now, just get one feed
+        feedUrl = feeds[0].m_feedUrl
+        resourceFetcher = ResourceFetcher(feedUrl)
+        feedText = resourceFetcher.getData()
+        feedItemList = parseFeed(feedText)
+
+        for feedItem in feedItemList:
+            print("Title: {}".format(feedItem.m_title))
+            print("Author: {}".format(feedItem.m_author))
+            print("Link: {}".format(feedItem.m_link))
+            print("Publication date: {}".format(feedItem.m_publicationDatetime))
+            print("GUID: {}".format(feedItem.m_guid))
+            print("Categories: {}".format(feedItem.m_categories))
+            print("Publication date/time: {}".format(feedItem.m_publicationDatetime))
+            print("Thumbnail: {}".format(feedItem.m_thumbnailLink))
+            print("Enclosure: {}".format(feedItem.m_enclosureLink))
+            print()
 
     def closeEvent(self, event):
         print("Closing database...")

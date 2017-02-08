@@ -1,5 +1,5 @@
 
-class FeedItem(object):
+class FeedItem:
     def __init__(self):
         super(FeedItem, self).__init__()
 
