@@ -9,6 +9,7 @@ from title_tree import TitleTree
 from content_view import RssContentView
 from resource_fetcher import ResourceFetcher
 from feed_item_parser import parseFeed
+from feed_updater import FeedUpdater
 
 
 kDatabaseName = "Feeds.db"
@@ -44,6 +45,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.feedTreeObj = FeedTree(self.feedTree)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
+        self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
 
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
@@ -166,6 +168,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, self.m_currentFeedId))
         feedItem = self.db.getFeedItem(feedItemGuid, self.m_currentFeedId)
         self.rssContentViewObj.setContents(feedItem)
+
+    def onFeedUpdateRequested(self, feedId):
+        print("onFeedUpdateRequested for feed: {}".format(feedId))
+        if feedId > 0:
+            feedUpdater = FeedUpdater(self.db)
+            feedUpdater.updateFeed(feedId)
+        else:
+            logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
     @QtCore.pyqtSlot()
     def on_actionUpdate_Feeds_triggered(self):

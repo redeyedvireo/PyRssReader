@@ -8,8 +8,8 @@ class FeedItem:
         self.m_link = ""
         self.m_description = ""
         self.m_encodedContent = ""  # < content: encoded > tag sometimes contains the article
-        self. m_categories = []
-        self.m_publicationDatetime = None   # datetime
+        self.m_categories = []
+        self.m_publicationDatetime = None   # datetime (stored in database as a Julian Day, (eg, a Unix timestamp)
         self.m_thumbnailLink = ""
         self.m_thumbnailSize = None     # QSize
         self.m_guid = ""
@@ -25,3 +25,6 @@ class FeedItem:
 
     def hasEnclosure(self):
         return len(self.m_enclosureLink) > 0
+
+    def isRead(self):
+        return self.m_bRead

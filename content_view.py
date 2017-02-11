@@ -65,7 +65,7 @@ class RssContentView(QtCore.QObject):
         imgFinder = ImgFinder(self.m_processedFeedContents)
         if imgFinder.hasImages():
             self.imageList = imgFinder.getImages()
-            print("Images: {}".format(self.imageList))
+            #print("Images: {}".format(self.imageList))
             self.fetchImages()
 
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
@@ -85,7 +85,7 @@ class RssContentView(QtCore.QObject):
         for imgUrl in self.imageList:
             resourceFetcher = ResourceFetcher(imgUrl)
             image = resourceFetcher.getData()
-            print("Image downloaded: {}".format(imgUrl))
+            #print("Image downloaded: {}".format(imgUrl))
             pixmap = QtGui.QPixmap()
             pixmap.loadFromData(image)
             document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), pixmap)

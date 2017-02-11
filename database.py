@@ -4,9 +4,9 @@ from pathlib import Path
 from exceptions import DbError
 from feed import Feed
 from feed_item import FeedItem
-from utility import julianDayToDate
+from utility import julianDayToDate, dateToJulianDay
 
-class Database(object):
+class Database:
     def __init__(self):
         super(Database, self).__init__()
         self.db = None
@@ -34,6 +34,32 @@ class Database(object):
     def close(self):
         if self.db is not None:
             self.db.close()
+
+    def beginTransaction(self):
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("begin transaction")
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error beginning a transaction: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            print(errMsg)
+
+    def endTransaction(self):
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("end transaction")
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error ending a transaction: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            print(errMsg)
 
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """
@@ -120,6 +146,35 @@ class Database(object):
             
         return feed
 
+    def getFeedItemGuids(self, feedId):
+        """ Returns the GUIDs for all feed items for the given feed.
+            This is used when adding new feed items, to ensure that they do not already exist. """
+        guidList = []
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select "
+        queryStr += "guid"
+        queryStr += " from {}".format(feedTableName)
+
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            logging.error("Error when attempting to retrieve all guids: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
+            return []
+
+        while queryObj.next():
+            guid = queryObj.record().value(0)
+            guidList.append(guid)
+
+        return guidList
+
     def getFeedItems(self, feedId):
         """ Returns a list of feed items for the given feed ID. """
         feedItemList = []
@@ -176,6 +231,59 @@ class Database(object):
             feedItemList.append(feedItem)
 
         return feedItemList
+
+
+    def addFeedItems(self, feedItemList, feedId):
+        """ Adds multiple feed items, using a transaction.  Does not check for duplicates. """
+        self.beginTransaction()
+
+        for feedItem in feedItemList:
+            self.addFeedItem(feedItem, feedId)
+
+        self.endTransaction()
+
+
+    def addFeedItem(self, feedItem, feedId):
+        """ Adds the given feed item to the given feed. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryStr = "insert into {} ".format(feedTableName)
+        queryStr += "(title, author, link, description, categories, pubdatetime, thumbnaillink, thumbnailwidth, "
+        queryStr += "thumbnailheight, guid, feedburneroriglink, readflag, "
+        queryStr += "enclosurelink, enclosurelength, enclosuretype, contentencoded)"
+        queryStr += "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(feedItem.m_title)
+        queryObj.addBindValue(feedItem.m_author)
+        queryObj.addBindValue(feedItem.m_link)
+        queryObj.addBindValue(feedItem.m_description)
+        queryObj.addBindValue(",".join(feedItem.m_categories))
+        queryObj.addBindValue(dateToJulianDay(feedItem.m_publicationDatetime))
+        queryObj.addBindValue(feedItem.m_thumbnailLink)
+        queryObj.addBindValue(feedItem.m_thumbnailSize.width())
+        queryObj.addBindValue(feedItem.m_thumbnailSize.height())
+        queryObj.addBindValue(feedItem.m_guid)
+        queryObj.addBindValue(feedItem.m_feedburnerOrigLink)
+        queryObj.addBindValue(1 if feedItem.isRead() else 0)
+        queryObj.addBindValue(feedItem.m_enclosureLink)
+        queryObj.addBindValue(feedItem.m_enclosureLength)
+        queryObj.addBindValue(feedItem.m_enclosureType)
+        queryObj.addBindValue(feedItem.m_encodedContent)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error adding a feed item: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            print(errMsg)
+
 
     def getFeedItem(self, guid, feedId):
         """ Retrieves a single feed item."""

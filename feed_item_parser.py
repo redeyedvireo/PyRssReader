@@ -3,6 +3,7 @@ from lxml.etree import fromstring
 import dateutil.parser
 import datetime
 from feed_item import FeedItem
+from PyQt5 import QtCore
 
 # Dependencies:
 # pip3 install lxml
@@ -13,6 +14,11 @@ def parseFeed(feedItemRawText):
     """ Parses a feed item, from raw text received from the server.
         Returns a list of feedItem objects. """
 
+    # Debug: save feed to disk
+    #fileObj = open('feed.xml', 'w')
+    #fileObj.write(feedItemRawText.decode('utf-8'))
+    #fileObj.close()
+
     feedItemList = []
 
     rawText = feedItemRawText
@@ -21,12 +27,39 @@ def parseFeed(feedItemRawText):
 
     # TODO: Need exception handling here.  If there is an error parsing the XML, just return an empty list
     root = etree.fromstring(rawText)
-    channel = root.find('channel')
-    items = channel.findall('item')
 
-    if len(items) == 0:
+    # Debug saved parsed feed to disk
+    #fileObj = open('feed-parsed.xml', 'w')
+    #fileObj.write(etree.tostring(root, pretty_print=True).decode("utf-8"))
+    #fileObj.close()
+
+    channel = root.find('channel')
+
+    # Some feeds (ahem, GOOGLE!) don't have a channel tag
+    if channel is not None:
+        feedItemParent = channel
+    else:
+        feedItemParent = root
+
+    # Note: can't use findall() to find tags, because this will ignore namespaced items.  Must use iterfind()
+    #items = feedItemParent.iterfind("{*}item")
+    items = feedItemParent.findall("{*}item")
+    #testItems = feedItemParent.findall("{*}item")
+
+    # Test if any items were found
+    itemsFound = False
+    for item in items:
+        itemsFound = True
+
+        # Since items is a generator, by attempting to iterate, we've moved past the first item.  To
+        # reset, we must issue the iterfind() call again.
+        #items = feedItemParent.iterfind("{*}item")
+        break
+
+    if not itemsFound:
         # Sometimes <entry> is used in place of <item>, but this is rare
-        items = channel.findall('entry')
+        #items = feedItemParent.iterfind("{*}entry")
+        items = feedItemParent.findall("{*}entry")
 
     for item in items:
         feedItem = FeedItem()
@@ -34,12 +67,13 @@ def parseFeed(feedItemRawText):
         feedItem.m_title = getElementValue(item, ['title'])
         feedItem.m_author = getElementValue(item, ['author', 'creator', 'dc:creator'])
         feedItem.m_link = getLink(item.find('link'))
-        feedItem.m_description = item.find('description')
-        feedItem.m_encodedContent = item.find('content')
+        feedItem.m_description = getElementValue(item, ['description'])
+        feedItem.m_encodedContent = getElementValue(item, ['content', 'encoded'])
         feedItem.m_categories = getCategories(item)
         feedItem.m_publicationDatetime = getPublicationDateTime(item)
         feedItem.m_guid = getElementValue(item, ['guid', 'id', 'link'])
         feedItem.m_thumbnailLink, width, height = getThumbnail(item)
+        feedItem.m_thumbnailSize = QtCore.QSize(width, height)
         feedItem.m_enclosureLink, feedItem.m_enclosureLength, feedItem.m_enclosureType = getEnclosure(item)
 
         feedItemList.append(feedItem)
@@ -52,12 +86,13 @@ def getElementValue(element, nameList):
         If that name is not found, the next element will be checked.  If that element is not found, the next
         element is checked, etc.  If none of the elements are found, an empty string will be returned. """
     for name in nameList:
-        elementList = element.iterfind("{}*{}{}".format('{', '}', name))
+        elementList = element.iterfind("{{*}}{}".format(name))
         if elementList is not None:
             for elt in elementList:
-                value = elt.text.strip()
-                if len(value) > 0:
-                    return value
+                if elt.text is not None:
+                    value = elt.text.strip()
+                    if len(value) > 0:
+                        return value
 
     # Not found
     return ""
