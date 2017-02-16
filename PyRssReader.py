@@ -42,6 +42,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.adFilter = AdFilter(self.db)
 
         self.m_currentFeedId = -1
+        self.feedIdsToUpdate = []
+
+        # This is a persistent object, so it won't go out of scope while fetching feeds
+        self.feedUpdater = FeedUpdater(self.db)
+        self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
+        self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
 
         self.feedTreeObj = FeedTree(self.feedTree)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
@@ -172,32 +178,36 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def onFeedUpdateRequested(self, feedId):
         print("onFeedUpdateRequested for feed: {}".format(feedId))
         if feedId > 0:
-            feedUpdater = FeedUpdater(self.db)
-            feedUpdater.updateFeed(feedId)
+            self.feedUpdater.updateFeed(feedId)
         else:
             logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
     @QtCore.pyqtSlot()
     def on_actionUpdate_Feeds_triggered(self):
-        feeds = self.db.getFeeds()
+        self.feedIdsToUpdate = self.db.getFeedIds()
 
-        # For now, just get one feed
-        feedUrl = feeds[0].m_feedUrl
-        resourceFetcher = ResourceFetcher(feedUrl)
-        feedText = resourceFetcher.getData()
-        feedItemList = parseFeed(feedText)
+        self.updateNextFeed()
 
-        for feedItem in feedItemList:
-            print("Title: {}".format(feedItem.m_title))
-            print("Author: {}".format(feedItem.m_author))
-            print("Link: {}".format(feedItem.m_link))
-            print("Publication date: {}".format(feedItem.m_publicationDatetime))
-            print("GUID: {}".format(feedItem.m_guid))
-            print("Categories: {}".format(feedItem.m_categories))
-            print("Publication date/time: {}".format(feedItem.m_publicationDatetime))
-            print("Thumbnail: {}".format(feedItem.m_thumbnailLink))
-            print("Enclosure: {}".format(feedItem.m_enclosureLink))
-            print()
+    def updateNextFeed(self):
+        """ Starts the update process for the next feed in the list.  This is the feed that is
+            at the head of self.feedIdsToUpdate. """
+        if self.feedIdsToUpdate:
+            feedIdToUpdate = self.feedIdsToUpdate.pop(0)
+            self.feedUpdater.updateFeed(feedIdToUpdate)
+        else:
+            self.showStatusBarMessage("Updating complete.")
+
+
+    @QtCore.pyqtSlot(int, list)
+    def onFeedItemUpdate(self, feedId, feedItemList):
+        self.db.addFeedItems(feedItemList, feedId)
+        QtCore.QTimer.singleShot(0, self.updateNextFeed)
+
+    @QtCore.pyqtSlot(str, int)
+    def showStatusBarMessage(self, message, timeout=10000):
+        """ Displays a message on the status bar. """
+        self.statusBar.showMessage(message, timeout)
+
 
     def closeEvent(self, event):
         print("Closing database...")

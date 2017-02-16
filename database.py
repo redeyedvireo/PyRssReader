@@ -102,6 +102,31 @@ class Database:
         return feedList
 
 
+    def getFeedIds(self):
+        """ Returns a list of feed IDs. """
+        feedList = []
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("select feedid from feeds")
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            errMsg = "Error when attempting to retrieve feed IDs: {}".format(sqlErr.text())
+            logging.error(errMsg)
+            print(errMsg)
+            # TODO: Maybe an exception should be thrown here
+            return []
+
+        while queryObj.next():
+            feedId = queryObj.record().value(0)
+            feedList.append(feedId)
+
+        return feedList
+
+
     def getFeed(self, feedId):
         """ Returns data for a single feed. """
         feed = Feed()

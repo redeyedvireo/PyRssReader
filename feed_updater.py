@@ -1,37 +1,33 @@
-from feed_item_parser import parseFeed
-from feed_item_debugger import debugParseFeed
-from resource_fetcher import ResourceFetcher
+from feed_update_thread import FeedUpdateThread
+from PyQt5 import QtCore
 
-# Use DEBUG = True to invoke feed parse debugging
-#DEBUG = True
-DEBUG = False
+# Show feed update messages for 10 seconds
+kMessageTimeout = 10000
 
-class FeedUpdater:
+class FeedUpdater(QtCore.QObject):
+    # Emitted when feed items are available to be stored into the database.
+    # Parameters: feedID, list of feed items
+    feedItemUpdateSignal = QtCore.pyqtSignal(int, list)
+    feedUpdateMessageSignal = QtCore.pyqtSignal(str, int)
+
     def __init__(self, db):
         super(FeedUpdater, self).__init__()
         self.db = db
 
     def updateFeed(self, feedId):
         """ Updates the given feed. """
+        self.feedId = feedId
         feed = self.db.getFeed(feedId)
-        feedUrl = feed.m_feedUrl
-        resourceFetcher = ResourceFetcher(feedUrl)
-        feedText = resourceFetcher.getData()
-
-        if DEBUG:
-            debugParseFeed(feedText)
-            return
-        else:
-            feedItemList = parseFeed(feedText)
-
         guids = self.db.getFeedItemGuids(feedId)
-        noDuplicatesList = []
 
-        for feedItem in feedItemList:
-            if feedItem.m_guid not in guids:
-                #print("Adding {} to the database.".format(feedItem.m_guid))
-                noDuplicatesList.append(feedItem)
-            else:
-                print("GUID: {} already exists".format(feedItem.m_guid))
+        updateMessage = "Updating {}".format(feed.m_feedTitle)
+        self.feedUpdateMessageSignal.emit(updateMessage, kMessageTimeout)
 
-        self.db.addFeedItems(noDuplicatesList, feedId)
+        self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids)
+        self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
+        self.feedUpdateThread.start()
+
+    @QtCore.pyqtSlot(list)
+    def onFeedUpdateDone(self, feedItemList):
+        # Pass this on up to the main window
+        self.feedItemUpdateSignal.emit(self.feedId, feedItemList)
