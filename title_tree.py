@@ -17,7 +17,10 @@ class TitleTree(QtCore.QObject):
 
         self.languageFilter = languageFilter
         self.titleTreeView = treeView
+        self.sortColumn = kDateColumn
+        self.sortOrder = QtCore.Qt.DescendingOrder
         self.configureTree()
+        self.titleTreeView.header().sortIndicatorChanged.connect(self.onSortIndicatorChanged)
         self.titleTreeView.clicked.connect(self.onItemChanged)
         self.m_Grouper = None
 
@@ -26,12 +29,19 @@ class TitleTree(QtCore.QObject):
         self.model.setColumnCount(kNumColumns)
         self.model.setHorizontalHeaderLabels(["Enclosure", "Title", "Date", "Creator", "Categories"])
         self.titleTreeView.setModel(self.model)
+        self.titleTreeView.setSortingEnabled(True)
+        self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
+        self.titleTreeView.setUniformRowHeights(True)
 
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)
         feedItemGuid = item.guid()
         print("Row clicked: {}, GUID: {}".format(index.row(), feedItemGuid))
         self.feedItemSelectedSignal.emit(feedItemGuid)
+
+    def onSortIndicatorChanged(self, logicalIndex, order):
+        self.sortColumn = logicalIndex
+        self.sortOrder = order
 
     def addFeedItem(self, feedItem):
         bRead = feedItem.m_bRead
@@ -84,6 +94,9 @@ class TitleTree(QtCore.QObject):
         for feedItem in feedItemList:
             self.addFeedItem(feedItem)
 
+        self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
+        self.model.sort(self.sortColumn, self.sortOrder)
+
         self.titleTreeView.clicked.connect(self.onItemChanged)
 
     def GetColumnWidths(self):
@@ -98,3 +111,15 @@ class TitleTree(QtCore.QObject):
         """ Sets all column widths """
         for index, item in enumerate(columnList, start=0):
             self.titleTreeView.setColumnWidth(index, int(item))
+
+    def getSortColumn(self):
+        return self.sortColumn
+
+    def setSortColumn(self, column):
+        self.sortColumn = column
+
+    def getSortOrder(self):
+        return self.sortOrder
+
+    def setSortOrder(self, order):
+        self.sortOrder = order

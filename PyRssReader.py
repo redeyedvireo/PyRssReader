@@ -5,7 +5,7 @@ from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
 from feed_tree import FeedTree
-from title_tree import TitleTree
+from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
 from resource_fetcher import ResourceFetcher
 from feed_item_parser import parseFeed
@@ -24,6 +24,8 @@ kHorizSplitterSizes = "horizsplitterSizes"
 kVertSplitterSizes = "vertsplitterSizes"
 kTitleTreeSettingsGroup = "titletree"
 kColumnWidths = "columnwidths"
+kSortColumn = "sortcolumn"
+kColumnSortOrder = "columnsortorder"
 kFeedSettingsGroup = "feed"
 kLastViewedFeedId = "lastviewedfeedid"
 
@@ -128,6 +130,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if settingsObj.contains(kColumnWidths):
             columnList = settingsObj.value(kColumnWidths)
             self.titleTreeObj.SetColumnWidths(columnList)
+        sortColumn = int(settingsObj.value(kSortColumn, kDateColumn))
+        self.titleTreeObj.setSortColumn(sortColumn)
+        sortOrder = int(settingsObj.value(kColumnSortOrder, QtCore.Qt.DescendingOrder))
+        self.titleTreeObj.setSortOrder(sortOrder)
         settingsObj.endGroup()
 
         # Last-viewed feed
@@ -151,6 +157,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.beginGroup(kTitleTreeSettingsGroup)
         columnList = self.titleTreeObj.GetColumnWidths()
         settingsObj.setValue(kColumnWidths, columnList)
+        settingsObj.setValue(kSortColumn, self.titleTreeObj.getSortColumn())
+        settingsObj.setValue(kColumnSortOrder, self.titleTreeObj.getSortOrder())
         settingsObj.endGroup()
 
         #  Last-viewed feed
