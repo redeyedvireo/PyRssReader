@@ -209,6 +209,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
         self.db.addFeedItems(feedItemList, feedId)
+
+        if feedId == self.m_currentFeedId:
+            # Update title tree with new set of feed items
+            self.populateFeedItemView(feedId)
+
         QtCore.QTimer.singleShot(0, self.updateNextFeed)
 
     @QtCore.pyqtSlot(str, int)
