@@ -7,11 +7,12 @@ from utility import getResourceFileText
 
 
 class RssContentView(QtCore.QObject):
-    def __init__(self, textBrowser, languageFilter, adFilter):
+    def __init__(self, textBrowser, languageFilter, adFilter, proxy):
         super(RssContentView, self).__init__()
 
         self.languageFilter = languageFilter
         self.adFilter = adFilter
+        self.proxy = proxy
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
@@ -46,6 +47,9 @@ class RssContentView(QtCore.QObject):
                 return False
 
         return QtWidgets.QTextBrowser.eventFilter(self.textBrowser, obj, event)
+
+    def setProxy(self, proxy):
+        self.proxy = proxy
 
     def setContents(self, feedItem):
         """ Sets a feed item's HTML into the text browser. """
@@ -83,7 +87,7 @@ class RssContentView(QtCore.QObject):
         # document as they come in.
         document = self.textBrowser.document()
         for imgUrl in self.imageList:
-            resourceFetcher = ResourceFetcher(imgUrl)
+            resourceFetcher = ResourceFetcher(imgUrl, self.proxy)
             image = resourceFetcher.getData()
             #print("Image downloaded: {}".format(imgUrl))
             pixmap = QtGui.QPixmap()

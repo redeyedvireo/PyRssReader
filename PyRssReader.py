@@ -7,9 +7,9 @@ from ad_filter import AdFilter
 from feed_tree import FeedTree
 from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
-from resource_fetcher import ResourceFetcher
-from feed_item_parser import parseFeed
 from feed_updater import FeedUpdater
+from preferences_dialog import PrefsDialog
+from proxy import Proxy
 
 
 kDatabaseName = "Feeds.db"
@@ -20,6 +20,7 @@ kAppNameForSettings = "PyRssReader" # Used for saving settings
 kWindowSettingsGroup = "window"
 kSize = "size"
 kPos = "pos"
+kProxySettingsGroup = "proxy"
 kHorizSplitterSizes = "horizsplitterSizes"
 kVertSplitterSizes = "vertsplitterSizes"
 kTitleTreeSettingsGroup = "titletree"
@@ -28,6 +29,9 @@ kSortColumn = "sortcolumn"
 kColumnSortOrder = "columnsortorder"
 kFeedSettingsGroup = "feed"
 kLastViewedFeedId = "lastviewedfeedid"
+kProxyHostname = "proxyhostname"
+kProxyPort = "proxyport"
+kProxyUserId = "proxyuserid"
 
 
 # ---------------------------------------------------------------
@@ -42,6 +46,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db = Database()
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
+
+        self.proxy = Proxy()
 
         self.m_currentFeedId = -1
         self.feedIdsToUpdate = []
@@ -58,7 +64,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter)
+        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.proxy)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -141,6 +147,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.m_currentFeedId = int(settingsObj.value(kLastViewedFeedId, 0))
         settingsObj.endGroup()
 
+        # HTML Proxy
+        settingsObj.beginGroup(kProxySettingsGroup)
+        self.proxy.proxyUrl = settingsObj.value(kProxyHostname, "")
+        self.proxy.proxyPort = int(settingsObj.value(kProxyPort, 0))
+        self.proxy.proxyUser = settingsObj.value(kProxyUserId, "")
+        settingsObj.endGroup()
+
     def saveSettings(self):
         """ Saves application settings. """
         settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
@@ -166,6 +179,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.setValue(kLastViewedFeedId, self.m_currentFeedId)
         settingsObj.endGroup()
 
+        # HTML Proxy
+        settingsObj.beginGroup(kProxySettingsGroup)
+        settingsObj.setValue(kProxyHostname, self.proxy.proxyUrl)
+        settingsObj.setValue(kProxyPort, self.proxy.proxyPort)
+        settingsObj.setValue(kProxyUserId, self.proxy.proxyUser)
+        settingsObj.endGroup()
+
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
         self.m_currentFeedId = feedId
@@ -187,7 +207,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def onFeedUpdateRequested(self, feedId):
         print("onFeedUpdateRequested for feed: {}".format(feedId))
         if feedId > 0:
-            self.feedUpdater.updateFeed(feedId)
+            self.feedUpdater.updateFeed(feedId, self.proxy)
         else:
             logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
@@ -202,7 +222,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             at the head of self.feedIdsToUpdate. """
         if self.feedIdsToUpdate:
             feedIdToUpdate = self.feedIdsToUpdate.pop(0)
-            self.feedUpdater.updateFeed(feedIdToUpdate)
+            self.feedUpdater.updateFeed(feedIdToUpdate, self.proxy)
         else:
             self.showStatusBarMessage("Updating complete.")
 
@@ -216,6 +236,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.populateFeedItemView(feedId)
 
         QtCore.QTimer.singleShot(0, self.updateNextFeed)
+
+    @QtCore.pyqtSlot()
+    def on_actionPreferences_triggered(self):
+        prefsDialog = PrefsDialog(self, self.proxy)
+        if prefsDialog.exec() == QtWidgets.QDialog.Accepted:
+            self.proxy = prefsDialog.getProxySettings()
+            self.rssContentViewObj.setProxy(self.proxy)
+
 
     @QtCore.pyqtSlot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):

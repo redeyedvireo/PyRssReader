@@ -1,4 +1,5 @@
 from feed_update_thread import FeedUpdateThread
+from proxy import Proxy
 from PyQt5 import QtCore
 
 # Show feed update messages for 10 seconds
@@ -13,17 +14,19 @@ class FeedUpdater(QtCore.QObject):
     def __init__(self, db):
         super(FeedUpdater, self).__init__()
         self.db = db
+        self.proxy = Proxy()
 
-    def updateFeed(self, feedId):
+    def updateFeed(self, feedId, proxy):
         """ Updates the given feed. """
         self.feedId = feedId
         feed = self.db.getFeed(feedId)
         guids = self.db.getFeedItemGuids(feedId)
+        self.proxy = proxy
 
         updateMessage = "Updating {}".format(feed.m_feedTitle)
         self.feedUpdateMessageSignal.emit(updateMessage, kMessageTimeout)
 
-        self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids)
+        self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids, self.proxy)
         self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
         self.feedUpdateThread.start()
 
