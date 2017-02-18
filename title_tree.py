@@ -64,6 +64,7 @@ class TitleTree(QtCore.QObject):
         feedItemGuid = item.guid()
         print("Row clicked: {}, GUID: {}".format(item.row(), feedItemGuid))
         self.feedItemSelectedSignal.emit(feedItemGuid)
+        self.markRowAsRead(item.row())
 
     def onSortIndicatorChanged(self, logicalIndex, order):
         self.sortColumn = logicalIndex
@@ -124,6 +125,12 @@ class TitleTree(QtCore.QObject):
         self.model.sort(self.sortColumn, self.sortOrder)
 
         self.enableUserActions()
+
+    def markRowAsRead(self, row):
+        """ Marks all tree items in the given row as read. """
+        for column in range(0, kNumColumns):
+            item = self.model.item(row, column)
+            item.setReadState(True)
 
     def GetColumnWidths(self):
         """ Returns the widths of all columns """

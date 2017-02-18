@@ -35,6 +35,11 @@ class Database:
         if self.db is not None:
             self.db.close()
 
+    def reportError(self, errorMessage):
+        logging.error(errorMessage)
+        print(errorMessage)
+        raise DbError(errorMessage)
+
     def beginTransaction(self):
         queryObj = QtSql.QSqlQuery(self.db)
         queryObj.prepare("begin transaction")
@@ -57,9 +62,7 @@ class Database:
         sqlErr = queryObj.lastError()
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            errMsg = "Error ending a transaction: {}".format(sqlErr.text())
-            logging.error(errMsg)
-            print(errMsg)
+            self.reportError("Error ending a transaction: {}".format(sqlErr.text()))
 
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """
@@ -73,8 +76,7 @@ class Database:
         sqlErr = queryObj.lastError()
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            logging.error("Error when attempting to retrieve all feeds: {}".format(sqlErr.text()))
-            print("getFeeds: error: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to retrieve all feeds: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
 
@@ -114,9 +116,7 @@ class Database:
         sqlErr = queryObj.lastError()
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            errMsg = "Error when attempting to retrieve feed IDs: {}".format(sqlErr.text())
-            logging.error(errMsg)
-            print(errMsg)
+            self.reportError("Error when attempting to retrieve feed IDs: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
 
@@ -146,8 +146,7 @@ class Database:
         sqlErr = queryObj.lastError()
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            logging.error("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
-            print("getFeed: error: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return feed
         
@@ -190,7 +189,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            logging.error("Error when attempting to retrieve all guids: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to retrieve all guids: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
 
@@ -221,7 +220,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            logging.error("Error when attempting to retrieve all feed items: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to retrieve all feed items: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
 
@@ -305,9 +304,8 @@ class Database:
         sqlErr = queryObj.lastError()
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            errMsg = "Error adding a feed item: {}".format(sqlErr.text())
-            logging.error(errMsg)
-            print(errMsg)
+            self.reportError("Error adding a feed item: {}".format(sqlErr.text()))
+            # TODO: Maybe an exception should be thrown here
 
 
     def getFeedItem(self, guid, feedId):
@@ -334,7 +332,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            logging.error("Error when attempting to retrieve a single feed item: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to retrieve a single feed item: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return feedItem
 
@@ -366,6 +364,26 @@ class Database:
 
         return feedItem
 
+    def setFeedItemReadFlag(self, feedId, guid, readFlag):
+        """ Sets the read flag of the given feed item."""
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "update {} set readflag=? where guid=?".format(feedTableName)
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(1 if readFlag else 0)
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to set feed item's: {}".format(sqlErr.text()))
+
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)
         return tableName
@@ -383,9 +401,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            errMsg = "Error when attempting to retrieve all filtered words: {}".format(sqlErr.text())
-            logging.error(errMsg)
-            raise DbError(errMsg)
+            self.reportError("Error when attempting to retrieve all filtered words: {}".format(sqlErr.text()))
 
         allFilteredWords = []
 
@@ -410,9 +426,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            errMsg = "Error when attempting to retrieve all ad filters: {}".format(sqlErr.text())
-            logging.error(errMsg)
-            raise DbError(errMsg)
+            self.reportError("Error when attempting to retrieve all ad filters: {}".format(sqlErr.text()))
 
         allFilters = []
 
