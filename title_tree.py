@@ -19,6 +19,7 @@ class TitleTree(QtCore.QObject):
         self.languageFilter = languageFilter
         self.titleTreeView = treeView
         self.sortColumn = kDateColumn
+        self.feedItemGuid = ""
         self.sortOrder = QtCore.Qt.DescendingOrder
         self.configureTree()
         self.titleTreeView.header().sortIndicatorChanged.connect(self.onSortIndicatorChanged)
@@ -61,9 +62,9 @@ class TitleTree(QtCore.QObject):
 
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)
-        feedItemGuid = item.guid()
-        print("Row clicked: {}, GUID: {}".format(item.row(), feedItemGuid))
-        self.feedItemSelectedSignal.emit(feedItemGuid)
+        self.feedItemGuid = item.guid()
+        print("Row clicked: {}, GUID: {}".format(item.row(), self.feedItemGuid))
+        self.feedItemSelectedSignal.emit(self.feedItemGuid)
         self.markRowAsRead(item.row())
 
     def onSortIndicatorChanged(self, logicalIndex, order):
@@ -111,7 +112,10 @@ class TitleTree(QtCore.QObject):
             sizeHint.setHeight(kRowHeight)
             item.setSizeHint(sizeHint)
 
-    def addFeedItems(self, feedItemList):
+    def addFeedItems(self, feedItemList, sameFeed=False):
+        """ Removes existing feed items from the tree, if any, and adds the given feed item list.
+            If sameFeed is True, the feed items are from the same feed as the tree was already
+            displaying.  In that case, an attempt is made to keep the same feed item selected. """
         self.disableUserActions()
 
         numRows = self.model.rowCount()
@@ -124,7 +128,32 @@ class TitleTree(QtCore.QObject):
         self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
         self.model.sort(self.sortColumn, self.sortOrder)
 
+        rowToSelect = 0
+        if sameFeed and self.feedItemGuid:
+            currentFeedItemRow = self.findFeedItem(self.feedItemGuid)
+            rowToSelect = currentFeedItemRow if currentFeedItemRow >= 0 else 0
+
+        self.selectRow(rowToSelect)
+
         self.enableUserActions()
+
+    def findFeedItem(self, guid):
+        """ Returns the row containing the given GUID, or -1 if not found. """
+        foundRow = -1
+        numRows = self.model.rowCount()
+        for row in range(numRows):
+            if guid == self.getGuidForRow(row):
+                return row
+        return foundRow
+
+    def getGuidForRow(self, row):
+        item = self.model.item(row, kTitleColumn)
+        return item.guid()
+
+    def selectRow(self, row):
+        index = self.model.index(row, 0)
+        self.titleTreeView.setCurrentIndex(index)
+        self.onItemChanged(index)
 
     def markRowAsRead(self, row):
         """ Marks all tree items in the given row as read. """

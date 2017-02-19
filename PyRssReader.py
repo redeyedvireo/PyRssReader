@@ -194,9 +194,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedImageLabel.setPixmap(feed.m_feedFavicon)
         self.populateFeedItemView(feedId)
 
-    def populateFeedItemView(self, feedId):
+    def populateFeedItemView(self, feedId, sameFeed=False):
         feedItemList = self.db.getFeedItems(feedId)
-        self.titleTreeObj.addFeedItems(feedItemList)
+        self.titleTreeObj.addFeedItems(feedItemList, sameFeed)
 
     def onFeedItemSelected(self, feedItemGuid):
         print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, self.m_currentFeedId))
@@ -233,7 +233,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         if feedId == self.m_currentFeedId:
             # Update title tree with new set of feed items
-            self.populateFeedItemView(feedId)
+            self.populateFeedItemView(feedId, True)
 
         QtCore.QTimer.singleShot(0, self.updateNextFeed)
 
