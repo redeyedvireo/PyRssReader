@@ -13,11 +13,12 @@ class TitleTree(QtCore.QObject):
     feedItemSelectedSignal = QtCore.pyqtSignal(str)
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
-    def __init__(self, treeView, languageFilter):
+    def __init__(self, treeView, languageFilter, keyboardHandler):
         super(TitleTree, self).__init__()
 
         self.languageFilter = languageFilter
         self.titleTreeView = treeView
+        self.keyboardHandler = keyboardHandler
         self.sortColumn = kDateColumn
         self.feedItemGuid = ""
         self.sortOrder = QtCore.Qt.DescendingOrder
@@ -26,6 +27,9 @@ class TitleTree(QtCore.QObject):
         self.enableUserActions()
         self.m_Grouper = None
         self.titleTreeView.installEventFilter(self)
+
+        self.keyboardHandler.nextFeedItemSignal.connect(self.gotoNextFeedItem)
+        self.keyboardHandler.previousFeedItemSignal.connect(self.gotoPreviousFeedItem)
 
     def configureTree(self):
         self.model = QtGui.QStandardItemModel()
@@ -49,8 +53,10 @@ class TitleTree(QtCore.QObject):
     def eventFilter(self, obj, event):
         if obj == self.titleTreeView:
             if event.type() == QtCore.QEvent.KeyRelease:
-                print("key: {}".format(event.key()))
-                self.handleKeyRelease(event.key())
+                keyCode = event.key()
+                print("key: {}".format(keyCode))
+                if not self.keyboardHandler.handleKey(keyCode):
+                    self.handleKeyRelease(keyCode)
                 return False
 
         return QtWidgets.QTreeView.eventFilter(self.titleTreeView, obj, event)
@@ -59,6 +65,16 @@ class TitleTree(QtCore.QObject):
         if keyName in self.movementKeys:
             # Qt takes care of moving the selected item.  All we need to do is update the content view.
             self.onItemChanged(self.titleTreeView.currentIndex())
+
+    def gotoNextFeedItem(self):
+        currentRow = self.titleTreeView.currentIndex().row()
+        if currentRow < self.model.rowCount() - 1:
+            self.selectRow(currentRow + 1)
+
+    def gotoPreviousFeedItem(self):
+        currentRow = self.titleTreeView.currentIndex().row()
+        if currentRow > 0:
+            self.selectRow(currentRow - 1)
 
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)

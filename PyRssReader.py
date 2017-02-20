@@ -9,6 +9,7 @@ from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
 from feed_updater import FeedUpdater
 from preferences_dialog import PrefsDialog
+from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 
 
@@ -57,14 +58,16 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
         self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
 
-        self.feedTreeObj = FeedTree(self.feedTree)
+        self.keyboardHandler = KeyboardHandler(self)
+
+        self.feedTreeObj = FeedTree(self.feedTree, self.keyboardHandler)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
 
-        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter)
+        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.proxy)
+        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.keyboardHandler, self.proxy)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -84,6 +87,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         if self.m_currentFeedId >= 0:
             self.onFeedSelected(self.m_currentFeedId)
+            self.feedTreeObj.setCurrentFeed(self.m_currentFeedId)
 
     # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
