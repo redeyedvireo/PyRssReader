@@ -33,6 +33,18 @@ class ResourceFetcher(object):
             buffer.open(QtCore.QIODevice.WriteOnly)
             nullImage.save(buffer, "PNG")
             self.data = byteArray
+        except Exception as e:
+            errMsg = "URL Error fetching: {}".format(url)
+            print(errMsg)
+            logging.error(errMsg)
+
+            # Set a NULL image to data
+            nullImage = QtGui.QImage()
+            byteArray = QtCore.QByteArray()
+            buffer =  QtCore.QBuffer(byteArray)
+            buffer.open(QtCore.QIODevice.WriteOnly)
+            nullImage.save(buffer, "PNG")
+            self.data = byteArray
 
     def getData(self):
         return self.data
