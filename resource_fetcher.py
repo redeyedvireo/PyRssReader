@@ -1,6 +1,6 @@
 import logging
 from urllib import request
-from urllib.request import Request, ProxyHandler, ProxyBasicAuthHandler, urlopen, HTTPError
+from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, urlopen, HTTPError
 from PyQt5 import QtGui, QtCore
 
 class ResourceFetcher(object):
@@ -10,9 +10,9 @@ class ResourceFetcher(object):
 
         try:
             if self.proxy.usesProxy():
-                proxyAndPortStr = "{}:{}".format(self.proxy.proxyUrl, self.proxy.proxyPort)
+                proxyAndPortStr = r'http://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort)
                 proxy_handler = ProxyHandler({'http': proxyAndPortStr})
-                proxy_auth_handler = ProxyBasicAuthHandler()
+                proxy_auth_handler = HTTPBasicAuthHandler()
                 proxy_auth_handler.add_password('realm', self.proxy.proxyUrl, self.proxy.proxyUser, self.proxy.proxyPassword)
                 opener = request.build_opener(proxy_handler, proxy_auth_handler)
 
