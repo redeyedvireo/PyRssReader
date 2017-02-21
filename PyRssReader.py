@@ -85,6 +85,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         feedList = self.db.getFeeds()
         self.feedTreeObj.addFeeds(feedList)
 
+        if self.proxy.usesProxy():
+            password = QtWidgets.QInputDialog.getText(self, "Password", "Enter Proxy Password for user {}".format(self.proxy.proxyUser),
+                                                      QtWidgets.QLineEdit.Password)
+            if password[1]:
+                self.proxy.proxyPassword = password[0]
+
         if self.m_currentFeedId >= 0:
             self.onFeedSelected(self.m_currentFeedId)
             self.feedTreeObj.setCurrentFeed(self.m_currentFeedId)
