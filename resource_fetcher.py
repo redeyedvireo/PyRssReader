@@ -1,6 +1,6 @@
 import logging
 from urllib import request
-from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, urlopen, HTTPError
+from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
 from PyQt5 import QtGui, QtCore
 
 class ResourceFetcher(object):
@@ -10,11 +10,12 @@ class ResourceFetcher(object):
 
         try:
             if self.proxy.usesProxy():
-                proxyAndPortStr = r'http://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort)
-                proxy_handler = ProxyHandler({'http': proxyAndPortStr})
+                proxyAndPortStr = 'http://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort)
+                proxy_handler = ProxyHandler({'http': 'http://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort),
+                                              'https': 'https://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort)})
                 proxy_auth_handler = HTTPBasicAuthHandler()
-                proxy_auth_handler.add_password('realm', self.proxy.proxyUrl, self.proxy.proxyUser, self.proxy.proxyPassword)
-                opener = request.build_opener(proxy_handler, proxy_auth_handler)
+                #proxy_auth_handler.add_password('realm', self.proxy.proxyUrl, self.proxy.proxyUser, self.proxy.proxyPassword)
+                opener = request.build_opener(proxy_handler, proxy_auth_handler, HTTPHandler)
 
                 # This installs it globally, so it can be used with urlopen().
                 request.install_opener(opener)
@@ -22,7 +23,7 @@ class ResourceFetcher(object):
             self.request = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             self.data = urlopen(self.request).read()
         except HTTPError as e:
-            errMsg = "HTTP error fetching: {}".format(url)
+            errMsg = "HTTP error fetching: {}: {}".format(url, e.code)
             print(errMsg)
             logging.error(errMsg)
 
@@ -33,8 +34,8 @@ class ResourceFetcher(object):
             buffer.open(QtCore.QIODevice.WriteOnly)
             nullImage.save(buffer, "PNG")
             self.data = byteArray
-        except Exception as e:
-            errMsg = "URL Error fetching: {}".format(url)
+        except URLError as e:
+            errMsg = "URL Error fetching: {}: {}".format(url, e.reason)
             print(errMsg)
             logging.error(errMsg)
 
