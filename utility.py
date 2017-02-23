@@ -1,4 +1,4 @@
-from PyQt5 import QtCore
+from PyQt5 import QtGui
 import os, os.path
 import time
 import datetime
@@ -25,3 +25,16 @@ def getResourceFileText(filename):
     file.close()
 
     return contents
+
+def getResourceFilePixmap(filename):
+    scriptDir = os.getcwd()
+    filePath = os.path.join(scriptDir, "Resources", filename)
+
+    file = open(filePath, 'rb')
+    imageData = file.read()
+    file.close()
+
+    pixmap = QtGui.QPixmap()
+    pixmap.loadFromData(imageData)
+
+    return pixmap

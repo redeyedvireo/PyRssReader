@@ -1,10 +1,10 @@
 from title_tree_view_item import TitleTreeViewItem
 
 class TitleTreeTitleItem(TitleTreeViewItem):
-    def __init__(self, originalText, displayText, bRead, guid):
+    def __init__(self, originalText, displayText, bRead, feedId, guid):
         """ originalText is the original text from the feed.  This must be saved so that it
             can be filtered later, if the user changes the language filter. """
-        TitleTreeViewItem.__init__(self, displayText, bRead, guid)
+        TitleTreeViewItem.__init__(self, displayText, bRead, feedId, guid)
 
         self.originalText = originalText
 

@@ -10,11 +10,12 @@ kTagsColumn = 4
 kNumColumns = 5
 
 class TitleTreeViewItem(QtGui.QStandardItem):
-    def __init__(self, itemText, bRead, guid):
+    def __init__(self, itemText, bRead, feedId, guid):
         QtGui.QStandardItem.__init__(self)
         self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
         self.setFlags(self.flags() & ~QtCore.Qt.ItemIsUserCheckable)
 
+        self.m_feedId = feedId
         self.m_guid = guid
         self.setText(itemText)
         self.m_bRead = bRead
@@ -30,3 +31,6 @@ class TitleTreeViewItem(QtGui.QStandardItem):
 
     def guid(self):
         return self.m_guid
+
+    def feedId(self):
+        return self.m_feedId

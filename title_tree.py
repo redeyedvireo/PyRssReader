@@ -10,7 +10,8 @@ kRowHeight = 17
 kEnclosureColumnWidth = 40
 
 class TitleTree(QtCore.QObject):
-    feedItemSelectedSignal = QtCore.pyqtSignal(str)
+    # Signal emitted when a feed item is selected in the title tree.  Parameters are: feed ID, guid.
+    feedItemSelectedSignal = QtCore.pyqtSignal(int, str)
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
     def __init__(self, treeView, languageFilter, keyboardHandler):
@@ -79,8 +80,9 @@ class TitleTree(QtCore.QObject):
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)
         self.feedItemGuid = item.guid()
-        print("Row clicked: {}, GUID: {}".format(item.row(), self.feedItemGuid))
-        self.feedItemSelectedSignal.emit(self.feedItemGuid)
+        self.feedId = item.feedId()
+        print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
+        self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
         self.markRowAsRead(item.row())
 
     def onSortIndicatorChanged(self, logicalIndex, order):
@@ -90,27 +92,28 @@ class TitleTree(QtCore.QObject):
     def addFeedItem(self, feedItem):
         bRead = feedItem.m_bRead
         guid = feedItem.m_guid
+        feedId = feedItem.m_parentFeedId
         itemList = []
 
         # Enclosure
-        enclosureItem = TitleTreeViewItem("", bRead, guid)
+        enclosureItem = TitleTreeViewItem("", bRead, feedId, guid)
         itemList.append(enclosureItem)
 
         # Title
         displayText = self.languageFilter.filterString(feedItem.m_title)
-        titleItem = TitleTreeTitleItem(feedItem.m_title, displayText, bRead, guid)
+        titleItem = TitleTreeTitleItem(feedItem.m_title, displayText, bRead, feedId, guid)
         itemList.append(titleItem)
 
         # Date
-        dateItem = TitleTreeDateItem(feedItem.m_publicationDatetime, bRead, guid)
+        dateItem = TitleTreeDateItem(feedItem.m_publicationDatetime, bRead, feedId, guid)
         itemList.append(dateItem)
 
         # Creator
-        creatorItem = TitleTreeViewItem(feedItem.m_author, bRead, guid)
+        creatorItem = TitleTreeViewItem(feedItem.m_author, bRead, feedId, guid)
         itemList.append(creatorItem)
 
         # Categories
-        categoriesItem = TitleTreeCategoriesItem(feedItem.m_categories, bRead, guid)
+        categoriesItem = TitleTreeCategoriesItem(feedItem.m_categories, bRead, feedId, guid)
         itemList.append(categoriesItem)
 
         if self.m_Grouper is not None:

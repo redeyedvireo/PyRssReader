@@ -6,6 +6,11 @@ from feed import Feed
 from feed_item import FeedItem
 from utility import julianDayToDate, dateToJulianDay
 
+# Global value data type constants
+kDataTypeInteger = 0
+kDataTypeString = 1
+kDataTypeBlob = 2
+
 class Database:
     def __init__(self):
         super(Database, self).__init__()
@@ -63,6 +68,63 @@ class Database:
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error ending a transaction: {}".format(sqlErr.text()))
+
+    def getGlobalValue(self, key):
+        """ Returns the value of a 'global value' for the given key. """
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("select datatype from globals where key = ?")
+        queryObj.bindValue(0, key)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to retrieve a global value key: {}".format(sqlErr.text()))
+            return None
+
+        if queryObj.next():
+            typeField = queryObj.record().indexOf("datatype")
+
+            dataType = queryObj.value(typeField)
+        else:
+            # key not found
+            return None
+
+        if dataType == kDataTypeInteger:
+            createStr = "select intval from globals where key=?"
+        elif dataType == kDataTypeString:
+            createStr = "select stringval from globals where key=?"
+        elif dataType == kDataTypeBlob:
+            createStr = "select blobval from globals where key=?"
+        else:
+            # Unknown data type
+            self.reportError("getGlobalValue: unknown data type: {}".format(dataType))
+            return None
+
+        # Now that the data type is known, retrieve the data itself.
+        queryObj.prepare(createStr)
+        queryObj.bindValue(0, key)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to retrieve a page: {}".format(sqlErr.text()))
+            return None
+
+        if queryObj.next():
+            if dataType == kDataTypeInteger:
+                valueField = queryObj.record().indexOf("intval")
+            elif dataType == kDataTypeString:
+                valueField = queryObj.record().indexOf("stringval")
+            elif dataType == kDataTypeBlob:
+                valueField = queryObj.record().indexOf("blobval")
+
+            value = queryObj.value(valueField)
+            return value
 
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """
@@ -383,6 +445,31 @@ class Database:
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to set feed item's: {}".format(sqlErr.text()))
+
+    def getItemsOfInterest(self):
+        """ Retrieves all the items of interest, as a list of tuples of the form: (feedId, guid). """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select feedid, guid from itemsofinterest"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when retrieving items of interest: {}".format(sqlErr.text()))
+            return
+
+        itemsOfInterestList = []
+
+        while queryObj.next():
+            feedId = queryObj.record().value(0)
+            guid = queryObj.record().value(1)
+            itemsOfInterestList.append( (feedId, guid) )
+
+        return itemsOfInterestList
 
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)

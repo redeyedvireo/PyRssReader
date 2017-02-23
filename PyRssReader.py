@@ -11,6 +11,7 @@ from feed_updater import FeedUpdater
 from preferences_dialog import PrefsDialog
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
+from feed import kItemsOfInterestFeedId
 
 
 kDatabaseName = "Feeds.db"
@@ -83,7 +84,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.adFilter.initialize()
 
         feedList = self.db.getFeeds()
-        self.feedTreeObj.addFeeds(feedList)
+        feedIdStr = self.db.getGlobalValue("feed-order")
+        feedOrderListOfStrings = feedIdStr.split(",")
+        feedOrderList = [int(idStr) for idStr in feedOrderListOfStrings]
+        self.feedTreeObj.addFeeds(feedList, feedOrderList)
 
         if self.proxy.usesProxy():
             password = QtWidgets.QInputDialog.getText(self, "Password", "Enter Proxy Password for user {}".format(self.proxy.proxyUser),
@@ -199,19 +203,32 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
         self.m_currentFeedId = feedId
-        feed = self.db.getFeed(feedId)
-        self.feedNameLabel.setText(feed.m_feedName)
-        self.feedImageLabel.setPixmap(feed.m_feedFavicon)
-        self.populateFeedItemView(feedId)
+        if self.m_currentFeedId != kItemsOfInterestFeedId:
+            feed = self.db.getFeed(feedId)
+            self.feedNameLabel.setText(feed.m_feedName)
+            self.feedImageLabel.setPixmap(feed.m_feedFavicon)
+            self.populateFeedItemView(feedId)
+        else:
+            # TODO: Set feed name
+            # TODO: Set feed icon
+            ioiList = self.db.getItemsOfInterest()
+
+            # Read the actual feed items
+            feedItemList = []
+            for ioiTuple in ioiList:
+                feedItem = self.db.getFeedItem(ioiTuple[1], ioiTuple[0])
+                feedItemList.append(feedItem)
+
+            self.titleTreeObj.addFeedItems(feedItemList, False)
 
     def populateFeedItemView(self, feedId, sameFeed=False):
         feedItemList = self.db.getFeedItems(feedId)
         self.titleTreeObj.addFeedItems(feedItemList, sameFeed)
 
-    def onFeedItemSelected(self, feedItemGuid):
-        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, self.m_currentFeedId))
-        feedItem = self.db.getFeedItem(feedItemGuid, self.m_currentFeedId)
-        self.db.setFeedItemReadFlag(self.m_currentFeedId, feedItemGuid, True)
+    def onFeedItemSelected(self, feedId, feedItemGuid):
+        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
+        feedItem = self.db.getFeedItem(feedItemGuid, feedId)
+        self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
         self.rssContentViewObj.setContents(feedItem)
 
     def onFeedUpdateRequested(self, feedId):

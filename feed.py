@@ -1,5 +1,7 @@
 from PyQt5 import QtGui
 
+kItemsOfInterestFeedId = 2147483647
+
 class Feed(object):
     def __init__(self):
         super(Feed, self).__init__()

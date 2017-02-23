@@ -1,6 +1,10 @@
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
+from feed import Feed
+from utility import getResourceFilePixmap
+from feed import kItemsOfInterestFeedId
 
+kStarIcon = "star.png"
 
 kRowHeight = 20
 
@@ -51,11 +55,35 @@ class FeedTree(QtCore.QObject):
 
         return QtWidgets.QTreeWidget.eventFilter(self.feedTree, obj, event)
 
-    def addFeeds(self, feedList):
+    def addFeeds(self, feedList, feedOrderList):
+        if len(feedList) != len(feedOrderList):
+            logging.error("FeedTree: number of feeds does not equal the length of the feed order list.")
         self.feedTree.currentItemChanged.disconnect(self.onItemActivated)
-        for feed in feedList:
-            self.addFeedToTopLevel(feed)
+        ioiFeed = self.createItemsOfInterestFeed()
+        self.addFeedToTopLevel(ioiFeed)
+
+        for feedId in feedOrderList:
+            feed = self.findFeedInList(feedList, feedId)
+            if feed is not None:
+                self.addFeedToTopLevel(feed)
+            else:
+                logging.error("FeedTree: unknown feed ID in feed order list: {}".format(feedId))
+
         self.feedTree.currentItemChanged.connect(self.onItemActivated)
+
+    def findFeedInList(self, feedList, feedId):
+        """ Finds the given feed in the given feed list."""
+        for feed in feedList:
+            if feed.m_feedId == feedId:
+                return feed
+        return None
+
+    def createItemsOfInterestFeed(self):
+        ioiFeed = Feed()
+        ioiFeed.m_feedFavicon = getResourceFilePixmap(kStarIcon)
+        ioiFeed.m_feedName = "Items of Interest"
+        ioiFeed.m_feedId = kItemsOfInterestFeedId
+        return ioiFeed
 
     def addFeedToTopLevel(self, feed):
         feedIcon = QtGui.QIcon(feed.m_feedFavicon)
