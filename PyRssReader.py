@@ -11,12 +11,15 @@ from feed_updater import FeedUpdater
 from preferences_dialog import PrefsDialog
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
+from utility import getResourceFilePixmap
 from feed import kItemsOfInterestFeedId
 
 
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
 kAppNameForSettings = "PyRssReader" # Used for saving settings
+
+kStarIcon = "star.png"
 
 # Settings groups
 kWindowSettingsGroup = "window"
@@ -42,7 +45,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         super(PyRssReaderWindow, self).__init__()
         uic.loadUi('PyRssReaderWindow.ui', self)
 
-        logging.basicConfig(filename="RsReader.log", level=logging.INFO)
+        logging.basicConfig(filename="RssReader.log", level=logging.INFO)
         logging.info('Application Started')
 
         self.db = Database()
@@ -61,7 +64,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.keyboardHandler = KeyboardHandler(self)
 
-        self.feedTreeObj = FeedTree(self.feedTree, self.keyboardHandler)
+        self.feedTreeObj = FeedTree(self.feedTree, self.db, self.keyboardHandler)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
 
@@ -209,8 +212,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.feedImageLabel.setPixmap(feed.m_feedFavicon)
             self.populateFeedItemView(feedId)
         else:
-            # TODO: Set feed name
-            # TODO: Set feed icon
+            self.feedNameLabel.setText("Items of Interest")
+            starPixmap = getResourceFilePixmap(kStarIcon)
+            self.feedImageLabel.setPixmap(starPixmap)
             ioiList = self.db.getItemsOfInterest()
 
             # Read the actual feed items
@@ -229,6 +233,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
         feedItem = self.db.getFeedItem(feedItemGuid, feedId)
         self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
+        self.feedTreeObj.updateFeedCount(feedId)
         self.rssContentViewObj.setContents(feedItem)
 
     def onFeedUpdateRequested(self, feedId):

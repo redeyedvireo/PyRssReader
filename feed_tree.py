@@ -12,11 +12,12 @@ class FeedTree(QtCore.QObject):
     feedSelectedSignal = QtCore.pyqtSignal(int)
     feedUpdateRequestedSignal = QtCore.pyqtSignal(int)
 
-    def __init__(self, treeWidget, keyboardHandler):
+    def __init__(self, treeWidget, db, keyboardHandler):
         super(FeedTree, self).__init__()
 
-        self.keyboardHandler = keyboardHandler
         self.feedTree = treeWidget
+        self.db = db
+        self.keyboardHandler = keyboardHandler
         self.lastClickedFeedId = -1     # ID of feed that was most-recently clicked
         self.feedTree.currentItemChanged.connect(self.onItemActivated)
         self.feedTree.customContextMenuRequested.connect(self.onContextMenu)
@@ -69,6 +70,7 @@ class FeedTree(QtCore.QObject):
             else:
                 logging.error("FeedTree: unknown feed ID in feed order list: {}".format(feedId))
 
+        self.updateAllFeedCounts()
         self.feedTree.currentItemChanged.connect(self.onItemActivated)
 
     def findFeedInList(self, feedList, feedId):
@@ -92,6 +94,7 @@ class FeedTree(QtCore.QObject):
         if feed.m_feedName:
             pNewItem.setText(0, feed.m_feedName)
             pNewItem.setData(0, QtCore.Qt.UserRole, feed.m_feedId)
+            pNewItem.setData(0, QtCore.Qt.UserRole+1, feed.m_feedName)
 
             if not feedIcon.isNull():
                 pNewItem.setIcon(0, feedIcon)
@@ -103,6 +106,42 @@ class FeedTree(QtCore.QObject):
 
             self.feedTree.addTopLevelItem(pNewItem)
             self.feedTree.setCurrentItem(pNewItem)
+
+    def updateAllFeedCounts(self):
+        curItem = self.feedTree.invisibleRootItem()
+        curItem = curItem.child(0)
+
+        while curItem is not None:
+            curfeedId = self.feedIdForItem(curItem)
+            self.updateFeedCountForItem(curItem, curfeedId)
+
+            curItem = self.feedTree.itemBelow(curItem)
+
+    def updateFeedCount(self, feedId):
+        """ Updates the feed count for the given feed ID. """
+        item = self.findFeed(feedId)
+        if item is not None:
+            self.updateFeedCountForItem(item, feedId)
+
+            # Also update the Items of Interest feed
+            item = self.findFeed(kItemsOfInterestFeedId)
+            self.updateFeedCountForItem(item, kItemsOfInterestFeedId)
+
+    def updateFeedCountForItem(self, treeWidgetItem, feedId):
+        """ Updates the feed count for the given tree widget item. """
+        feedName = self.feedNameForItem(treeWidgetItem)
+        if feedId == kItemsOfInterestFeedId:
+            unreadItems = self.db.getUnreadCountForItemsOfInterest()
+        else:
+            unreadItems = self.db.getFeedItemUnreadCount(feedId)
+
+        itemFont = treeWidgetItem.font(0)
+        itemFont.setBold(unreadItems > 0)
+        treeWidgetItem.setFont(0, itemFont)
+        if unreadItems > 0:
+            treeWidgetItem.setText(0, "{} ({})".format(feedName, unreadItems))
+        else:
+            treeWidgetItem.setText(0, feedName)
 
     def setCurrentFeed(self, feedId):
         """ Sets the given feedId to be the currently-selected feed. """
@@ -124,8 +163,12 @@ class FeedTree(QtCore.QObject):
         return None
 
     def feedIdForItem(self, item):
-        """ Returns the row for the given item. """
+        """ Returns the feed ID for the given item. """
         return item.data(0, QtCore.Qt.UserRole)
+
+    def feedNameForItem(self, item):
+        """ Returns the feed name for the given item. """
+        return item.data(0, QtCore.Qt.UserRole+1)
 
     def onItemActivated(self, current, previous):
         feedId = current.data(0, QtCore.Qt.UserRole)

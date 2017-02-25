@@ -232,6 +232,41 @@ class Database:
             
         return feed
 
+    def getFeedItemUnreadCount(self, feedId):
+        """ Returns the number of unread feed items in the given feed. """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Determine number of unread items
+        queryStr = "select title from {} where readflag='0'".format(feedTableName)
+        queryObj.prepare(queryStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to retrieve number of unread items in feed: {}".format(sqlErr.text()))
+            return 0
+
+        numUnreadItems = 0
+
+        while queryObj.next():
+            numUnreadItems += 1
+
+        return numUnreadItems
+
+    def getUnreadCountForItemsOfInterest(self):
+        """ Returns the number of unread feed items in the Items of Interest feed. """
+        ioiList = self.getItemsOfInterest()
+        unreadCount = 0
+
+        for ioiTuple in ioiList:
+            if not self.isFeedItemRead(ioiTuple[0], ioiTuple[1]):
+                unreadCount += 1
+
+        return unreadCount
+
     def getFeedItemGuids(self, feedId):
         """ Returns the GUIDs for all feed items for the given feed.
             This is used when adding new feed items, to ensure that they do not already exist. """
@@ -444,7 +479,33 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            self.reportError("Error when attempting to set feed item's: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to set feed item's read flag: {}".format(sqlErr.text()))
+
+    def isFeedItemRead(self, feedId, guid):
+        """ Returns True if the given feed item is read, False otherwise.
+            False is returned if the feed item doesn't exist. """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryStr = "select readflag from {} where guid=?".format(feedTableName)
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to get feed item's read flag: {}".format(sqlErr.text()))
+            return False
+
+        bReturn = False
+        if queryObj.next():
+            readFlag = queryObj.record().value(0)
+            bReturn = True if readFlag == 1 else False
+
+        return bReturn
 
     def getItemsOfInterest(self):
         """ Retrieves all the items of interest, as a list of tuples of the form: (feedId, guid). """
