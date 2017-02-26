@@ -4,6 +4,7 @@ from pathlib import Path
 from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
+from feed_item_filter_matcher import FeedItemFilterMatcher
 from feed_tree import FeedTree
 from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
@@ -51,6 +52,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db = Database()
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
+        self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
 
         self.proxy = Proxy()
 
@@ -85,6 +87,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.languageFilter.initialize()
         self.adFilter.initialize()
+        self.feedItemFilterMatcher.initialize()
 
         feedList = self.db.getFeeds()
         feedIdStr = self.db.getGlobalValue("feed-order")
@@ -262,6 +265,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
         self.db.addFeedItems(feedItemList, feedId)
+        self.feedItemFilterMatcher.filterFeedItems(feedId, feedItemList)
 
         if feedId == self.m_currentFeedId:
             # Update title tree with new set of feed items

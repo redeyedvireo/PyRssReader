@@ -4,6 +4,7 @@ from pathlib import Path
 from exceptions import DbError
 from feed import Feed
 from feed_item import FeedItem
+from feed_item_filter import  FeedItemFilter
 from utility import julianDayToDate, dateToJulianDay
 
 # Global value data type constants
@@ -461,6 +462,25 @@ class Database:
 
         return feedItem
 
+    def deleteFeedItem(self, feedId, guid):
+        """ Deletes the given feed item. """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "delete from {} where guid=?".format(feedTableName)
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete a feed item: {}".format(sqlErr.text()))
+
     def setFeedItemReadFlag(self, feedId, guid, readFlag):
         """ Sets the read flag of the given feed item."""
         feedTableName = self.feedItemsTableName(feedId)
@@ -532,6 +552,23 @@ class Database:
 
         return itemsOfInterestList
 
+    def addItemOfInterest(self, feedId, guid):
+        """ Adds a feed item to the Items of Interest feed. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "insert into itemsofinterest (feedid, guid) values (?, ?)"
+
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(feedId)
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when adding an item of interest: {}".format(sqlErr.text()))
+
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)
         return tableName
@@ -583,5 +620,36 @@ class Database:
 
             if filteredWord:
                 allFilters.append(filteredWord)
+
+        return allFilters
+
+    def getFeedItemFilters(self):
+        """ Returns a list of all the global feed item filters. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "select filterid, feedid, field, verb, querystring, action from feeditemfilters"
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to retrieve all feed item filters: {}".format(sqlErr.text()))
+            return []
+
+        allFilters = []
+
+        while queryObj.next():
+            feedItemFilter = FeedItemFilter()
+
+            feedItemFilter.m_filterId = queryObj.record().value(0)
+            feedItemFilter.m_feedId = queryObj.record().value(1)
+            feedItemFilter.m_fieldId = queryObj.record().value(2)
+            feedItemFilter.m_verb = queryObj.record().value(3)
+            feedItemFilter.m_queryStr = queryObj.record().value(4)
+            feedItemFilter.m_action = queryObj.record().value(5)
+
+            allFilters.append(feedItemFilter)
 
         return allFilters
