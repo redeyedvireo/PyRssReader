@@ -3,7 +3,7 @@ from urllib import request
 from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
 from PyQt5 import QtGui, QtCore
 
-class ResourceFetcher(object):
+class ResourceFetcher:
     def __init__(self, url, proxy):
         super(ResourceFetcher, self).__init__()
         self.proxy = proxy
@@ -26,6 +26,8 @@ class ResourceFetcher(object):
                 errMsg = "Could not connect to server when fetching: {}: {}".format(url, e.reason)
             elif hasattr(e, 'code'):
                 errMsg = "Could not fulfill request when fetching: {}: {}".format(url, e.code)
+            else:
+                errMsg = "Unknown URL Exception."
 
             print(errMsg)
             logging.error(errMsg)
