@@ -10,9 +10,12 @@ from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
 from feed_updater import FeedUpdater
 from preferences_dialog import PrefsDialog
+from purge_dialog import PurgeDialog
+from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 from utility import getResourceFilePixmap
+
 from feed import kItemsOfInterestFeedId
 
 
@@ -53,6 +56,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
         self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
+        self.feedPurger = FeedPurger(self.db, self)
+        self.feedPurger.feedPurgedSignal.connect(self.onFeedPurged)
+        self.feedPurger.messageSignal.connect(self.showStatusBarMessage)
 
         self.proxy = Proxy()
 
@@ -280,6 +286,25 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.proxy = prefsDialog.getProxySettings()
             self.rssContentViewObj.setProxy(self.proxy)
 
+
+    @QtCore.pyqtSlot()
+    def on_actionPurge_Old_News_triggered(self):
+        purgeDlg = PurgeDialog(self)
+        if purgeDlg.exec() == QtWidgets.QDialog.Accepted:
+            priorDays = purgeDlg.getDays()
+            purgeUnreadItems = purgeDlg.purgeUnreadItems()
+
+            self.feedPurger.purgeAllFeeds(priorDays, purgeUnreadItems)
+            self.onFeedSelected(self.m_currentFeedId)   # Force repopulation of title tree
+
+
+    @QtCore.pyqtSlot(int)
+    def onFeedPurged(self, feedId):
+        self.feedTreeObj.updateFeedCount(feedId)
+
+        if feedId == self.m_currentFeedId:
+            # Update title tree with new set of feed items
+            self.populateFeedItemView(feedId, True)
 
     @QtCore.pyqtSlot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):

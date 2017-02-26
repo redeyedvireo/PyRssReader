@@ -70,6 +70,19 @@ class Database:
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error ending a transaction: {}".format(sqlErr.text()))
 
+    def vacuumDatabase(self):
+        """ Performs a 'vacuum' operation on the database.  This compacts the database file. """
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("vacuum;")
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to vacuum the database: {}".format(sqlErr.text()))
+
     def getGlobalValue(self, key):
         """ Returns the value of a 'global value' for the given key. """
         queryObj = QtSql.QSqlQuery(self.db)
@@ -232,6 +245,23 @@ class Database:
             feed.m_feedLastPurged = julianDayToDate(queryObj.record().value(12))  # Convert to time
             
         return feed
+
+    def updateFeedLastPurgedField(self, feedId, lastPurgedDate):
+        """ Updates the last-purged field for the given feed. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Determine number of unread items
+        queryStr = "update feeds set lastpurged=? where feedid=?"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(dateToJulianDay(lastPurgedDate))
+        queryObj.addBindValue(feedId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to update the last-purged field: {}".format(sqlErr.text()))
 
     def getFeedItemUnreadCount(self, feedId):
         """ Returns the number of unread feed items in the given feed. """
@@ -471,7 +501,6 @@ class Database:
         queryStr = "delete from {} where guid=?".format(feedTableName)
 
         queryObj.prepare(queryStr)
-
         queryObj.addBindValue(guid)
 
         queryObj.exec_()
@@ -480,6 +509,31 @@ class Database:
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to delete a feed item: {}".format(sqlErr.text()))
+
+    def deleteFeedItemsByDate(self, feedId, targetDate, deleteUnreadItems):
+        """ Deletes feed items in the given feed.
+            :param feedId Feed ID in which to delete the items
+            :param targetDate Items on this date and later will be deleted
+            :param deleteUnreadItems If true, unread items in the target range will be included
+        """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        if deleteUnreadItems:
+            queryStr = "delete from {} where pubdatetime<=?".format(feedTableName)
+        else:
+            queryStr = "delete from {} where pubdatetime<=? and readflag=1".format(feedTableName)
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(dateToJulianDay(targetDate))
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete feed items by date: {}".format(sqlErr.text()))
 
     def setFeedItemReadFlag(self, feedId, guid, readFlag):
         """ Sets the read flag of the given feed item."""
@@ -527,6 +581,25 @@ class Database:
 
         return bReturn
 
+    def feedItemExists(self, feedId, guid):
+        """ Returns True if the given feed item exists, False otherwise. """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryStr = "select title from {} where guid=?".format(feedTableName)
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to determine if a feed item exists: {}".format(sqlErr.text()))
+            return False
+
+        return queryObj.next()
+
     def getItemsOfInterest(self):
         """ Retrieves all the items of interest, as a list of tuples of the form: (feedId, guid). """
         queryObj = QtSql.QSqlQuery(self.db)
@@ -568,6 +641,23 @@ class Database:
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when adding an item of interest: {}".format(sqlErr.text()))
+
+    def deleteItemOfInterest(self, feedId, guid):
+        """ Deletes an item of interest. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "delete from itemsofinterest where feedid=? and guid=?"
+
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(feedId)
+        queryObj.addBindValue(guid)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when deleting an item of interest: {}".format(sqlErr.text()))
 
     def feedItemsTableName(self, feedId):
         tableName = "FeedItems{:06}".format(feedId)
