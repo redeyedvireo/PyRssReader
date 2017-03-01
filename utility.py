@@ -2,6 +2,7 @@ from PyQt5 import QtGui
 import os, os.path
 import time
 import datetime
+from datetime import timezone
 
 def julianDayToDate(julianDay):
     """ Returns a Python datetime object corresponding to the given Julian day. """
@@ -10,7 +11,7 @@ def julianDayToDate(julianDay):
     # Testing:
     #qtDate = QtCore.QDateTime.fromTime_t(julianDay)
     #print("Python: {}, Qt: {}".format(dateTime, qtDate.toString("M/d/yyyy, h:mm AP")))
-    return dateTime
+    return dateTime.replace(tzinfo=timezone.utc)
 
 def dateToJulianDay(inDate):
     """ Returns a Julian day (ie, a 'timestamp') for the given date. """

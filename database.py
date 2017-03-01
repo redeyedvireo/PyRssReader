@@ -44,7 +44,9 @@ class Database:
     def reportError(self, errorMessage):
         logging.error(errorMessage)
         print(errorMessage)
-        raise DbError(errorMessage)
+
+        # TODO: Decide if throwing an error is the right thing to do.
+        #raise DbError(errorMessage)
 
     def beginTransaction(self):
         queryObj = QtSql.QSqlQuery(self.db)

@@ -2,6 +2,7 @@ from lxml import etree
 from lxml.etree import fromstring
 import dateutil.parser
 import datetime
+from datetime import timezone
 from feed_item import FeedItem
 from PyQt5 import QtCore
 
@@ -125,6 +126,10 @@ def getPublicationDateTime(item):
 
     if dateElement is not None:
         pubDateTime = dateutil.parser.parse(dateElement.text)
+
+    # Make sure pubDateTime is an "aware" datetime; ie, that it has a timezone.
+    if pubDateTime.tzinfo is None or pubDateTime.tzinfo.utcoffset(pubDateTime):
+        pubDateTime = pubDateTime.replace(tzinfo=timezone.utc)
     return pubDateTime
 
 def getThumbnail(item):
