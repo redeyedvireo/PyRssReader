@@ -1,3 +1,4 @@
+import logging
 from lxml import etree
 from lxml.etree import fromstring
 import dateutil.parser
@@ -27,7 +28,13 @@ def parseFeed(feedItemRawText):
     #rawText = feedItemRawText.encode('utf-8')   # Not sure this is necessary
 
     # TODO: Need exception handling here.  If there is an error parsing the XML, just return an empty list
-    root = etree.fromstring(rawText)
+    try:
+        root = etree.fromstring(rawText)
+    except Exception as inst:
+        errMsg = "parseFeed: Exception when parsing feed item text: {}: {}".format(rawText, inst)
+        print(errMsg)
+        logging.error(errMsg)
+        return []
 
     # Debug saved parsed feed to disk
     #fileObj = open('feed-parsed.xml', 'w')

@@ -152,7 +152,8 @@ class TitleTree(QtCore.QObject):
             currentFeedItemRow = self.findFeedItem(self.feedItemGuid)
             rowToSelect = currentFeedItemRow if currentFeedItemRow >= 0 else 0
 
-        self.selectRow(rowToSelect)
+        if len(feedItemList):
+            self.selectRow(rowToSelect)
 
         self.enableUserActions()
 
