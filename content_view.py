@@ -3,7 +3,8 @@ import webbrowser
 from resource_fetcher import ResourceFetcher
 from PyQt5 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
-from utility import getResourceFileText
+from image_fetch_thread import ImageFetchThread
+from utility import getResourceFileText, getResourceFilePixmap
 
 
 class RssContentView(QtCore.QObject):
@@ -17,6 +18,7 @@ class RssContentView(QtCore.QObject):
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
+        self.dummyImage = QtGui.QPixmap()
         self.imageList = []
 
         self.textBrowser = textBrowser
@@ -36,6 +38,9 @@ class RssContentView(QtCore.QObject):
         self.m_feedHeaderHtml = self.m_feedHeaderHtml.replace("\r", "").replace("\n", "")
 
         doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
+
+        self.dummyImage = getResourceFilePixmap("hourglass.png")
+        self.starImageForDebugging = getResourceFilePixmap("star.png")
 
     # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
     def eventFilter(self, obj, event):
@@ -58,6 +63,8 @@ class RssContentView(QtCore.QObject):
 
     def setContents(self, feedItem):
         """ Sets a feed item's HTML into the text browser. """
+        print("Setting contents...")
+
         # Title
         filteredTitle = self.languageFilter.filterString(feedItem.m_title)
         strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
@@ -74,7 +81,7 @@ class RssContentView(QtCore.QObject):
         imgFinder = ImgFinder(self.m_processedFeedContents)
         if imgFinder.hasImages():
             self.imageList = imgFinder.getImages()
-            #print("Images: {}".format(self.imageList))
+            self.setDummyImages()
             self.fetchImages()
 
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
@@ -87,20 +94,41 @@ class RssContentView(QtCore.QObject):
         # Set focus onto the content view, so that arrow keys will scroll the content view
         self.textBrowser.setFocus()
 
-    # TODO: This should be done in a thread.
-    def fetchImages(self):
-        """ Fetches all images. """
-        # TODO: Maybe this should be in a separate file or class
-        # This should be done with a ThreadPoolExecutor.  Use the as_completed() function to add images to the
-        # document as they come in.
+    def setDummyImages(self):
+        """ Sets all embedded images to a dummy image, so that the document will be ready to view quickly.
+            The actual images will be downloaded in a thread, so the user can start reading the document
+            while the images download. """
+        print("Setting dummy images...")
         document = self.textBrowser.document()
         for imgUrl in self.imageList:
-            resourceFetcher = ResourceFetcher(imgUrl, self.proxy)
-            image = resourceFetcher.getData()
-            #print("Image downloaded: {}".format(imgUrl))
-            pixmap = QtGui.QPixmap()
-            pixmap.loadFromData(image)
-            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), pixmap)
+            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.dummyImage)
+
+    @QtCore.pyqtSlot()
+    def changeImages(self):
+        print("Changing images...")
+        document = self.textBrowser.document()
+        for imgUrl in self.imageList:
+            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.starImageForDebugging)
+        self.textBrowser.reload()
+        self.textBrowser.repaint()
+
+    @QtCore.pyqtSlot()
+    def fetchImages(self):
+        """ Fetches all images. """
+        print("Fetching images...")
+
+        self.imageFetchThread = ImageFetchThread(self.imageList, self.proxy)
+        self.imageFetchThread.imageFetchDoneSignal.connect(self.onImageFetchDone)
+        self.imageFetchThread.start()
+
+    def onImageFetchDone(self, imageList):
+        """ Called when image fetching from the thread has finished. """
+        document = self.textBrowser.document()
+        for imageTuple in imageList:
+            url = imageTuple[0]
+            pixmap = imageTuple[1]
+            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(url), pixmap)
+        self.textBrowser.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):
         print("Link clicked: {}".format(url))
