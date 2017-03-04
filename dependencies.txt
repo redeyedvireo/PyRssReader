@@ -1,0 +1,17 @@
+Dependencies, and how to install them.
+
+PyQt:
+To install:
+pip3 install PyQt5
+
+lxml:
+To install:
+pip3 install lxml
+
+Dateutil:
+To install
+pip3 install python-dateutil
+
+Cachetools:
+To install:
+pip3 install cachetools
