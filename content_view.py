@@ -8,11 +8,12 @@ from utility import getResourceFileText, getResourceFilePixmap
 
 
 class RssContentView(QtCore.QObject):
-    def __init__(self, textBrowser, languageFilter, adFilter, keyboardHandler, proxy):
+    def __init__(self, textBrowser, languageFilter, adFilter, imageCache, keyboardHandler, proxy):
         super(RssContentView, self).__init__()
 
         self.languageFilter = languageFilter
         self.adFilter = adFilter
+        self.imageCache = imageCache
         self.keyboardHandler = keyboardHandler
         self.proxy = proxy
         self.m_css = ""
@@ -39,7 +40,8 @@ class RssContentView(QtCore.QObject):
 
         doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
 
-        self.dummyImage = getResourceFilePixmap("hourglass.png")
+        self.dummyImage = QtGui.QPixmap(10, 10)
+        self.dummyImage.fill()      # Fill it with white
         self.starImageForDebugging = getResourceFilePixmap("star.png")
 
     # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
@@ -85,10 +87,6 @@ class RssContentView(QtCore.QObject):
             self.fetchImages()
 
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
-
-        # TODO: might need to set some image placeholders before setting the HTML contents into the text browser
-        # With the placeholders in place, the text browser can lay out the entire document.  The images can
-        # be added later (I hope).
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
         # Set focus onto the content view, so that arrow keys will scroll the content view
@@ -98,14 +96,16 @@ class RssContentView(QtCore.QObject):
         """ Sets all embedded images to a dummy image, so that the document will be ready to view quickly.
             The actual images will be downloaded in a thread, so the user can start reading the document
             while the images download. """
-        print("Setting dummy images...")
         document = self.textBrowser.document()
         for imgUrl in self.imageList:
-            document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.dummyImage)
+            if self.imageCache.contains(imgUrl):
+                # Note that images that are found in the image cache are added to the resources here
+                document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.imageCache.getImage(imgUrl))
+            else:
+                document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.dummyImage)
 
     @QtCore.pyqtSlot()
     def changeImages(self):
-        print("Changing images...")
         document = self.textBrowser.document()
         for imgUrl in self.imageList:
             document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.starImageForDebugging)
@@ -115,9 +115,12 @@ class RssContentView(QtCore.QObject):
     @QtCore.pyqtSlot()
     def fetchImages(self):
         """ Fetches all images. """
-        print("Fetching images...")
+        imageFetchList = []
+        for image in self.imageList:
+            if not self.imageCache.contains(image):
+                imageFetchList.append(image)
 
-        self.imageFetchThread = ImageFetchThread(self.imageList, self.proxy)
+        self.imageFetchThread = ImageFetchThread(imageFetchList, self.proxy)
         self.imageFetchThread.imageFetchDoneSignal.connect(self.onImageFetchDone)
         self.imageFetchThread.start()
 
@@ -128,6 +131,9 @@ class RssContentView(QtCore.QObject):
             url = imageTuple[0]
             pixmap = imageTuple[1]
             document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(url), pixmap)
+
+            # Add to the image cache
+            self.imageCache.addImage(url, pixmap)
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):

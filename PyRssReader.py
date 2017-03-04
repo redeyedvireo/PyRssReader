@@ -4,6 +4,7 @@ from pathlib import Path
 from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
+from image_cache import ImageCache
 from feed_item_filter_matcher import FeedItemFilterMatcher
 from feed_tree import FeedTree
 from title_tree import TitleTree, kDateColumn
@@ -42,6 +43,9 @@ kProxyHostname = "proxyhostname"
 kProxyPort = "proxyport"
 kProxyUserId = "proxyuserid"
 
+# Image cache size (number of cache entries)
+kMaxCacheSize = 100
+
 
 # ---------------------------------------------------------------
 class PyRssReaderWindow(QtWidgets.QMainWindow):
@@ -50,11 +54,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         uic.loadUi('PyRssReaderWindow.ui', self)
 
         logging.basicConfig(filename="RssReader.log", level=logging.INFO)
-        logging.info('Application Started')
 
         self.db = Database()
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
+        self.imageCache = ImageCache(kMaxCacheSize)
+
         self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
         self.feedPurger = FeedPurger(self.db, self)
         self.feedPurger.feedPurgedSignal.connect(self.onFeedPurged)
@@ -79,7 +84,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.keyboardHandler, self.proxy)
+        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.imageCache,
+                                                self.keyboardHandler, self.proxy)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -316,7 +322,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("Closing database...")
         self.db.close()
         self.saveSettings()
-        logging.info("Program exiting")
 
 # ---------------------------------------------------------------
 if __name__ == "__main__":

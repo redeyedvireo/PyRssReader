@@ -174,7 +174,9 @@ def getStringAttribute(element, attribute, defaultValue):
         return defaultValue
 
 def getIntegerAttribute(element, attribute, defaultValue):
+    returnValue = defaultValue
     if attribute in element.attrib:
-        return int(element.attrib[attribute])
-    else:
-        return defaultValue
+        valueStr = element.attrib[attribute]
+        if len(valueStr) > 0:
+            returnValue = int(valueStr)
+    return returnValue
