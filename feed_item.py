@@ -28,3 +28,12 @@ class FeedItem:
 
     def isRead(self):
         return self.m_bRead
+
+    def getFeedItemText(self):
+        """ Returns the text of the feed item. """
+        feedItemText = ""
+        if self.m_encodedContent:
+            feedItemText = self.m_encodedContent
+        else:
+            feedItemText = self.m_description
+        return feedItemText

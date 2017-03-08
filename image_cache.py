@@ -19,3 +19,6 @@ class ImageCache:
             return self.cache[url]
         else:
             return QtGui.QPixmap()
+
+    def cacheSize(self):
+        return len(self.cache)

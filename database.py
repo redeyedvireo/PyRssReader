@@ -387,6 +387,23 @@ class Database:
         return feedItemList
 
 
+    def getFeedItemsFromList(self, feedItemList):
+        """ Returns a list of feed items, corresponding to the given feed item guids in feedItemList. """
+        contentList = []
+        self.beginTransaction()
+
+        for feedItem in feedItemList:
+            feedId = feedItem[0]
+            guid = feedItem[1]
+            result = self.getFeedItem(guid, feedId)
+
+            if result is not None:
+                contentList.append(result)
+
+        self.endTransaction()
+        return contentList
+
+
     def addFeedItems(self, feedItemList, feedId):
         """ Adds multiple feed items, using a transaction.  Does not check for duplicates. """
         self.beginTransaction()

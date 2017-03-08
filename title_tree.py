@@ -1,6 +1,7 @@
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 from language_filter import LanguageFilter
+from prefetch_controller import PrefetchController
 from title_tree_view_item import TitleTreeViewItem, kEnclosureColumn, kTitleColumn, kDateColumn, kCreatorColumn, kTagsColumn, kNumColumns
 from title_tree_date_item import TitleTreeDateItem
 from title_tree_title_item import TitleTreeTitleItem
@@ -12,14 +13,20 @@ kEnclosureColumnWidth = 40
 class TitleTree(QtCore.QObject):
     # Signal emitted when a feed item is selected in the title tree.  Parameters are: feed ID, guid.
     feedItemSelectedSignal = QtCore.pyqtSignal(int, str)
+
+    # Signal emitted when feed item images should be preselected.  The list is a list of tuples of the form:
+    # (feedId, guids).
+    prefetchImagesSignal = QtCore.pyqtSignal(list)
+
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
-    def __init__(self, treeView, languageFilter, keyboardHandler):
+    def __init__(self, treeView, languageFilter, keyboardHandler, imagePrefetcher):
         super(TitleTree, self).__init__()
 
         self.languageFilter = languageFilter
         self.titleTreeView = treeView
         self.keyboardHandler = keyboardHandler
+        self.imagePrefetcher = imagePrefetcher
         self.sortColumn = kDateColumn
         self.feedItemGuid = ""
         self.sortOrder = QtCore.Qt.DescendingOrder
@@ -28,6 +35,9 @@ class TitleTree(QtCore.QObject):
         self.enableUserActions()
         self.m_Grouper = None
         self.titleTreeView.installEventFilter(self)
+
+        # Prefetch control
+        self.prefetchController = PrefetchController()
 
         self.keyboardHandler.nextFeedItemSignal.connect(self.gotoNextFeedItem)
         self.keyboardHandler.previousFeedItemSignal.connect(self.gotoPreviousFeedItem)
@@ -84,6 +94,9 @@ class TitleTree(QtCore.QObject):
         print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
         self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
         self.markRowAsRead(item.row())
+        self.prefetchController.rowSelected(item.row())
+        if (self.prefetchController.prefetchNeeded()):
+            self.prefetchImages()
 
     def onSortIndicatorChanged(self, logicalIndex, order):
         self.sortColumn = logicalIndex
@@ -141,19 +154,22 @@ class TitleTree(QtCore.QObject):
         if numRows > 0:
             self.model.removeRows(0, numRows)
 
-        for feedItem in feedItemList:
-            self.addFeedItem(feedItem)
-
-        self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
-        self.model.sort(self.sortColumn, self.sortOrder)
-
-        rowToSelect = 0
-        if sameFeed and self.feedItemGuid:
-            currentFeedItemRow = self.findFeedItem(self.feedItemGuid)
-            rowToSelect = currentFeedItemRow if currentFeedItemRow >= 0 else 0
-
         if len(feedItemList) > 0:
+            for feedItem in feedItemList:
+                self.addFeedItem(feedItem)
+
+            self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
+            self.model.sort(self.sortColumn, self.sortOrder)
+
+            rowToSelect = 0
+            if sameFeed and self.feedItemGuid:
+                currentFeedItemRow = self.findFeedItem(self.feedItemGuid)
+                rowToSelect = currentFeedItemRow if currentFeedItemRow >= 0 else 0
+
             self.selectRow(rowToSelect)
+
+            self.prefetchController.setNumRows(len(feedItemList))
+            self.prefetchImages()
 
         self.enableUserActions()
 
@@ -170,6 +186,10 @@ class TitleTree(QtCore.QObject):
         item = self.model.item(row, kTitleColumn)
         return item.guid()
 
+    def getFeedIdForRow(self, row):
+        item = self.model.item(row, kTitleColumn)
+        return item.feedId()
+
     def selectRow(self, row):
         index = self.model.index(row, 0)
         self.titleTreeView.setCurrentIndex(index)
@@ -180,6 +200,15 @@ class TitleTree(QtCore.QObject):
         for column in range(0, kNumColumns):
             item = self.model.item(row, column)
             item.setReadState(True)
+
+    def prefetchImages(self):
+        """ Prefetches images for the next few feeds. """
+        fetchList = []
+        for row in self.prefetchController.prefetchList():
+            feedId = self.getFeedIdForRow(row)
+            guid = self.getGuidForRow(row)
+            fetchList.append( (feedId, guid) )
+        self.imagePrefetcher.prefetchImages(fetchList)
 
     def GetColumnWidths(self):
         """ Returns the widths of all columns """

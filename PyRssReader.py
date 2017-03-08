@@ -5,6 +5,7 @@ from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
 from image_cache import ImageCache
+from image_prefetcher import ImagePrefetcher
 from feed_item_filter_matcher import FeedItemFilterMatcher
 from feed_tree import FeedTree
 from title_tree import TitleTree, kDateColumn
@@ -56,16 +57,17 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         logging.basicConfig(filename="RssReader.log", level=logging.INFO)
 
         self.db = Database()
+        self.proxy = Proxy()
+
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
         self.imageCache = ImageCache(kMaxCacheSize)
+        self.imagePrefetcher = ImagePrefetcher(self.db, self.imageCache, self.proxy)
 
         self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
         self.feedPurger = FeedPurger(self.db, self)
         self.feedPurger.feedPurgedSignal.connect(self.onFeedPurged)
         self.feedPurger.messageSignal.connect(self.showStatusBarMessage)
-
-        self.proxy = Proxy()
 
         self.m_currentFeedId = -1
         self.feedIdsToUpdate = []
@@ -81,7 +83,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
 
-        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler)
+        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
         self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.imageCache,

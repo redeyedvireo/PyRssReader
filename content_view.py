@@ -71,11 +71,7 @@ class RssContentView(QtCore.QObject):
         filteredTitle = self.languageFilter.filterString(feedItem.m_title)
         strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
 
-        htmlBody = ""
-        if feedItem.m_encodedContent:
-            htmlBody = self.languageFilter.filterHtml(feedItem.m_encodedContent)
-        else:
-            htmlBody = self.languageFilter.filterHtml(feedItem.m_description)
+        htmlBody = self.languageFilter.filterHtml(feedItem.getFeedItemText())
 
         # Find image source URLs, within <img> tags.  The image source URLs will be used as the image "names"
         # in the content view document.
@@ -118,6 +114,7 @@ class RssContentView(QtCore.QObject):
         imageFetchList = []
         for image in self.imageList:
             if not self.imageCache.contains(image):
+                print("The image cache did not contain: {}".format(image))
                 imageFetchList.append(image)
 
         self.imageFetchThread = ImageFetchThread(imageFetchList, self.proxy)
@@ -134,6 +131,9 @@ class RssContentView(QtCore.QObject):
 
             # Add to the image cache
             self.imageCache.addImage(url, pixmap)
+
+        # Disconnect the signal, as this class is used in other places
+        self.imageFetchThread.imageFetchDoneSignal.disconnect(self.onImageFetchDone)
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):
