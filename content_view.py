@@ -132,8 +132,6 @@ class RssContentView(QtCore.QObject):
             # Add to the image cache
             self.imageCache.addImage(url, pixmap)
 
-        # Disconnect the signal, as this class is used in other places
-        self.imageFetchThread.imageFetchDoneSignal.disconnect(self.onImageFetchDone)
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):
