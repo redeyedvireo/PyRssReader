@@ -1,12 +1,12 @@
 from PyQt5 import QtGui
-from cachetools import LFUCache
+from cachetools import LRUCache
 
 
 class ImageCache:
     def __init__(self, maxSize):
         super(ImageCache, self).__init__()
 
-        self.cache = LFUCache(maxSize)
+        self.cache = LRUCache(maxSize)
 
     def addImage(self, url, image):
         self.cache[url] = image
