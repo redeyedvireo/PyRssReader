@@ -1,6 +1,4 @@
-import logging
 import webbrowser
-from resource_fetcher import ResourceFetcher
 from PyQt5 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
 from image_fetch_thread import ImageFetchThread
@@ -19,6 +17,7 @@ class RssContentView(QtCore.QObject):
         self.m_css = ""
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
+        self.rawFeedContents = ""
         self.dummyImage = QtGui.QPixmap()
         self.imageList = []
 
@@ -28,15 +27,20 @@ class RssContentView(QtCore.QObject):
         self.textBrowser.installEventFilter(self)
         self.textBrowser.anchorClicked.connect(self.linkClicked)
 
+        self.textBrowser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.textBrowser.customContextMenuRequested.connect(self.onContextMenu)
+
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
         self.m_css = getResourceFileText("pagestyle.css")
         self.m_feedHeaderHtml = getResourceFileText("feedHeader.html")
+        self.m_completeHtmlDocument = getResourceFileText("completeHtmlDocument.html")
 
         # Replace carriage returns and line feeds with spaces
         self.m_css = self.m_css.replace("\r", "").replace("\n", "")
         self.m_feedHeaderHtml = self.m_feedHeaderHtml.replace("\r", "").replace("\n", "")
+        self.m_completeHtmlDocument = self.m_completeHtmlDocument.replace("\r", "").replace("\n", "")
 
         doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
 
@@ -72,10 +76,18 @@ class RssContentView(QtCore.QObject):
         strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
 
         htmlBody = self.languageFilter.filterHtml(feedItem.getFeedItemText())
+        self.rawFeedContents = htmlBody
+
+        # Create an HTML body
+        if "<body>" not in htmlBody:
+            newBody = self.m_completeHtmlDocument.format(strTitleLink, htmlBody)
+            self.m_processedFeedContents = newBody
+        else:
+            # TODO: Need a better way to to this
+            self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
 
         # Find image source URLs, within <img> tags.  The image source URLs will be used as the image "names"
         # in the content view document.
-        self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
         imgFinder = ImgFinder(self.m_processedFeedContents)
         if imgFinder.hasImages():
             self.imageList = imgFinder.getImages()
@@ -137,3 +149,43 @@ class RssContentView(QtCore.QObject):
     def linkClicked(self, url):
         print("Link clicked: {}".format(url))
         webbrowser.open(url.toString())
+
+    @QtCore.pyqtSlot('QPoint')
+    def onContextMenu(self, point):
+        print("Context menu requested")
+        menu = self.textBrowser.createStandardContextMenu()
+        menu.addSeparator()
+
+        selText = self.textBrowser.textCursor().selectedText()
+        if len(selText) > 0:
+            menu.addAction("Add {} to language filter".format(selText), self.onAddToFilter)
+            menu.addAction("Search for {} in Google".format(selText), self.onSearchGoogle)
+            menu.addAction("Search for {} in Wikipedia".format(selText), self.onSearchWikipedia)
+
+            menu.addSeparator()
+
+        menu.addAction("Copy feed item source to clipboard", self.onCopyWebSource)
+        menu.addAction("Copy raw feed item source to clipboard", self.onCopyRawFeedItemSource)
+        menu.addAction("Rerun language filter", self.runLanguageFilter)
+
+        menu.exec(self.textBrowser.mapToGlobal(point))
+
+    def onAddToFilter(self):
+        print("onAddToFilter called")
+
+    def onSearchGoogle(self):
+        print("onSearchGoogle called")
+
+    def onSearchWikipedia(self):
+        print("onSearchWikipedia called")
+
+    def onCopyWebSource(self):
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(self.textBrowser.toHtml())
+
+    def onCopyRawFeedItemSource(self):
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(self.rawFeedContents)
+
+    def runLanguageFilter(self):
+        print("runLanguageFilter")
