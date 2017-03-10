@@ -74,7 +74,7 @@ def parseFeed(feedItemRawText):
 
         feedItem.m_title = getElementValue(item, ['title'])
         feedItem.m_author = getElementValue(item, ['author', 'creator', 'dc:creator'])
-        feedItem.m_link = getLink(item.find('link'))
+        feedItem.m_link = getElementValue(item, ['link'])
         feedItem.m_description = getElementValue(item, ['description'])
         feedItem.m_encodedContent = getElementValue(item, ['content', 'encoded'])
         feedItem.m_categories = getCategories(item)
