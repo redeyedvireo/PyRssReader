@@ -74,7 +74,7 @@ def parseFeed(feedItemRawText):
 
         feedItem.m_title = getElementValue(item, ['title'])
         feedItem.m_author = getElementValue(item, ['author', 'creator', 'dc:creator'])
-        feedItem.m_link = getElementValue(item, ['link'])
+        feedItem.m_link = getLink(item)
         feedItem.m_description = getElementValue(item, ['description'])
         feedItem.m_encodedContent = getElementValue(item, ['content', 'encoded'])
         feedItem.m_categories = getCategories(item)
@@ -109,10 +109,19 @@ def getLink(item):
     if item is None:
         return ""
 
-    if 'href' in item.attrib:
-        return item.attrib['href']
-    else:
-        return item.text
+    elementList = item.iterfind("{{*}}{}".format('link'))
+    if elementList is not None:
+        for elt in elementList:
+            if 'href' in elt.attrib:
+                return elt.attrib['href']
+            else:
+                if elt.text is not None:
+                    value = elt.text.strip()
+                    if len(value) > 0:
+                        return value
+
+    logging.error("Can't find link element in {}".format(str(item)))
+    return ""
 
 def getCategories(item):
     """ Returns all categories as a list. """
