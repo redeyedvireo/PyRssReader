@@ -87,6 +87,18 @@ class TitleTree(QtCore.QObject):
         if currentRow > 0:
             self.selectRow(currentRow - 1)
 
+    def reselectFeedItem(self):
+        """ Causes the feedItemSelectedSignal to be emitted for the current feed item.
+            This is usually needed to reread a feed item after the language filter, or ad filter,
+            has been changed.  At this point, the language filter has already been updated with new filter strings. """
+        self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
+
+        # Rerun the language filter on the feed item's title, so it is updated in the title tree
+        row = self.findFeedItem(self.feedItemGuid)
+        item = self.model.item(row, kTitleColumn)
+        currentText = item.text()
+        item.setDisplayText(self.languageFilter.filterString(currentText))
+
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)
         self.feedItemGuid = item.guid()

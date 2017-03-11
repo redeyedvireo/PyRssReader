@@ -19,6 +19,11 @@ class LanguageFilter:
         except DbError as e:
             print("LanguageFilter.initialize: {}".format(e.message))
 
+    def addFilterWord(self, newWord):
+        """ Adds a word to the filter. """
+        self.db.addFilteredWord(newWord)
+        self.filteredWords.append(newWord)
+
     def filterString(self, inString):
         """ Filters the given string.  That is, any occurrence of a filtered word is replaced with ****. """
         filteredString = inString

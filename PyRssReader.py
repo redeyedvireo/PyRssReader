@@ -88,6 +88,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.imageCache,
                                                 self.keyboardHandler, self.proxy)
+        self.rssContentViewObj.reselectFeedItemSignal.connect(self.onReselectFeedItem)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -252,6 +253,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
         self.feedTreeObj.updateFeedCount(feedId)
         self.rssContentViewObj.setContents(feedItem)
+
+    @QtCore.pyqtSlot()
+    def onReselectFeedItem(self):
+        """ Causes the current feed item to be reselected. """
+        self.titleTreeObj.reselectFeedItem()
 
     def onFeedUpdateRequested(self, feedId):
         print("onFeedUpdateRequested for feed: {}".format(feedId))

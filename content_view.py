@@ -6,6 +6,10 @@ from utility import getResourceFileText, getResourceFilePixmap
 
 
 class RssContentView(QtCore.QObject):
+    # Emitted when the current feed item should be re-selected.  This is usually due to the language filter
+    # being changed, which requires the current feed item to be re-read, and re-filtered.
+    reselectFeedItemSignal = QtCore.pyqtSignal()
+
     def __init__(self, textBrowser, languageFilter, adFilter, imageCache, keyboardHandler, proxy):
         super(RssContentView, self).__init__()
 
@@ -75,7 +79,7 @@ class RssContentView(QtCore.QObject):
         filteredTitle = self.languageFilter.filterString(feedItem.m_title)
         strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
 
-        htmlBody = self.languageFilter.filterHtml(feedItem.getFeedItemText())
+        htmlBody = feedItem.getFeedItemText()
         self.rawFeedContents = htmlBody
 
         # Create an HTML body
@@ -84,7 +88,8 @@ class RssContentView(QtCore.QObject):
             self.m_processedFeedContents = newBody
         else:
             # TODO: Need a better way to to this
-            self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
+            #self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
+            self.m_processedFeedContents = "setContents: Error - feed item contained complete HTML"
 
         # Find image source URLs, within <img> tags.  The image source URLs will be used as the image "names"
         # in the content view document.
@@ -94,6 +99,7 @@ class RssContentView(QtCore.QObject):
             self.setDummyImages()
             self.fetchImages()
 
+        self.m_processedFeedContents = self.languageFilter.filterHtml(self.m_processedFeedContents)
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
@@ -172,6 +178,11 @@ class RssContentView(QtCore.QObject):
 
     def onAddToFilter(self):
         print("onAddToFilter called")
+        selText = self.textBrowser.textCursor().selectedText()
+
+        if selText:
+            self.languageFilter.addFilterWord(selText)
+            self.reselectFeedItemSignal.emit()
 
     def onSearchGoogle(self):
         print("onSearchGoogle called")

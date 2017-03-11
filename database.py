@@ -707,6 +707,21 @@ class Database:
 
         return allFilteredWords
 
+    def addFilteredWord(self, newWord):
+        """ Adds a word to the language filter table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "insert into filteredwords (word) values (?)"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(newWord)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to add a new filtered word: {}".format(sqlErr.text()))
+
     def getAdFilters(self):
         """ Reads the URLS/domains for filtering ads, and returns them as a list. """
         queryObj = QtSql.QSqlQuery(self.db)
