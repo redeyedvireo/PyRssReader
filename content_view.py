@@ -153,7 +153,6 @@ class RssContentView(QtCore.QObject):
         self.textBrowser.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):
-        print("Link clicked: {}".format(url))
         webbrowser.open(url.toString())
 
     @QtCore.pyqtSlot('QPoint')
@@ -177,7 +176,6 @@ class RssContentView(QtCore.QObject):
         menu.exec(self.textBrowser.mapToGlobal(point))
 
     def onAddToFilter(self):
-        print("onAddToFilter called")
         selText = self.textBrowser.textCursor().selectedText()
 
         if selText:
@@ -185,10 +183,18 @@ class RssContentView(QtCore.QObject):
             self.reselectFeedItemSignal.emit()
 
     def onSearchGoogle(self):
-        print("onSearchGoogle called")
+        selText = self.textBrowser.textCursor().selectedText()
+
+        if selText:
+            urlStr = "http://www.google.com/search?q={}".format(selText.strip().replace(" ", "+"))
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr))
 
     def onSearchWikipedia(self):
-        print("onSearchWikipedia called")
+        selText = self.textBrowser.textCursor().selectedText()
+
+        if selText:
+            urlStr = "http://en.wikipedia.org/wiki/{}".format(selText.strip().replace(" ", "_"))
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr))
 
     def onCopyWebSource(self):
         clipboard = QtWidgets.QApplication.clipboard()
@@ -199,4 +205,4 @@ class RssContentView(QtCore.QObject):
         clipboard.setText(self.rawFeedContents)
 
     def runLanguageFilter(self):
-        print("runLanguageFilter")
+        self.reselectFeedItemSignal.emit()
