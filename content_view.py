@@ -1,4 +1,7 @@
+import logging
 import webbrowser
+import re
+from bs4 import BeautifulSoup
 from PyQt5 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
 from image_fetch_thread import ImageFetchThread
@@ -24,6 +27,7 @@ class RssContentView(QtCore.QObject):
         self.rawFeedContents = ""
         self.dummyImage = QtGui.QPixmap()
         self.imageList = []
+        self.currentFeedItem = None
 
         self.textBrowser = textBrowser
         self.textBrowser.setMouseTracking(True)
@@ -73,7 +77,7 @@ class RssContentView(QtCore.QObject):
 
     def setContents(self, feedItem):
         """ Sets a feed item's HTML into the text browser. """
-        print("Setting contents...")
+        self.currentFeedItem = feedItem
 
         # Title
         filteredTitle = self.languageFilter.filterString(feedItem.m_title)
@@ -87,9 +91,9 @@ class RssContentView(QtCore.QObject):
             newBody = self.m_completeHtmlDocument.format(strTitleLink, htmlBody)
             self.m_processedFeedContents = newBody
         else:
-            # TODO: Need a better way to to this
-            #self.m_processedFeedContents = "{}<body>{}</body>".format(strTitleLink, htmlBody)
-            self.m_processedFeedContents = "setContents: Error - feed item contained complete HTML"
+            logging.info("setContents: Error - feed item contained complete HTML.  GUID: {}".format(feedItem.m_guid))
+            # TODO: Need to add the strTitleLink
+            self.m_processedFeedContents = htmlBody
 
         # Find image source URLs, within <img> tags.  The image source URLs will be used as the image "names"
         # in the content view document.
@@ -101,10 +105,54 @@ class RssContentView(QtCore.QObject):
 
         self.m_processedFeedContents = self.languageFilter.filterHtml(self.m_processedFeedContents)
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
+        self.m_processedFeedContents = self.fixHtml(self.m_processedFeedContents)
+
         self.textBrowser.setHtml(self.m_processedFeedContents)
+
+        # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
+        #self.fixDocument()
 
         # Set focus onto the content view, so that arrow keys will scroll the content view
         self.textBrowser.setFocus()
+
+    def fixHtml(self, htmlText):
+        """ Attempts to fix various readability issues caused by incompatible formatting contained in the
+            feed item text, before setting the HTML to the document. """
+        soup = BeautifulSoup(htmlText, 'html.parser')
+        allParagraphs = soup.find_all("div")
+        fixOccurred = False
+        for paragraph in allParagraphs:
+            if "style" in paragraph.attrs:
+                styleAttr = paragraph.attrs["style"]
+                if "line-height" in styleAttr:
+                    newStyleAttr = re.sub(r'line-height:[^;]*;', '', styleAttr)
+                    paragraph.attrs["style"] = newStyleAttr.strip()
+                    fixOccurred = True
+
+        if fixOccurred:
+            logging.info("A fix in the HTML occurred.  GUID: {}".format(self.currentFeedItem))
+
+        return soup.prettify()
+
+    def fixDocument(self):
+        """ Attempts to fix various readability issues caused by incompatible formatting contained in the
+            feed item text. """
+        # currentBlock = self.textBrowser.document().begin()
+        # while currentBlock.isValid():
+        #     blockFormat = currentBlock.blockFormat()
+        #     currentLineHeight = blockFormat.lineHeight()
+        #     blockFormat.setLineHeight(0.0, QtGui.QTextBlockFormat.SingleHeight)
+        #     #currentBlock.setBlockFormat(blockFormat)
+        #     currentBlock = currentBlock.next()
+
+        # Select entire document
+        selectionCursor = self.textBrowser.textCursor()
+        selectionCursor.select(QtGui.QTextCursor.Document)
+
+        selectionFormat = self.textBrowser.textCursor().blockFormat()
+        selectionFormat.setLineHeight(0.0, QtGui.QTextBlockFormat.SingleHeight)
+        selectionCursor.setBlockFormat(selectionFormat)
+
 
     def setDummyImages(self):
         """ Sets all embedded images to a dummy image, so that the document will be ready to view quickly.
