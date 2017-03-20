@@ -16,13 +16,13 @@ class FeedUpdater(QtCore.QObject):
         super(FeedUpdater, self).__init__()
         self.db = db
         self.proxy = Proxy()
-        self.lastPurgedDate = datetime.datetime.today()
+        self.lastUpdatedDate = datetime.datetime.today()
 
     def updateFeed(self, feedId, proxy):
         """ Updates the given feed. """
         self.feedId = feedId
         feed = self.db.getFeed(feedId)
-        self.lastPurgedDate = feed.m_feedLastPurged
+        self.lastUpdatedDate = feed.m_feedLastUpdated
         guids = self.db.getFeedItemGuids(feedId)
         self.proxy = proxy
 
@@ -35,10 +35,11 @@ class FeedUpdater(QtCore.QObject):
 
     @QtCore.pyqtSlot(list)
     def onFeedUpdateDone(self, feedItemList):
-        # Remove feed items that are older than the last purged date
+        self.db.updateFeedLastUpdatedField(self.feedId, datetime.date.today())
+
         finalFeedItemList = []
         for feedItem in feedItemList:
-            if feedItem.m_publicationDatetime > self.lastPurgedDate:
+            if feedItem.m_publicationDatetime > self.lastUpdatedDate:
                 finalFeedItemList.append(feedItem)
 
         # Pass this on up to the main window
