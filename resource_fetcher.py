@@ -47,6 +47,12 @@ class ResourceFetcher:
     def getData(self):
         return self.data
 
+    def getDataAsPixmap(self):
+        """ Returns the data as a pixmap. """
+        pixmap = QtGui.QPixmap()
+        pixmap.loadFromData(self.data)
+        return pixmap
+
     def createNullImage(self):
         nullImage = QtGui.QImage()
         byteArray = QtCore.QByteArray()

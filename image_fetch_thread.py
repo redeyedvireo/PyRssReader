@@ -16,9 +16,7 @@ class ImageFetchThread(QtCore.QThread):
     def run(self):
         for url in self.urlList:
             resourceFetcher = ResourceFetcher(url, self.proxy)
-            image = resourceFetcher.getData()
-            pixmap = QtGui.QPixmap()
-            pixmap.loadFromData(image)
+            pixmap = resourceFetcher.getDataAsPixmap()
             self.outputList.append( (url, pixmap) )
 
         self.imageFetchDoneSignal.emit(self.outputList)

@@ -56,6 +56,10 @@ class FeedTree(QtCore.QObject):
 
         return QtWidgets.QTreeWidget.eventFilter(self.feedTree, obj, event)
 
+    def addFeed(self, feed):
+        """ Public function to use for adding a feed to the feed tree. """
+        self.addFeedToTopLevel(feed)
+
     def addFeeds(self, feedList, feedOrderList):
         if len(feedList) != len(feedOrderList):
             logging.error("FeedTree: number of feeds does not equal the length of the feed order list.")
@@ -88,13 +92,13 @@ class FeedTree(QtCore.QObject):
         return ioiFeed
 
     def addFeedToTopLevel(self, feed):
-        feedIcon = QtGui.QIcon(feed.m_feedFavicon)
+        feedIcon = QtGui.QIcon(feed.getFeedIcon())
         pNewItem = QtWidgets.QTreeWidgetItem()
 
-        if feed.m_feedName:
-            pNewItem.setText(0, feed.m_feedName)
+        if feed.feedName():
+            pNewItem.setText(0, feed.feedName())
             pNewItem.setData(0, QtCore.Qt.UserRole, feed.m_feedId)
-            pNewItem.setData(0, QtCore.Qt.UserRole+1, feed.m_feedName)
+            pNewItem.setData(0, QtCore.Qt.UserRole+1, feed.feedName())
 
             if not feedIcon.isNull():
                 pNewItem.setIcon(0, feedIcon)
@@ -199,3 +203,18 @@ class FeedTree(QtCore.QObject):
         previousItem = self.feedTree.itemAbove(currentItem)
         if previousItem is not None:
             self.feedTree.setCurrentItem(previousItem)
+
+    def generateFeedOrderString(self):
+        """ Generates a comma-separated list of feed IDs, used to store the feed order in the database. """
+        feedIdList = []
+        curItem = self.feedTree.invisibleRootItem()
+        curItem = curItem.child(0)
+
+        while curItem is not None:
+            curfeedId = self.feedIdForItem(curItem)
+            if curfeedId != kItemsOfInterestFeedId:
+                feedIdList.append(str(curfeedId))
+            curItem = self.feedTree.itemBelow(curItem)
+
+        feedIdString = ",".join(feedIdList)
+        return feedIdString

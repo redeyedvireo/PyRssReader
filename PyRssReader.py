@@ -12,6 +12,7 @@ from title_tree import TitleTree, kDateColumn
 from content_view import RssContentView
 from feed_updater import FeedUpdater
 from preferences_dialog import PrefsDialog
+from NewFeed import NewFeedDialog
 from purge_dialog import PurgeDialog
 from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
@@ -24,6 +25,8 @@ from feed import kItemsOfInterestFeedId
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
 kAppNameForSettings = "PyRssReader" # Used for saving settings
+
+kFeedOrderGlobalKey = "feed-order"
 
 kStarIcon = "star.png"
 
@@ -105,7 +108,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedItemFilterMatcher.initialize()
 
         feedList = self.db.getFeeds()
-        feedIdStr = self.db.getGlobalValue("feed-order")
+        feedIdStr = self.db.getGlobalValue(kFeedOrderGlobalKey)
         feedOrderListOfStrings = feedIdStr.split(",")
         feedOrderList = [int(idStr) for idStr in feedOrderListOfStrings]
         self.feedTreeObj.addFeeds(feedList, feedOrderList)
@@ -320,6 +323,27 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Update title tree with new set of feed items
             self.populateFeedItemView(feedId, True)
 
+    @QtCore.pyqtSlot()
+    def on_actionAdd_Feed_triggered(self):
+        dlg = NewFeedDialog(self, self.proxy)
+
+        if dlg.exec() == QtWidgets.QDialog.Accepted:
+            feed = dlg.getFeed()
+
+            # Must add the feed to the database first, in order to have the feed ID set.
+            feed = self.db.addFeed(feed)
+            feedId = feed.m_feedId
+
+            if feedId > 0:
+                # Update feed ID with the value from the database
+                self.feedTreeObj.addFeed(feed)
+
+                # Switch to this feed
+                self.onFeedSelected(feedId)
+                # Fetch feed items
+                self.onFeedUpdateRequested(feedId)
+
+
     @QtCore.pyqtSlot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):
         """ Displays a message on the status bar. """
@@ -327,6 +351,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
 
     def closeEvent(self, event):
+        feedOrderString = self.feedTreeObj.generateFeedOrderString()
+        self.db.setGlobalValue(kFeedOrderGlobalKey, feedOrderString)
         print("Closing database...")
         self.db.close()
         self.saveSettings()

@@ -1,4 +1,4 @@
-from PyQt5 import QtGui
+from PyQt5 import QtCore, QtGui
 
 kItemsOfInterestFeedId = 2147483647
 
@@ -7,7 +7,7 @@ class Feed(object):
         super(Feed, self).__init__()
 
         # User data
-        self.m_feedName = ""  # User-specified name of feed
+        self.m_feedName = ""  # User-specified name of feed.  This is deprecated; use m_feedTitle.
         self.m_feedUrl = ""  # URL of the feed
 
         # Tracking info
@@ -21,11 +21,28 @@ class Feed(object):
         self.m_feedDescription = ""
         self.m_feedWebPageLink = ""
 
-        self.m_feedFavicon = None  # Favicon for the feed's main web site (for display in feed tree)
-        self.m_feedImage = None  # Image from the feed itself. This is generally not an icon.
-
         self.m_feedId = -1  # ID number of the feed
         self.m_parentId = -1  # Used in the feed tree
 
-        self.m_feedFavicon = QtGui.QPixmap()
-        self.m_feedImage = QtGui.QPixmap()
+        self.m_feedFavicon = QtGui.QPixmap()        # Favicon for the feed's main web site (for display in feed tree)
+        self.m_feedImage = QtGui.QPixmap()          # Image from the feed itself. This is generally not an icon.
+
+    def getFeedIcon(self):
+        if not isinstance(self.m_feedImage, str) and not self.m_feedImage.isNull():
+            if isinstance(self.m_feedImage, QtCore.QByteArray):
+                pixmap = QtGui.QPixmap()
+                pixmap.loadFromData(self.m_feedImage)
+                self.m_feedImage = pixmap
+            return self.m_feedImage
+        else:
+            if isinstance(self.m_feedFavicon, QtCore.QByteArray):
+                pixmap = QtGui.QPixmap()
+                pixmap.loadFromData(self.m_feedImage)
+                self.m_feedFavicon = pixmap
+            return self.m_feedFavicon
+
+    def feedName(self):
+        if self.m_feedName:
+            return self.m_feedName
+        else:
+            return self.m_feedTitle

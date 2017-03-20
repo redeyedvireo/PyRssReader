@@ -27,6 +27,7 @@ class Database:
         if self.db.open():
             if dbExists:
                 print("Database open")
+                self.updateDatabase()
             else:
                 # TODO: Create the database, and all tables
                 #       Note: when creating the language filter database, add some hard-coded words
@@ -47,6 +48,11 @@ class Database:
 
         # TODO: Decide if throwing an error is the right thing to do.
         #raise DbError(errorMessage)
+
+    def updateDatabase(self):
+        """ Updates the database to the current version. """
+        # Nothing to do at this point.
+        pass
 
     def beginTransaction(self):
         queryObj = QtSql.QSqlQuery(self.db)
@@ -141,6 +147,134 @@ class Database:
 
             value = queryObj.value(valueField)
             return value
+
+
+    def setGlobalValue(self, key, value):
+        """ Sets the value of the given key to the given value. """
+
+        # See if the key exists
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("select datatype from globals where key = ?")
+        queryObj.bindValue(0, key)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to determine if a global value exists: {}".format(sqlErr.text()))
+            return
+
+        if queryObj.next():
+            # Key exists; update its value
+            if isinstance(value, int):
+                createStr = "update globals set intval=? where key=?"
+            elif isinstance(value, str):
+                createStr = "update globals set stringval=? where key=?"
+            elif isinstance(value, QtCore.QByteArray):
+                createStr = "update globals set blobval=? where key=?"
+            else:
+                self.reportError("setGlobalValue: invalid data type")
+                return
+
+            queryObj.prepare(createStr)
+
+            queryObj.addBindValue(value)
+            queryObj.addBindValue(key)
+        else:
+            if isinstance(value, int):
+                createStr = "insert into globals (key, datatype, intval) values (?, ?, ?)"
+                dataType = kDataTypeInteger
+            elif isinstance(value, str):
+                createStr = "insert into globals (key, datatype, stringval) values (?, ?, ?)"
+                dataType = kDataTypeString
+            elif isinstance(value, QtCore.QByteArray):
+                createStr = "insert into globals (key, datatype, blobval) values (?, ?, ?)"
+                dataType = kDataTypeBlob
+            else:
+                self.reportError("setGlobalValue: invalid data type")
+                return
+
+            queryObj.prepare(createStr)
+
+            queryObj.addBindValue(key)
+            queryObj.addBindValue(dataType)
+            queryObj.addBindValue(value)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to set a global value: {}".format(sqlErr.text()))
+
+
+    def createFeedTable(self):
+        """ Creates the feed table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        createStr = "create table feeds ("
+        createStr += "feedid integer primary key, " # Unique Feed ID (must not be 0).  SQLite guarantees this field be unique
+        createStr += "name text, " # User - specified name of feed
+        createStr += "url text, " # Feed URL
+        createStr += "parentid integer, " # Page 's parent page (TODO: Figure out how to use this)
+        createStr += "added integer, " # Date and time the feed was added, as a time_t
+        createStr += "lastupdated integer, " # Date and time page was last updated, as a time_t
+        createStr += "title text, " # Feed title
+        createStr += "language text, " # Feed language
+        createStr += "description text, " # Feed description
+        createStr += "webpagelink text, " # URL of web site that owns this feed
+        createStr += "favicon blob, " # Favicon for feed's main web site
+        createStr += "image blob, " # Feed image(not a favicon)
+        createStr += "lastpurged integer default 0" # Date and time the feed was last purged
+    
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the feed table: {}".format(sqlErr.text()))
+
+
+    def createFeedItemsTable(self, feedId):
+        """ Creates a feed item table. """
+        feedTableName = self.feedItemsTableName(feedId)
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        createStr = "create table {} (".format(feedTableName)
+        createStr += "title text, " # Item title
+        createStr += "author text, " # Item author
+        createStr += "link text, " # Item link
+        createStr += "description text, " # Item description
+        createStr += "categories text, " # Item categories
+        createStr += "pubdatetime integer, " # Date / time of item 's publication, as a time_t
+        createStr += "thumbnaillink text, " # Link to item 's thumbnail
+        createStr += "thumbnailwidth integer, " # Width of thumbnail
+        createStr += "thumbnailheight integer, " # Height of thumbnail
+        createStr += "guid text UNIQUE, " # Item guid(usually just the URL of the article)
+        createStr += "feedburneroriglink text, " # Feedburner link(possibly unnecessary?)
+        createStr += "readflag integer, " # 0 for Not Read, non - zero for Read
+        createStr += "enclosurelink text, " # Link to media enclosure(ie, podcast)
+        createStr += "enclosurelength integer, " # Length of enclosure
+        createStr += "enclosuretype text, " # Type of enclosure(such as "media/mpeg")
+        createStr += "contentencoded text " # Store < content: encoded > tag data
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create a feed item table: {}".format(sqlErr.text()))
 
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """
@@ -247,6 +381,96 @@ class Database:
             feed.m_feedLastPurged = julianDayToDate(queryObj.record().value(12))  # Convert to time
             
         return feed
+
+
+    def addFeed(self, feed):
+        """ Adds a feed to the database.  Returns the feed with its feed ID updated to reflect the actual feed ID. """
+
+        # Write favicon to a buffer
+        faviconBytes = QtCore.QByteArray()
+        tempBuffer = QtCore.QBuffer(faviconBytes)
+        tempBuffer.open(QtCore.QIODevice.WriteOnly)
+        feed.m_feedFavicon.save(tempBuffer, "PNG")  # Write pixmap into bytes in PNG format
+
+        # Write feed image to a buffer
+        imageBytes = QtCore.QByteArray()
+        tempImageBuffer = QtCore.QBuffer(imageBytes)
+        tempImageBuffer.open(QtCore.QIODevice.WriteOnly)
+        feed.m_feedImage.save(tempImageBuffer, "PNG")   # Write pixmap into bytes in PNG format
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Note that feedid is not specified here.  Since feedid is the primary key, it's value is chosen by
+        # SQLite to be a unique value.
+        queryStr = "insert into feeds (parentid, name, title, description, language, url, added, lastupdated, " \
+                   "webpagelink, favicon, image, lastpurged) " \
+                   "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(feed.m_parentId)
+        queryObj.addBindValue(feed.m_feedName)
+        queryObj.addBindValue(feed.m_feedTitle)
+        queryObj.addBindValue(feed.m_feedDescription)
+        queryObj.addBindValue(feed.m_feedLanguage)
+        queryObj.addBindValue(feed.m_feedUrl)
+        queryObj.addBindValue(dateToJulianDay(feed.m_feedDateAdded))
+        queryObj.addBindValue(dateToJulianDay(feed.m_feedLastUpdated))
+        queryObj.addBindValue(feed.m_feedWebPageLink)
+        queryObj.addBindValue(faviconBytes)
+        queryObj.addBindValue(imageBytes)
+        queryObj.addBindValue(dateToJulianDay(feed.m_feedLastPurged))
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to add a feed: {}".format(sqlErr.text()))
+            return
+
+        # Retrieve the feed ID (it is set by SQLite when the row was created)
+        queryObj.prepare("select last_insert_rowid();")
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to retrieve the last inserted row id: {}".format(sqlErr.text()))
+            # Note that if an error occurs here, and we exit, the above-created row will still be present, thus
+            # leaving the database in an inconsistent state.  But, without the rowid of the newly-created row,
+            # we can't delete it!
+            return None
+
+        if queryObj.next():
+            feedId = queryObj.record().value(0)
+        else:
+            self.reportError("Can't retrieve the last inserted row id.")
+            # Note that if an error occurs here, and we exit, the above-created row will still be present, thus
+            # leaving the database in an inconsistent state.  But, without the rowid of the newly-created row,
+            # we can't delete it!
+            return None
+
+        # Create the corresponding FeedItemsTable for this feed
+        self.createFeedItemsTable(feedId)
+        feed.m_feedId = feedId
+        return feed
+
+    def updateFeedLastUpdatedField(self, feedId, lastUpdatedDate):
+        """ Updates the last-updated field for the given feed. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Determine number of unread items
+        queryStr = "update feeds set lastupdated=? where feedid=?"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(dateToJulianDay(lastUpdatedDate))
+        queryObj.addBindValue(feedId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to update the last-updated field: {}".format(sqlErr.text()))
 
     def updateFeedLastPurgedField(self, feedId, lastPurgedDate):
         """ Updates the last-purged field for the given feed. """
