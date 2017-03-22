@@ -209,9 +209,18 @@ class TitleTree(QtCore.QObject):
 
     def markRowAsRead(self, row):
         """ Marks all tree items in the given row as read. """
+        self.setRowReadState(row, True)
+
+    def setRowReadState(self, row, readState):
         for column in range(0, kNumColumns):
             item = self.model.item(row, column)
-            item.setReadState(True)
+            item.setReadState(readState)
+
+    def setReadStateOfAllRows(self, readState):
+        """ Sets the read state of all rows to the given state. """
+        numRows = self.model.rowCount()
+        for row in range(numRows):
+            self.setRowReadState(row, readState)
 
     def prefetchImages(self):
         """ Prefetches images for the next few feeds. """

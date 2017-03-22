@@ -524,6 +524,26 @@ class Database:
 
         return unreadCount
 
+
+    def setFeedReadFlagAllItems(self, feedId, readFlag):
+        """ Sets the read flag of all feed items in the given feed to the given value:
+            readFlag:  True: read, False: unread. """
+        feedTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "update {} set readflag=?".format(feedTableName)
+
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(1 if readFlag else 0)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to set the read flag for all feed items in feed {}: {}".format(feedId, sqlErr.text()))
+
+
     def getFeedItemGuids(self, feedId):
         """ Returns the GUIDs for all feed items for the given feed.
             This is used when adding new feed items, to ensure that they do not already exist. """

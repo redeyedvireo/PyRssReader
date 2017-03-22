@@ -85,6 +85,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj = FeedTree(self.feedTree, self.db, self.keyboardHandler)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
+        self.feedTreeObj.feedReadStateSignal.connect(self.onSetFeedReadState)
 
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
@@ -342,6 +343,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 self.onFeedSelected(feedId)
                 # Fetch feed items
                 self.onFeedUpdateRequested(feedId)
+
+
+    @QtCore.pyqtSlot(int, bool)
+    def onSetFeedReadState(self, feedId, readState):
+        """ Marks all items in the given feed as read. """
+        self.db.setFeedReadFlagAllItems(feedId, readState)
+        self.titleTreeObj.setReadStateOfAllRows(readState)
 
 
     @QtCore.pyqtSlot(str, int)

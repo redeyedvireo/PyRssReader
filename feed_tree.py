@@ -12,6 +12,7 @@ kRowHeight = 20
 class FeedTree(QtCore.QObject):
     feedSelectedSignal = QtCore.pyqtSignal(int)
     feedUpdateRequestedSignal = QtCore.pyqtSignal(int)
+    feedReadStateSignal = QtCore.pyqtSignal(int, bool)
 
     def __init__(self, treeWidget, db, keyboardHandler):
         super(FeedTree, self).__init__()
@@ -40,6 +41,8 @@ class FeedTree(QtCore.QObject):
 
         self.m_actionUpdate.triggered.connect(self.onActionUpdate)
         self.m_feedProperties.triggered.connect(self.onFeedProperties)
+        self.m_actionMarkRead.triggered.connect(self.onMarkFeedAsRead)
+        self.m_actionMarkUnread.triggered.connect(self.onMarkFeedAsUnread)
 
         self.m_contextMenu.addAction(self.m_actionUpdate)
         self.m_contextMenu.addAction(self.m_actionMarkRead)
@@ -210,6 +213,14 @@ class FeedTree(QtCore.QObject):
         dlg = FeedPropertiesDialog(self.feedTree, self.db, self.lastClickedFeedId)
 
         dlg.exec()
+
+    def onMarkFeedAsRead(self):
+        self.feedReadStateSignal.emit(self.lastClickedFeedId, True)
+        self.updateFeedCount(self.lastClickedFeedId)
+
+    def onMarkFeedAsUnread(self):
+        self.feedReadStateSignal.emit(self.lastClickedFeedId, False)
+        self.updateFeedCount(self.lastClickedFeedId)
 
     def generateFeedOrderString(self):
         """ Generates a comma-separated list of feed IDs, used to store the feed order in the database. """
