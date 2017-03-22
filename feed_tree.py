@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from feed import Feed
 from utility import getResourceFilePixmap
 from feed import kItemsOfInterestFeedId
+from FeedPropertiesDlg import FeedPropertiesDialog
 
 kStarIcon = "star.png"
 
@@ -38,6 +39,7 @@ class FeedTree(QtCore.QObject):
         self.m_feedProperties = QtWidgets.QAction("Feed Properties")
 
         self.m_actionUpdate.triggered.connect(self.onActionUpdate)
+        self.m_feedProperties.triggered.connect(self.onFeedProperties)
 
         self.m_contextMenu.addAction(self.m_actionUpdate)
         self.m_contextMenu.addAction(self.m_actionMarkRead)
@@ -203,6 +205,11 @@ class FeedTree(QtCore.QObject):
         previousItem = self.feedTree.itemAbove(currentItem)
         if previousItem is not None:
             self.feedTree.setCurrentItem(previousItem)
+
+    def onFeedProperties(self):
+        dlg = FeedPropertiesDialog(self.feedTree, self.db, self.lastClickedFeedId)
+
+        dlg.exec()
 
     def generateFeedOrderString(self):
         """ Generates a comma-separated list of feed IDs, used to store the feed order in the database. """

@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>New Feed</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Resources/RssReader.ico</normaloff>Resources/RssReader.ico</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
     <number>2</number>

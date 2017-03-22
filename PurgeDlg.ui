@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Purge Feed</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Resources/RssReader.ico</normaloff>Resources/RssReader.ico</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
