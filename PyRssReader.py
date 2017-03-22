@@ -86,6 +86,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
         self.feedTreeObj.feedReadStateSignal.connect(self.onSetFeedReadState)
+        self.feedTreeObj.feedPurgeSignal.connect(self.onPurgeSingleFeed)
 
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
@@ -315,6 +316,15 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.feedPurger.purgeAllFeeds(priorDays, purgeUnreadItems)
             self.onFeedSelected(self.m_currentFeedId)   # Force repopulation of title tree
 
+
+    @QtCore.pyqtSlot(int)
+    def onPurgeSingleFeed(self, feedId):
+        purgeDlg = PurgeDialog(self)
+        if purgeDlg.exec() == QtWidgets.QDialog.Accepted:
+            priorDays = purgeDlg.getDays()
+            purgeUnreadItems = purgeDlg.purgeUnreadItems()
+            
+            self.feedPurger.purgeSingleFeed(feedId, priorDays, purgeUnreadItems)
 
     @QtCore.pyqtSlot(int)
     def onFeedPurged(self, feedId):

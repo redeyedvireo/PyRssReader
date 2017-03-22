@@ -28,7 +28,7 @@ class FeedPurger(QtCore.QObject):
         self.progressDialog.setWindowTitle("Purge Feeds")
 
         for index, feed in enumerate(feedList):
-            self.progressDialog.setLabelText("Purging: {}".format(feed.m_feedName))
+            self.progressDialog.setLabelText("Purging: {}".format(feed.m_feedTitle))
             self.progressDialog.setValue(index)
             if self.progressDialog.wasCanceled():
                 return
@@ -41,6 +41,21 @@ class FeedPurger(QtCore.QObject):
         self.removeDeletedItems()
         self.db.vacuumDatabase()
         self.messageSignal.emit("Feeds purged.", 10000)
+
+    def purgeSingleFeed(self, feedId, priorDays, purgeUnreadItems):
+        """ Purges a single feed. """
+        feed = self.db.getFeed(feedId)
+
+        targetDate = datetime.date.today() + relativedelta(days=-priorDays)
+        print("Today: {}, target date: {}".format(datetime.date.today(), targetDate))
+
+        self.db.deleteFeedItemsByDate(feedId, targetDate, purgeUnreadItems)
+        self.db.updateFeedLastPurgedField(feedId, targetDate)
+        self.feedPurgedSignal.emit(feedId)
+
+        self.removeDeletedItems()
+        self.db.vacuumDatabase()
+        self.messageSignal.emit("{} purged.".format(feed.m_feedTitle), 10000)
 
     def removeDeletedItems(self):
         """ Removes deleted items from the Items of Interest feed."""

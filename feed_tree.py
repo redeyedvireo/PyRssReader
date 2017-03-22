@@ -13,6 +13,7 @@ class FeedTree(QtCore.QObject):
     feedSelectedSignal = QtCore.pyqtSignal(int)
     feedUpdateRequestedSignal = QtCore.pyqtSignal(int)
     feedReadStateSignal = QtCore.pyqtSignal(int, bool)
+    feedPurgeSignal = QtCore.pyqtSignal(int)
 
     def __init__(self, treeWidget, db, keyboardHandler):
         super(FeedTree, self).__init__()
@@ -43,6 +44,7 @@ class FeedTree(QtCore.QObject):
         self.m_feedProperties.triggered.connect(self.onFeedProperties)
         self.m_actionMarkRead.triggered.connect(self.onMarkFeedAsRead)
         self.m_actionMarkUnread.triggered.connect(self.onMarkFeedAsUnread)
+        self.m_actionPurge.triggered.connect(self.onPurgeFeed)
 
         self.m_contextMenu.addAction(self.m_actionUpdate)
         self.m_contextMenu.addAction(self.m_actionMarkRead)
@@ -220,6 +222,10 @@ class FeedTree(QtCore.QObject):
 
     def onMarkFeedAsUnread(self):
         self.feedReadStateSignal.emit(self.lastClickedFeedId, False)
+        self.updateFeedCount(self.lastClickedFeedId)
+
+    def onPurgeFeed(self):
+        self.feedPurgeSignal.emit(self.lastClickedFeedId)
         self.updateFeedCount(self.lastClickedFeedId)
 
     def generateFeedOrderString(self):
