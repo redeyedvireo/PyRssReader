@@ -18,6 +18,7 @@ from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 from utility import getResourceFilePixmap
+from preferences import Preferences
 
 from feed import kItemsOfInterestFeedId
 
@@ -46,6 +47,9 @@ kLastViewedFeedId = "lastviewedfeedid"
 kProxyHostname = "proxyhostname"
 kProxyPort = "proxyport"
 kProxyUserId = "proxyuserid"
+kGeneralPreferencesGroup = "preferences"
+kFeedUpdateInterval = "feedupdateinterval"
+kUpdateOnAppStart = "updateonappstart"
 
 # Image cache size (number of cache entries)
 kMaxCacheSize = 100
@@ -61,6 +65,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.db = Database()
         self.proxy = Proxy()
+        self.preferences = Preferences()
 
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
@@ -95,6 +100,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                                                 self.keyboardHandler, self.proxy)
         self.rssContentViewObj.reselectFeedItemSignal.connect(self.onReselectFeedItem)
 
+        self.feedUpdateTimer = QtCore.QTimer()
+        self.feedUpdateTimer.timeout.connect(self.onFeedUpdateTimerTimeout)
+        self.feedUpdateTimer.setInterval(60000)     # One-minute interval
+        self.minutesSinceLastFeedUpdate = 0         # Minutes since last update of feeds
+
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
@@ -124,6 +134,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if self.m_currentFeedId >= 0:
             self.onFeedSelected(self.m_currentFeedId)
             self.feedTreeObj.setCurrentFeed(self.m_currentFeedId)
+
+        self.resetFeedUpdateMinuteCount()
+        self.startFeedUpdateTimer()
+
+        if self.preferences.updateOnAppStart:
+            self.on_actionUpdate_Feeds_triggered()
 
     # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
@@ -194,6 +210,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.proxy.proxyUser = settingsObj.value(kProxyUserId, "")
         settingsObj.endGroup()
 
+        # General Preferences
+        settingsObj.beginGroup(kGeneralPreferencesGroup)
+        self.preferences.feedUpdateInterval = int(settingsObj.value(kFeedUpdateInterval, 30))
+        self.preferences.updateOnAppStart = settingsObj.value(kUpdateOnAppStart, False, type=bool)
+        settingsObj.endGroup()
+
     def saveSettings(self):
         """ Saves application settings. """
         settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
@@ -224,6 +246,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.setValue(kProxyHostname, self.proxy.proxyUrl)
         settingsObj.setValue(kProxyPort, self.proxy.proxyPort)
         settingsObj.setValue(kProxyUserId, self.proxy.proxyUser)
+        settingsObj.endGroup()
+
+        # General Preferences
+        settingsObj.beginGroup(kGeneralPreferencesGroup)
+        settingsObj.setValue(kFeedUpdateInterval, self.preferences.feedUpdateInterval)
+        settingsObj.setValue(kUpdateOnAppStart, self.preferences.updateOnAppStart)
         settingsObj.endGroup()
 
     def onFeedSelected(self, feedId):
@@ -271,8 +299,28 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         else:
             logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
+    def startFeedUpdateTimer(self):
+        self.feedUpdateTimer.start()
+
+    def stopFeedUpdateTimer(self):
+        self.feedUpdateTimer.stop()
+
+    def resetFeedUpdateMinuteCount(self):
+        self.minutesSinceLastFeedUpdate = 0
+
+    @QtCore.pyqtSlot()
+    def onFeedUpdateTimerTimeout(self):
+        """ Slot to handle the feed update timer. """
+        self.minutesSinceLastFeedUpdate += 1
+        if self.minutesSinceLastFeedUpdate >= self.preferences.feedUpdateInterval:
+            # Time to update feeds
+            self.on_actionUpdate_Feeds_triggered()
+
     @QtCore.pyqtSlot()
     def on_actionUpdate_Feeds_triggered(self):
+        self.stopFeedUpdateTimer()
+        self.resetFeedUpdateMinuteCount()
+
         self.feedIdsToUpdate = self.db.getFeedIds()
 
         self.updateNextFeed()
@@ -284,8 +332,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             feedIdToUpdate = self.feedIdsToUpdate.pop(0)
             self.feedUpdater.updateFeed(feedIdToUpdate, self.proxy)
         else:
+            self.feedTreeObj.updateAllFeedCounts()
             self.showStatusBarMessage("Updating complete.")
-
+            if not self.feedUpdateTimer.isActive():
+                # Only want to do this if the timer is not running.  If the timer is running, calling
+                # start() on it will restart it from 0.
+                self.startFeedUpdateTimer()
 
     @QtCore.pyqtSlot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
@@ -300,10 +352,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionPreferences_triggered(self):
-        prefsDialog = PrefsDialog(self, self.proxy)
+        prefsDialog = PrefsDialog(self, self.proxy, self.preferences)
         if prefsDialog.exec() == QtWidgets.QDialog.Accepted:
             self.proxy = prefsDialog.getProxySettings()
             self.rssContentViewObj.setProxy(self.proxy)
+            self.preferences = prefsDialog.getPreferences()
 
 
     @QtCore.pyqtSlot()
@@ -323,7 +376,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if purgeDlg.exec() == QtWidgets.QDialog.Accepted:
             priorDays = purgeDlg.getDays()
             purgeUnreadItems = purgeDlg.purgeUnreadItems()
-            
+
             self.feedPurger.purgeSingleFeed(feedId, priorDays, purgeUnreadItems)
 
     @QtCore.pyqtSlot(int)
@@ -369,6 +422,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
 
     def closeEvent(self, event):
+        self.stopFeedUpdateTimer()
         feedOrderString = self.feedTreeObj.generateFeedOrderString()
         self.db.setGlobalValue(kFeedOrderGlobalKey, feedOrderString)
         print("Closing database...")

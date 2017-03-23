@@ -3,4 +3,6 @@
 class Preferences:
     def __init__(self):
         # Initialize default preferences
-        pass
+        self.feedUpdateInterval = 30
+        self.updateOnAppStart = False
+

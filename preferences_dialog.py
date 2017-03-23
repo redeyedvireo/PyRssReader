@@ -3,10 +3,11 @@ from proxy import Proxy
 
 
 class PrefsDialog(QtWidgets.QDialog):
-    def __init__(self, parent, proxy):
+    def __init__(self, parent, proxy, preferences):
         super(PrefsDialog, self).__init__(parent)
         uic.loadUi('PrefsDlg.ui', self)
         self.proxy = proxy
+        self.preferences = preferences
 
         self.populate()
 
@@ -19,9 +20,20 @@ class PrefsDialog(QtWidgets.QDialog):
         self.proxyTypeCombo.setCurrentIndex(2)
         self.proxyTypeCombo.setEnabled(False)
 
+        # Feed updating
+        self.intervalSpin.setValue(self.preferences.feedUpdateInterval)
+        self.updateOnStartCheckbox.setChecked(self.preferences.updateOnAppStart)
+
     def getProxySettings(self):
         """ Returns a Proxy object containing settings from the dialog. """
         self.proxy.proxyUrl = self.proxyHostnameLineEdit.text()
         self.proxy.proxyPort = self.proxyPortSpinBox.value()
         self.proxy.proxyUser = self.proxyUserIdLineEdit.text()
         return self.proxy
+
+    def getPreferences(self):
+        """ Returns the feed update interval. """
+        self.preferences.feedUpdateInterval = self.intervalSpin.value()
+        self.preferences.updateOnAppStart = self.updateOnStartCheckbox.isChecked()
+        return self.preferences
+
