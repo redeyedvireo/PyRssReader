@@ -35,11 +35,11 @@ class FeedUpdater(QtCore.QObject):
 
     @QtCore.pyqtSlot(list)
     def onFeedUpdateDone(self, feedItemList):
-        self.db.updateFeedLastUpdatedField(self.feedId, datetime.date.today())
+        self.db.updateFeedLastUpdatedField(self.feedId, datetime.datetime.today())
 
         finalFeedItemList = []
         for feedItem in feedItemList:
-            if feedItem.m_publicationDatetime > self.lastUpdatedDate:
+            if feedItem.m_publicationDatetime >= self.lastUpdatedDate:
                 finalFeedItemList.append(feedItem)
 
         # Pass this on up to the main window

@@ -17,8 +17,7 @@ class FeedPurger(QtCore.QObject):
     def purgeAllFeeds(self, priorDays, purgeUnreadItems):
         feedList = self.db.getFeeds()
         numFeeds = len(feedList)
-        targetDate = datetime.date.today() + relativedelta(days=-priorDays)
-        print("Today: {}, target date: {}".format(datetime.date.today(), targetDate))
+        targetDate = self.calculateTargetDate(priorDays)
 
         if numFeeds == 0:
             return
@@ -46,8 +45,7 @@ class FeedPurger(QtCore.QObject):
         """ Purges a single feed. """
         feed = self.db.getFeed(feedId)
 
-        targetDate = datetime.date.today() + relativedelta(days=-priorDays)
-        print("Today: {}, target date: {}".format(datetime.date.today(), targetDate))
+        targetDate = self.calculateTargetDate(priorDays)
 
         self.db.deleteFeedItemsByDate(feedId, targetDate, purgeUnreadItems)
         self.db.updateFeedLastPurgedField(feedId, targetDate)
@@ -56,6 +54,12 @@ class FeedPurger(QtCore.QObject):
         self.removeDeletedItems()
         self.db.vacuumDatabase()
         self.messageSignal.emit("{} purged.".format(feed.m_feedTitle), 10000)
+
+    def calculateTargetDate(self, priorDays):
+        """ Helper function to compute the targetDate, before which, feeds should be purged. """
+        targetDate = datetime.datetime.today() + relativedelta(days=-priorDays)
+        print("Today: {}, target date: {}".format(datetime.datetime.today(), targetDate))
+        return targetDate
 
     def removeDeletedItems(self):
         """ Removes deleted items from the Items of Interest feed."""
