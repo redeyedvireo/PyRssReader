@@ -1,4 +1,4 @@
-import logging
+import logger
 from PyQt5 import QtCore, QtGui, QtWidgets
 from language_filter import LanguageFilter
 from prefetch_controller import PrefetchController

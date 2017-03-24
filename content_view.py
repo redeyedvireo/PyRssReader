@@ -1,4 +1,4 @@
-import logging
+import logger
 import webbrowser
 import re
 from bs4 import BeautifulSoup
@@ -91,7 +91,7 @@ class RssContentView(QtCore.QObject):
             newBody = self.m_completeHtmlDocument.format(strTitleLink, htmlBody)
             self.m_processedFeedContents = newBody
         else:
-            logging.info("setContents: Error - feed item contained complete HTML.  GUID: {}".format(feedItem.m_guid))
+            logger.gLogger.LogInfo("setContents: Error - feed item contained complete HTML.  GUID: {}".format(feedItem.m_guid))
             # TODO: Need to add the strTitleLink
             self.m_processedFeedContents = htmlBody
 
@@ -130,7 +130,7 @@ class RssContentView(QtCore.QObject):
                     fixOccurred = True
 
         if fixOccurred:
-            logging.info("A fix in the HTML occurred.  GUID: {}".format(self.currentFeedItem))
+            logger.gLogger.LogInfo("A fix in the HTML occurred.  GUID: {}".format(self.currentFeedItem))
 
         return soup.prettify()
 

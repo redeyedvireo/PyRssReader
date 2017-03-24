@@ -1,4 +1,6 @@
-import os, sys, datetime, logging
+import sys
+import os
+import logger
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
@@ -61,7 +63,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         super(PyRssReaderWindow, self).__init__()
         uic.loadUi('PyRssReaderWindow.ui', self)
 
-        logging.basicConfig(filename="RssReader.log", level=logging.INFO)
+        logDir = self.getLogDirectory()
+        logger.InitLogging(logDir)
 
         self.db = Database()
         self.proxy = Proxy()
@@ -166,6 +169,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                     return ""
 
             return databasePath
+
+    def getLogDirectory(self):
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        logDir = os.path.join(scriptDir, "Logs")
+        if not os.path.exists(logDir):
+            os.makedirs(logDir)
+        return logDir
 
     def loadSettings(self):
         """ Loads application settings. """
@@ -297,7 +307,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if feedId > 0:
             self.feedUpdater.updateFeed(feedId, self.proxy)
         else:
-            logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
+            logger.gLogger.LogError("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
     def startFeedUpdateTimer(self):
         self.feedUpdateTimer.start()
@@ -428,6 +438,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("Closing database...")
         self.db.close()
         self.saveSettings()
+        logger.CloseLogging()
 
 # ---------------------------------------------------------------
 if __name__ == "__main__":

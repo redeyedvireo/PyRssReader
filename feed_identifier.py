@@ -1,4 +1,4 @@
-import logging
+import logger
 import datetime
 from lxml import etree
 from resource_fetcher import ResourceFetcher
@@ -26,7 +26,7 @@ class FeedIdentifier:
         except Exception as inst:
             errMsg = "parseFeed: Exception when parsing feed item text: {}: {}".format(feedText, inst)
             print(errMsg)
-            logging.error(errMsg)
+            logger.gLogger.LogError(errMsg)
             return self.feed
 
         channel = root.find('channel')

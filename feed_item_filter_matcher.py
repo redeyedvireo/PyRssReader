@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from bs4 import BeautifulSoup
 import re
-import logging
+import logger
 from feed_item_filter import FeedItemFilter
 from database import Database
 
@@ -69,7 +69,7 @@ class FeedItemFilterMatcher:
             feedText = ",".join(feedItem.m_categories)
         else:
             # Unknown filter
-            logging.error("Unknown feed item filter field ID: {}".format(filterItem.m_fieldId))
+            logger.gLogger.LogError("Unknown feed item filter field ID: {}".format(filterItem.m_fieldId))
             return False
 
         # See if the feed item is "matched" (or "selected")
