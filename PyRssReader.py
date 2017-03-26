@@ -1,6 +1,6 @@
 import sys
 import os
-import logger
+import logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from database import Database
@@ -28,6 +28,7 @@ from feed import kItemsOfInterestFeedId
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
 kAppNameForSettings = "PyRssReader" # Used for saving settings
+kLogFile = 'RssReader.log'
 
 kFeedOrderGlobalKey = "feed-order"
 
@@ -63,8 +64,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         super(PyRssReaderWindow, self).__init__()
         uic.loadUi('PyRssReaderWindow.ui', self)
 
-        logDir = self.getLogDirectory()
-        logger.InitLogging(logDir)
+        logging.basicConfig(filename=kLogFile, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
         self.db = Database()
         self.proxy = Proxy()
@@ -170,12 +170,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             return databasePath
 
-    def getLogDirectory(self):
-        scriptDir = os.path.dirname(os.path.realpath(__file__))
-        logDir = os.path.join(scriptDir, "Logs")
-        if not os.path.exists(logDir):
-            os.makedirs(logDir)
-        return logDir
 
     def loadSettings(self):
         """ Loads application settings. """
@@ -307,7 +301,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if feedId > 0:
             self.feedUpdater.updateFeed(feedId, self.proxy)
         else:
-            logger.gLogger.LogError("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
+            logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
 
     def startFeedUpdateTimer(self):
         self.feedUpdateTimer.start()
@@ -438,7 +432,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         print("Closing database...")
         self.db.close()
         self.saveSettings()
-        logger.CloseLogging()
 
 # ---------------------------------------------------------------
 if __name__ == "__main__":

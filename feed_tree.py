@@ -1,4 +1,4 @@
-import logger
+import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 from feed import Feed
 from utility import getResourceFilePixmap
@@ -69,7 +69,7 @@ class FeedTree(QtCore.QObject):
 
     def addFeeds(self, feedList, feedOrderList):
         if len(feedList) != len(feedOrderList):
-            logger.gLogger.LogError("FeedTree: number of feeds does not equal the length of the feed order list.")
+            logging.error("FeedTree: number of feeds does not equal the length of the feed order list.")
         self.feedTree.currentItemChanged.disconnect(self.onItemActivated)
         ioiFeed = self.createItemsOfInterestFeed()
         self.addFeedToTopLevel(ioiFeed)
@@ -79,7 +79,7 @@ class FeedTree(QtCore.QObject):
             if feed is not None:
                 self.addFeedToTopLevel(feed)
             else:
-                logger.gLogger.LogError("FeedTree: unknown feed ID in feed order list: {}".format(feedId))
+                logging.error("FeedTree: unknown feed ID in feed order list: {}".format(feedId))
 
         self.updateAllFeedCounts()
         self.feedTree.currentItemChanged.connect(self.onItemActivated)
@@ -185,7 +185,7 @@ class FeedTree(QtCore.QObject):
         feedId = current.data(0, QtCore.Qt.UserRole)
         self.lastClickedFeedId = feedId
         print("Item clicked: {}, feed ID: {}".format(current.text(0), feedId))
-        #logger.gLogger.LogInfo("Item clicked: {}".format(item.text(column)))
+        #logging.info("Item clicked: {}".format(item.text(column)))
         self.feedSelectedSignal.emit(feedId)
 
     def onContextMenu(self, pos):

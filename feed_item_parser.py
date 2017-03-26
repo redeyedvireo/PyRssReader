@@ -1,4 +1,4 @@
-import logger
+import logging
 from lxml import etree
 from lxml.etree import fromstring
 import dateutil.parser
@@ -33,7 +33,7 @@ def parseFeed(feedItemRawText):
     except Exception as inst:
         errMsg = "parseFeed: Exception when parsing feed item text: {}: {}".format(rawText, inst)
         print(errMsg)
-        logger.gLogger.LogError(errMsg)
+        logging.error(errMsg)
         return []
 
     # Debug saved parsed feed to disk
@@ -120,7 +120,7 @@ def getLink(item):
                     if len(value) > 0:
                         return value
 
-    logger.gLogger.LogError("Can't find link element in {}".format(str(item)))
+    logging.error("Can't find link element in {}".format(str(item)))
     return ""
 
 def getCategories(item):

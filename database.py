@@ -1,4 +1,4 @@
-import logger
+import logging
 from PyQt5 import QtCore, QtSql
 from pathlib import Path
 from exceptions import DbError
@@ -33,17 +33,17 @@ class Database:
                 #       Note: when creating the language filter database, add some hard-coded words
                 errMsg = "Database {} does not exist.".format(pathName)
                 print(errMsg)
-                logger.gLogger.LogInfo(errMsg)
+                logging.info(errMsg)
         else:
             print("Error: could not open database.")
-            logger.gLogger.LogError("Could not open database")
+            logging.error("Could not open database")
 
     def close(self):
         if self.db is not None:
             self.db.close()
 
     def reportError(self, errorMessage):
-        logger.gLogger.LogError(errorMessage)
+        logging.error(errorMessage)
         print(errorMessage)
 
         # TODO: Decide if throwing an error is the right thing to do.

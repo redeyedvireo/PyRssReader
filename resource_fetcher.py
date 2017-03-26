@@ -1,4 +1,4 @@
-import logger
+import logging
 from urllib import request
 from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
 from PyQt5 import QtGui, QtCore
@@ -30,18 +30,18 @@ class ResourceFetcher:
                 errMsg = "Unknown URL Exception."
 
             print(errMsg)
-            logger.gLogger.LogError(errMsg)
+            logging.error(errMsg)
 
             self.data = self.createNullImage()
         except ValueError as e:
             errMsg = "ValueError exception when fetching image: {}: {}".format(url, e)
             print(errMsg)
-            logger.gLogger.LogError(errMsg)
+            logging.error(errMsg)
             self.data = self.createNullImage()
         except Exception as inst:
             errMsg = "Exception when fetching {}: {}".format(url, inst)
             print(errMsg)
-            logger.gLogger.LogError(errMsg)
+            logging.error(errMsg)
             self.data = self.createNullImage()
 
     def getData(self):
