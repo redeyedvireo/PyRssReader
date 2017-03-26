@@ -99,9 +99,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
-        self.rssContentViewObj = RssContentView(self.rssContentView, self.languageFilter, self.adFilter, self.imageCache,
+        self.rssContentViewObj = RssContentView(self, self.languageFilter, self.adFilter, self.imageCache,
                                                 self.keyboardHandler, self.proxy)
+        self.addRssContentViewToLayout()
         self.rssContentViewObj.reselectFeedItemSignal.connect(self.onReselectFeedItem)
+        self.rssContentViewObj.urlHovered.connect(self.showStatusBarMessage)
 
         self.feedUpdateTimer = QtCore.QTimer()
         self.feedUpdateTimer.timeout.connect(self.onFeedUpdateTimerTimeout)
@@ -257,6 +259,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.setValue(kFeedUpdateInterval, self.preferences.feedUpdateInterval)
         settingsObj.setValue(kUpdateOnAppStart, self.preferences.updateOnAppStart)
         settingsObj.endGroup()
+
+    def addRssContentViewToLayout(self):
+        self.vertSplitter.addWidget(self.rssContentViewObj)
 
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))

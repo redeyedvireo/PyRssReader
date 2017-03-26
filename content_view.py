@@ -8,13 +8,18 @@ from image_fetch_thread import ImageFetchThread
 from utility import getResourceFileText, getResourceFilePixmap
 
 
-class RssContentView(QtCore.QObject):
+WEBURLTAG = "http://"
+WEBURLTAGS = "https://"
+
+
+class RssContentView(QtWidgets.QTextBrowser):
     # Emitted when the current feed item should be re-selected.  This is usually due to the language filter
     # being changed, which requires the current feed item to be re-read, and re-filtered.
     reselectFeedItemSignal = QtCore.pyqtSignal()
+    urlHovered = QtCore.pyqtSignal(str, int)
 
-    def __init__(self, textBrowser, languageFilter, adFilter, imageCache, keyboardHandler, proxy):
-        super(RssContentView, self).__init__()
+    def __init__(self, parent, languageFilter, adFilter, imageCache, keyboardHandler, proxy):
+        super(RssContentView, self).__init__(parent)
 
         self.languageFilter = languageFilter
         self.adFilter = adFilter
@@ -28,15 +33,16 @@ class RssContentView(QtCore.QObject):
         self.dummyImage = QtGui.QPixmap()
         self.imageList = []
         self.currentFeedItem = None
+        self.cursorOverLink = False     # Indicates if the cursor is over a link.  Used to prevent multiple urlHovered
+                                        # signals from being emitted as the cursor moves over a URL.
 
-        self.textBrowser = textBrowser
-        self.textBrowser.setMouseTracking(True)
-        self.textBrowser.setOpenLinks(False)
-        self.textBrowser.installEventFilter(self)
-        self.textBrowser.anchorClicked.connect(self.linkClicked)
+        self.setMouseTracking(True)
+        self.setOpenLinks(False)
+        self.installEventFilter(self)
+        self.anchorClicked.connect(self.linkClicked)
 
-        self.textBrowser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.textBrowser.customContextMenuRequested.connect(self.onContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.onContextMenu)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -50,27 +56,48 @@ class RssContentView(QtCore.QObject):
         self.m_feedHeaderHtml = self.m_feedHeaderHtml.replace("\r", "").replace("\n", "")
         self.m_completeHtmlDocument = self.m_completeHtmlDocument.replace("\r", "").replace("\n", "")
 
-        doc = self.textBrowser.document().setDefaultStyleSheet(self.m_css)
+        doc = self.document().setDefaultStyleSheet(self.m_css)
 
         self.dummyImage = QtGui.QPixmap(10, 10)
         self.dummyImage.fill()      # Fill it with white
         self.starImageForDebugging = getResourceFilePixmap("star.png")
 
-    # TODO: Implement this: when mouse over a URL, emit a urlHovered signal
     def eventFilter(self, obj, event):
-        if obj == self.textBrowser:
-            #print("Event type: {}".format(event.type()))
-            #if isinstance(event, QtGui.QMouseEvent):
-            if event.type() == QtCore.QEvent.MouseMove:
-                #print("pos: {}".format(event.pos()))
-                #linkStr = PointOverLink(ev->pos())
-                return False
-            elif event.type() == QtCore.QEvent.KeyRelease:
+        if obj == self:
+            if event.type() == QtCore.QEvent.KeyRelease:
                 keyCode = event.key()
                 self.keyboardHandler.handleKey(keyCode)
                 return False
 
-        return QtWidgets.QTextBrowser.eventFilter(self.textBrowser, obj, event)
+        return QtWidgets.QTextBrowser.eventFilter(self, obj, event)
+
+    def urlAtPoint(self, point):
+        """ If the point is over a URL link, that link is returned.  Otherwise, None is returned. """
+        linkAtCursor = self.anchorAt(point)
+        linkStr = None
+
+        if linkAtCursor:
+            if linkAtCursor.startswith(WEBURLTAG) or linkAtCursor.startswith(WEBURLTAGS):
+                possibleUrl = QtCore.QUrl(linkAtCursor)
+
+                if possibleUrl.isValid():
+                    linkStr = linkAtCursor
+
+        return linkStr
+
+    def mouseMoveEvent(self, event):
+        QtWidgets.QTextBrowser.mouseMoveEvent(self, event)
+        urlLink = self.urlAtPoint(event.pos())
+        if urlLink is not None:
+            if not self.cursorOverLink:
+                # The cursor has just moved over a link
+                self.cursorOverLink = True
+                self.urlHovered.emit(urlLink, 0)
+        else:
+            if self.cursorOverLink:
+                # The cursor was formerly over a link, and now is not.
+                self.cursorOverLink = False
+                self.urlHovered.emit("", 0)    # Blank out the link
 
     def setProxy(self, proxy):
         self.proxy = proxy
@@ -107,13 +134,13 @@ class RssContentView(QtCore.QObject):
         self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
         self.m_processedFeedContents = self.fixHtml(self.m_processedFeedContents)
 
-        self.textBrowser.setHtml(self.m_processedFeedContents)
+        self.setHtml(self.m_processedFeedContents)
 
         # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
         #self.fixDocument()
 
         # Set focus onto the content view, so that arrow keys will scroll the content view
-        self.textBrowser.setFocus()
+        self.setFocus()
 
     def fixHtml(self, htmlText):
         """ Attempts to fix various readability issues caused by incompatible formatting contained in the
@@ -137,7 +164,7 @@ class RssContentView(QtCore.QObject):
     def fixDocument(self):
         """ Attempts to fix various readability issues caused by incompatible formatting contained in the
             feed item text. """
-        # currentBlock = self.textBrowser.document().begin()
+        # currentBlock = self.document().begin()
         # while currentBlock.isValid():
         #     blockFormat = currentBlock.blockFormat()
         #     currentLineHeight = blockFormat.lineHeight()
@@ -146,10 +173,10 @@ class RssContentView(QtCore.QObject):
         #     currentBlock = currentBlock.next()
 
         # Select entire document
-        selectionCursor = self.textBrowser.textCursor()
+        selectionCursor = self.textCursor()
         selectionCursor.select(QtGui.QTextCursor.Document)
 
-        selectionFormat = self.textBrowser.textCursor().blockFormat()
+        selectionFormat = self.textCursor().blockFormat()
         selectionFormat.setLineHeight(0.0, QtGui.QTextBlockFormat.SingleHeight)
         selectionCursor.setBlockFormat(selectionFormat)
 
@@ -158,7 +185,7 @@ class RssContentView(QtCore.QObject):
         """ Sets all embedded images to a dummy image, so that the document will be ready to view quickly.
             The actual images will be downloaded in a thread, so the user can start reading the document
             while the images download. """
-        document = self.textBrowser.document()
+        document = self.document()
         for imgUrl in self.imageList:
             if self.imageCache.contains(imgUrl):
                 # Note that images that are found in the image cache are added to the resources here
@@ -168,11 +195,11 @@ class RssContentView(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def changeImages(self):
-        document = self.textBrowser.document()
+        document = self.document()
         for imgUrl in self.imageList:
             document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.starImageForDebugging)
-        self.textBrowser.reload()
-        self.textBrowser.repaint()
+        self.reload()
+        self.repaint()
 
     @QtCore.pyqtSlot()
     def fetchImages(self):
@@ -189,7 +216,7 @@ class RssContentView(QtCore.QObject):
 
     def onImageFetchDone(self, imageList):
         """ Called when image fetching from the thread has finished. """
-        document = self.textBrowser.document()
+        document = self.document()
         for imageTuple in imageList:
             url = imageTuple[0]
             pixmap = imageTuple[1]
@@ -198,7 +225,7 @@ class RssContentView(QtCore.QObject):
             # Add to the image cache
             self.imageCache.addImage(url, pixmap)
 
-        self.textBrowser.setHtml(self.m_processedFeedContents)
+        self.setHtml(self.m_processedFeedContents)
 
     def linkClicked(self, url):
         webbrowser.open(url.toString())
@@ -206,10 +233,10 @@ class RssContentView(QtCore.QObject):
     @QtCore.pyqtSlot('QPoint')
     def onContextMenu(self, point):
         print("Context menu requested")
-        menu = self.textBrowser.createStandardContextMenu()
+        menu = self.createStandardContextMenu()
         menu.addSeparator()
 
-        selText = self.textBrowser.textCursor().selectedText()
+        selText = self.textCursor().selectedText()
         if len(selText) > 0:
             menu.addAction("Add {} to language filter".format(selText), self.onAddToFilter)
             menu.addAction("Search for {} in Google".format(selText), self.onSearchGoogle)
@@ -221,24 +248,24 @@ class RssContentView(QtCore.QObject):
         menu.addAction("Copy raw feed item source to clipboard", self.onCopyRawFeedItemSource)
         menu.addAction("Rerun language filter", self.runLanguageFilter)
 
-        menu.exec(self.textBrowser.mapToGlobal(point))
+        menu.exec(self.mapToGlobal(point))
 
     def onAddToFilter(self):
-        selText = self.textBrowser.textCursor().selectedText()
+        selText = self.textCursor().selectedText()
 
         if selText:
             self.languageFilter.addFilterWord(selText)
             self.reselectFeedItemSignal.emit()
 
     def onSearchGoogle(self):
-        selText = self.textBrowser.textCursor().selectedText()
+        selText = self.textCursor().selectedText()
 
         if selText:
             urlStr = "http://www.google.com/search?q={}".format(selText.strip().replace(" ", "+"))
             QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr))
 
     def onSearchWikipedia(self):
-        selText = self.textBrowser.textCursor().selectedText()
+        selText = self.textCursor().selectedText()
 
         if selText:
             urlStr = "http://en.wikipedia.org/wiki/{}".format(selText.strip().replace(" ", "_"))
@@ -246,7 +273,7 @@ class RssContentView(QtCore.QObject):
 
     def onCopyWebSource(self):
         clipboard = QtWidgets.QApplication.clipboard()
-        clipboard.setText(self.textBrowser.toHtml())
+        clipboard.setText(self.toHtml())
 
     def onCopyRawFeedItemSource(self):
         clipboard = QtWidgets.QApplication.clipboard()
