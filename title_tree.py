@@ -29,6 +29,7 @@ class TitleTree(QtCore.QObject):
         self.imagePrefetcher = imagePrefetcher
         self.sortColumn = kDateColumn
         self.feedItemGuid = ""
+        self.feed = None
         self.sortOrder = QtCore.Qt.DescendingOrder
         self.configureTree()
         self.titleTreeView.header().sortIndicatorChanged.connect(self.onSortIndicatorChanged)
@@ -156,12 +157,13 @@ class TitleTree(QtCore.QObject):
             sizeHint.setHeight(kRowHeight)
             item.setSizeHint(sizeHint)
 
-    def addFeedItems(self, feedItemList, sameFeed=False):
+    def addFeedItems(self, feedItemList, feed, sameFeed=False):
         """ Removes existing feed items from the tree, if any, and adds the given feed item list.
             If sameFeed is True, the feed items are from the same feed as the tree was already
             displaying.  In that case, an attempt is made to keep the same feed item selected. """
         self.disableUserActions()
 
+        self.feed = feed
         numRows = self.model.rowCount()
         if numRows > 0:
             self.model.removeRows(0, numRows)
@@ -229,7 +231,7 @@ class TitleTree(QtCore.QObject):
             feedId = self.getFeedIdForRow(row)
             guid = self.getGuidForRow(row)
             fetchList.append( (feedId, guid) )
-        self.imagePrefetcher.prefetchImages(fetchList)
+        self.imagePrefetcher.prefetchImages(fetchList, self.feed)
 
     def GetColumnWidths(self):
         """ Returns the widths of all columns """

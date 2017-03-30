@@ -266,6 +266,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
         self.m_currentFeedId = feedId
+        self.currentFeed = self.db.getFeed(feedId)
         if self.m_currentFeedId != kItemsOfInterestFeedId:
             feed = self.db.getFeed(feedId)
             self.feedNameLabel.setText(feed.m_feedName)
@@ -283,18 +284,18 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 feedItem = self.db.getFeedItem(ioiTuple[1], ioiTuple[0])
                 feedItemList.append(feedItem)
 
-            self.titleTreeObj.addFeedItems(feedItemList, False)
+            self.titleTreeObj.addFeedItems(feedItemList, self.currentFeed, False)
 
     def populateFeedItemView(self, feedId, sameFeed=False):
         feedItemList = self.db.getFeedItems(feedId)
-        self.titleTreeObj.addFeedItems(feedItemList, sameFeed)
+        self.titleTreeObj.addFeedItems(feedItemList, self.currentFeed, sameFeed)
 
     def onFeedItemSelected(self, feedId, feedItemGuid):
         print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
         feedItem = self.db.getFeedItem(feedItemGuid, feedId)
         self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
         self.feedTreeObj.updateFeedCount(feedId)
-        self.rssContentViewObj.setContents(feedItem)
+        self.rssContentViewObj.setContents(feedItem, self.currentFeed)
 
     @QtCore.pyqtSlot()
     def onReselectFeedItem(self):

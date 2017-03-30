@@ -20,6 +20,11 @@ class FeedItem:
         self.m_enclosureType = ""       # MIME type of enclosure (for ex.: "media/mpeg")
 
         self.m_parentFeedId = -1        # Feed ID that owns this feed item
+        self.m_feedWebPageLink = ""     # URL of the feed item's web page.  This is not part of the feed item's XML,
+                                        # but is taken from the feed.
+                                        # TODO: This field will eventually be filled in by the feed item parser.  However,
+                                        #       it will be necessary to modify the database structure to include this item,
+                                        #       which means it will be necessary to add the database version update code.
 
         self.m_bRead = False            # True if feed item has been read
 

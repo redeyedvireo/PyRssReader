@@ -12,12 +12,12 @@ class ImagePrefetcher(QtCore.QObject):
         self.proxy = proxy
         self.imageCache = imageCache
 
-    def prefetchImages(self, feedItemList):
+    def prefetchImages(self, feedItemList, feed):
         """ Prefetches images from the given feed items.  feedItemList is a list of tuples of the
             form: (feedId, guid). """
         feedItems = self.db.getFeedItemsFromList(feedItemList)
 
-        self.imagePrefetchThread = ImagePrefetchThread(feedItems, self.proxy)
+        self.imagePrefetchThread = ImagePrefetchThread(feedItems, feed, self.proxy)
         self.imagePrefetchThread.imageReadySignal.connect(self.onImagePrefetched)
         self.imagePrefetchThread.start()
 

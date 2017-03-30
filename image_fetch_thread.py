@@ -6,17 +6,26 @@ class ImageFetchThread(QtCore.QThread):
     # consisting of tuples of the form: (url, pixmap).
     imageFetchDoneSignal = QtCore.pyqtSignal(list)
 
-    def __init__(self, urlList, proxy):
+    def __init__(self, urlList, feed, proxy):
         super(ImageFetchThread, self).__init__()
         self.urlList = urlList
+        self.feed = feed
         self.proxy = proxy
         self.outputList = []
 
 
     def run(self):
         for url in self.urlList:
-            resourceFetcher = ResourceFetcher(url, self.proxy)
+            imageUrl = url
+            if not url.startswith("http"):
+                imageUrl = "{}{}".format(self.feed.m_feedWebPageLink, url)
+
+            resourceFetcher = ResourceFetcher(imageUrl, self.proxy)
             pixmap = resourceFetcher.getDataAsPixmap()
+
+            # Note: if the feed's web page link needed to be added, the original url (without the web page link)
+            # is what will be used as the key in the image cache, since the HTML will contain only the urls
+            # without the web page link prepended.
             self.outputList.append( (url, pixmap) )
 
         self.imageFetchDoneSignal.emit(self.outputList)

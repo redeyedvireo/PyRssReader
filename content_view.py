@@ -33,6 +33,7 @@ class RssContentView(QtWidgets.QTextBrowser):
         self.dummyImage = QtGui.QPixmap()
         self.imageList = []
         self.currentFeedItem = None
+        self.currentFeed = None
         self.cursorOverLink = False     # Indicates if the cursor is over a link.  Used to prevent multiple urlHovered
                                         # signals from being emitted as the cursor moves over a URL.
 
@@ -102,9 +103,10 @@ class RssContentView(QtWidgets.QTextBrowser):
     def setProxy(self, proxy):
         self.proxy = proxy
 
-    def setContents(self, feedItem):
+    def setContents(self, feedItem, feed):
         """ Sets a feed item's HTML into the text browser. """
         self.currentFeedItem = feedItem
+        self.currentFeed = feed
 
         # Title
         filteredTitle = self.languageFilter.filterString(feedItem.m_title)
@@ -205,12 +207,12 @@ class RssContentView(QtWidgets.QTextBrowser):
     def fetchImages(self):
         """ Fetches all images. """
         imageFetchList = []
-        for image in self.imageList:
-            if not self.imageCache.contains(image):
-                print("The image cache did not contain: {}".format(image))
-                imageFetchList.append(image)
+        for imageUrl in self.imageList:
+            if not self.imageCache.contains(imageUrl):
+                print("The image cache did not contain: {}".format(imageUrl))
+                imageFetchList.append(imageUrl)
 
-        self.imageFetchThread = ImageFetchThread(imageFetchList, self.proxy)
+        self.imageFetchThread = ImageFetchThread(imageFetchList, self.currentFeed, self.proxy)
         self.imageFetchThread.imageFetchDoneSignal.connect(self.onImageFetchDone)
         self.imageFetchThread.start()
 
