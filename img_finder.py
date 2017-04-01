@@ -12,7 +12,9 @@ class ImgFinder:
 
         imageTags = self.soup.find_all('img')
         for tag in imageTags:
-            self.imgList.append(tag.get('src'))
+            imageSource = tag.get('src')
+            if imageSource is not None:
+                self.imgList.append(imageSource)
 
     def hasImages(self):
         return len(self.imgList) > 0
