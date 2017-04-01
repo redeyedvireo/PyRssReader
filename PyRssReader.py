@@ -1,5 +1,4 @@
 import sys
-import os
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
@@ -21,6 +20,7 @@ from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 from utility import getResourceFilePixmap
 from preferences import Preferences
+from filter_manager_dialog import FilterManagerDialog
 
 from feed import kItemsOfInterestFeedId
 
@@ -417,6 +417,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 # Fetch feed items
                 self.onFeedUpdateRequested(feedId)
 
+    @QtCore.pyqtSlot()
+    def on_actionCreate_Global_Filter_triggered(self):
+        dlg = FilterManagerDialog(self, self.db)
+        dlg.exec()
 
     @QtCore.pyqtSlot(int, bool)
     def onSetFeedReadState(self, feedId, readState):

@@ -1019,3 +1019,94 @@ class Database:
             allFilters.append(feedItemFilter)
 
         return allFilters
+
+    def addFeedItemFilter(self, filter):
+        """ Adds a feed item filter. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "insert into feeditemfilters "
+        queryStr += "(feedid, field, verb, querystring, action) "
+        queryStr += "values (?, ?, ?, ?, ?)"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(filter.m_feedId)
+        queryObj.addBindValue(filter.m_fieldId)
+        queryObj.addBindValue(filter.m_verb)
+        queryObj.addBindValue(filter.m_queryStr)
+        queryObj.addBindValue(filter.m_action)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to add a feed item filter: {}".format(sqlErr.text()))
+
+    def deleteFeedItemFilter(self, filterId):
+        """ Deletes a filter. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "delete from feeditemfilters where filterid=?"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(filterId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete a feed item filter: {}".format(sqlErr.text()))
+
+    def updateFeedItemFilter(self, filter):
+        """ Updates all fields of a filter. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "update feeditemfilters set "
+        queryStr += "feedid=?, field=?, verb=?, querystring=?, action=? "
+        queryStr += "where filterid=?"
+
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(filter.m_feedId)
+        queryObj.addBindValue(filter.m_fieldId)
+        queryObj.addBindValue(filter.m_verb)
+        queryObj.addBindValue(filter.m_queryStr)
+        queryObj.addBindValue(filter.m_action)
+        queryObj.addBindValue(filter.m_filterId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to update a feed item filter: {}".format(sqlErr.text()))
+
+    def addFeedItemFilters(self, filterList):
+        """ Adds the filters in filterList. """
+        self.beginTransaction()
+
+        for filter in filterList:
+            self.addFeedItemFilter(filter)
+
+        self.endTransaction()
+
+    def updateFeedItemFilters(self, filterList):
+        """ Updates the filters in filterIdList. """
+        self.beginTransaction()
+
+        for filter in filterList:
+            self.updateFeedItemFilter(filter)
+
+        self.endTransaction()
+
+    def deleteFeedItemFilters(self, filterIdList):
+        """ Deletes filters whose IDs are contained in filterItemList. """
+        self.beginTransaction()
+
+        for filterId in filterIdList:
+            self.deleteFeedItemFilter(filterId)
+
+        self.endTransaction()

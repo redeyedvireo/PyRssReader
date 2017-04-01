@@ -2,29 +2,12 @@ from enum import Enum, auto
 from bs4 import BeautifulSoup
 import re
 import logging
+from feed_item_filter import FilterField
+from feed_item_filter import FilterQuery
+from feed_item_filter import FilterAction
+
 from feed_item_filter import FeedItemFilter
 from database import Database
-
-class FilterField(Enum):
-    eFieldNone = 0
-    eFieldTitle = auto()
-    eFieldAuthor = auto()
-    eFieldDescription = auto()
-    eFieldCategories = auto()
-
-class FilterAction(Enum):
-    eActionDoNothing = 0
-    eActionCopyToInterestFeed = auto()   # Copy feed item to the "Items of Interest" feed
-    eActionMarkAsRead = auto()
-    eActionDeleteFeedItem = auto()
-
-# This is also known as the "verb"
-class FilterQuery(Enum):
-    eQueryIgnore = 0
-    eQueryContains = auto()
-    eQueryDoesNotContain = auto()
-    eQueryEquals = auto()
-    eQueryRegularExpressionMatch = auto()   # Use a regular expression for the query string
 
 
 class FeedItemFilterMatcher:
