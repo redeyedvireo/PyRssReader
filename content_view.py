@@ -258,6 +258,8 @@ class RssContentView(QtWidgets.QTextBrowser):
         if selText:
             self.languageFilter.addFilterWord(selText)
             self.reselectFeedItemSignal.emit()
+            # TODO: I think the entire feed should be reselected, so that the title tree gets reloaded.  But, must
+            #       ensure that this feed item also is reselected, to ensure continuity of experience for the user.
 
     def onSearchGoogle(self):
         selText = self.textCursor().selectedText()

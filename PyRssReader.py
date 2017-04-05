@@ -21,6 +21,7 @@ from proxy import Proxy
 from utility import getResourceFilePixmap
 from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
+from language_filter_dialog import LanguageFilterDialog
 
 from feed import kItemsOfInterestFeedId
 
@@ -421,6 +422,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def on_actionCreate_Global_Filter_triggered(self):
         dlg = FilterManagerDialog(self, self.db)
         dlg.exec()
+
+    @QtCore.pyqtSlot()
+    def on_actionEdit_Language_Filter_triggered(self):
+        dlg = LanguageFilterDialog(self, self.db)
+        if dlg.exec() == QtWidgets.QDialog.Accepted:
+            self.languageFilter.initialize()
+            # Reselecting the feed will repopulate title tree and content view.
+            self.onFeedSelected(self.m_currentFeedId)
 
     @QtCore.pyqtSlot(int, bool)
     def onSetFeedReadState(self, feedId, readState):

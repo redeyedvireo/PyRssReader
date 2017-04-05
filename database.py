@@ -964,6 +964,39 @@ class Database:
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to add a new filtered word: {}".format(sqlErr.text()))
 
+    def deleteFilteredWord(self, word):
+        """ Deletes a word from the language filter table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "delete from filteredwords where word=?"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(word)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete a filtered word: {}".format(sqlErr.text()))
+
+    def addFilteredWords(self, wordList):
+        """ Adds multiple filtered words to the database. """
+        self.beginTransaction()
+
+        for word in wordList:
+            self.addFilteredWord(word)
+
+        self.endTransaction()
+
+    def deleteFilteredWords(self, wordList):
+        """ Deletes multiple filtered words from the database. """
+        self.beginTransaction()
+
+        for word in wordList:
+            self.deleteFilteredWord(word)
+
+        self.endTransaction()
+
     def getAdFilters(self):
         """ Reads the URLS/domains for filtering ads, and returns them as a list. """
         queryObj = QtSql.QSqlQuery(self.db)
