@@ -1022,6 +1022,54 @@ class Database:
 
         return allFilters
 
+    def addAdFilter(self, word):
+        """ Adds an ad filter word to the database. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "insert into adfilters (word) values (?)"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(word)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to add a new ad filter word: {}".format(sqlErr.text()))
+
+    def deleteAdFilter(self, word):
+        """ Deletes an ad filter word from the database. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        queryStr = "delete from adfilters where word=?"
+        queryObj.prepare(queryStr)
+        queryObj.addBindValue(word)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete an ad filter word: {}".format(sqlErr.text()))
+
+    def addAdFilters(self, wordList):
+        """ Adds a list of words to the ad filter in the database. """
+        self.beginTransaction()
+
+        for word in wordList:
+            self.addAdFilter(word)
+
+        self.endTransaction()
+
+    def deleteAdFilters(self, wordList):
+        """ Deletes multiple words from the ad filter in the database. """
+        self.beginTransaction()
+
+        for word in wordList:
+            self.deleteAdFilter(word)
+
+        self.endTransaction()
+
     def getFeedItemFilters(self):
         """ Returns a list of all the global feed item filters. """
         queryObj = QtSql.QSqlQuery(self.db)

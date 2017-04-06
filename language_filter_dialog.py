@@ -19,6 +19,7 @@ class LanguageFilterDialog(QtWidgets.QDialog):
         for word in self.filteredWords:
             self.listWidget.addItem(word)
 
+    @QtCore.pyqtSlot()
     def onAccepted(self):
         self.db.deleteFilteredWords(self.removedFilteredWords)
         self.db.addFilteredWords(self.newFilteredWords)
@@ -30,7 +31,7 @@ class LanguageFilterDialog(QtWidgets.QDialog):
         newWord = self.addWordEdit.text()
         self.addWordEdit.clear()
 
-        # Make sure it does not aleady exist, and has not been already added in this session
+        # Make sure it does not already exist, and has not already been added in this session
         if newWord not in self.filteredWords and newWord not in self.newFilteredWords:
             self.newFilteredWords.append(newWord)
             self.listWidget.addItem(newWord)

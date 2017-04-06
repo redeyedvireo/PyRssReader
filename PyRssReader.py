@@ -22,6 +22,7 @@ from utility import getResourceFilePixmap
 from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
+from ad_filter_dialog import AdFilterDialog
 
 from feed import kItemsOfInterestFeedId
 
@@ -428,6 +429,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         dlg = LanguageFilterDialog(self, self.db)
         if dlg.exec() == QtWidgets.QDialog.Accepted:
             self.languageFilter.initialize()
+            # Reselecting the feed will repopulate title tree and content view.
+            self.onFeedSelected(self.m_currentFeedId)
+
+    @QtCore.pyqtSlot()
+    def on_actionEdit_Ad_Filter_triggered(self):
+        dlg = AdFilterDialog(self, self.db)
+        if dlg.exec() == QtWidgets.QDialog.Accepted:
             # Reselecting the feed will repopulate title tree and content view.
             self.onFeedSelected(self.m_currentFeedId)
 
