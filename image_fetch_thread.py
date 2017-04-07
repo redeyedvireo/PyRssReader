@@ -18,7 +18,11 @@ class ImageFetchThread(QtCore.QThread):
         for url in self.urlList:
             imageUrl = url
             if not url.startswith("http"):
-                imageUrl = "{}{}".format(self.feed.m_feedWebPageLink, url)
+                if url.startswith("//"):
+                    # In this case, we just need to add "https:"
+                    imageUrl = "https:{}".format(url)
+                else:
+                    imageUrl = "{}{}".format(self.feed.m_feedWebPageLink, url)
 
             resourceFetcher = ResourceFetcher(imageUrl, self.proxy)
             pixmap = resourceFetcher.getDataAsPixmap()
