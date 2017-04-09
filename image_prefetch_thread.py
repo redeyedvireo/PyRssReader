@@ -12,6 +12,7 @@ class ImagePrefetchThread(QtCore.QThread):
         self.feed = feed
         self.proxy = proxy
         self.outputList = []
+        self.stopFlag = False           # Used to abort fetching
 
     def run(self):
         imageUrlList = []
@@ -20,7 +21,11 @@ class ImagePrefetchThread(QtCore.QThread):
             if imgFinder.hasImages():
                 imageUrlList.extend(imgFinder.getImages())
 
+        self.stopFlag = False
         for url in imageUrlList:
+            if self.stopFlag:
+                break       # Abort fetching
+
             # If the image URL doesn't begin with 'http' or 'https', prepend the feed's web page link
             imageUrl = url
             if not url.startswith("http"):
@@ -38,3 +43,6 @@ class ImagePrefetchThread(QtCore.QThread):
             # without the web page link prepended.
             self.outputList.append( (url, pixmap) )
             self.imageReadySignal.emit((url, pixmap))
+
+    def abortFetching(self):
+        self.stopFlag = True

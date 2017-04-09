@@ -5,6 +5,7 @@ from pathlib import Path
 from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
+from prefetch_statusbar_widget import PrefetchStatusbarWidget
 from image_cache import ImageCache
 from image_prefetcher import ImagePrefetcher
 from feed_item_filter_matcher import FeedItemFilterMatcher
@@ -74,8 +75,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.languageFilter = LanguageFilter(self.db)
         self.adFilter = AdFilter(self.db)
+        self.prefetchStatusbarWidget = PrefetchStatusbarWidget(self)
         self.imageCache = ImageCache(kMaxCacheSize)
         self.imagePrefetcher = ImagePrefetcher(self.db, self.imageCache, self.proxy)
+
+        self.imagePrefetcher.imagePrefetchStartingSignal.connect(self.prefetchStatusbarWidget.prefetchOn)
+        self.imagePrefetcher.imagePrefetchDoneSignal.connect(self.prefetchStatusbarWidget.prefetchOff)
+        self.statusBar.addPermanentWidget(self.prefetchStatusbarWidget)
 
         self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
         self.feedPurger = FeedPurger(self.db, self)
