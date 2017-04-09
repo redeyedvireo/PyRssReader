@@ -12,6 +12,15 @@ kDataTypeInteger = 0
 kDataTypeString = 1
 kDataTypeBlob = 2
 
+# Current database version.  Previous versions are not handled by the Python version.
+kCurrentDatabaseVersion = 7
+
+# Name of item in the globals table that indicates the version of the database
+kDatabaseVersionId = "databaseversion"
+
+#
+kFeedOrderGlobalKey = "feed-order"
+
 class Database:
     def __init__(self):
         super(Database, self).__init__()
@@ -29,11 +38,8 @@ class Database:
                 print("Database open")
                 self.updateDatabase()
             else:
-                # TODO: Create the database, and all tables
-                #       Note: when creating the language filter database, add some hard-coded words
-                errMsg = "Database {} does not exist.".format(pathName)
-                print(errMsg)
-                logging.info(errMsg)
+                # Create the database, and all tables
+                self.createNewDatabase()
         else:
             print("Error: could not open database.")
             logging.error("Could not open database")
@@ -41,6 +47,191 @@ class Database:
     def close(self):
         if self.db is not None:
             self.db.close()
+
+    def createNewDatabase(self):
+        """ Creates a new database. """
+        logging.info("Creating new database...")
+
+        self.createGlobalsTable()
+        self.createFeedTable()
+        self.createFilteredWordsTable()
+        self.createItemsOfInterestTable()
+        self.createFilterTable()
+
+        self.createAdFilterTable()
+
+        # Initialize global data
+        self.setGlobalValue("highestfeedid", 0)     # Highest value currently used for a feed ID - probably not needed any more
+        self.setGlobalValue(kFeedOrderGlobalKey, "")    # Order in which feeds appear in the UI
+        self.setGlobalValue(kDatabaseVersionId, kCurrentDatabaseVersion)
+
+    def createGlobalsTable(self):
+        """ Creates the globals table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        createStr = "create table globals ("
+        createStr += "key text UNIQUE, "
+        createStr += "datatype int, "
+        createStr += "intval int, "
+        createStr += "stringval text, "
+        createStr += "blobval blob"
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to the globals table: {}".format(sqlErr.text()))
+
+    def createFeedTable(self):
+        """ Creates the feed table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        createStr = "create table feeds ("
+        createStr += "feedid integer primary key, "  # Unique Feed ID (must not be 0).  SQLite guarantees this field to be unique
+        createStr += "name text, "  # User - specified name of feed
+        createStr += "url text, "  # Feed URL
+        createStr += "parentid integer, "  # Page's parent page (TODO: Figure out how to use this)
+        createStr += "added integer, "  # Date and time the feed was added, as a time_t
+        createStr += "lastupdated integer, "  # Date and time page was last updated, as a time_t
+        createStr += "title text, "  # Feed title
+        createStr += "language text, "  # Feed language
+        createStr += "description text, "  # Feed description
+        createStr += "webpagelink text, "  # URL of web site that owns this feed
+        createStr += "favicon blob, "  # Favicon for feed's main web site
+        createStr += "image blob, "  # Feed image(not a favicon)
+        createStr += "lastpurged integer default 0"  # Date and time the feed was last purged
+
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the feed table: {}".format(sqlErr.text()))
+
+    def createFeedItemsTable(self, feedId):
+        """ Creates a feed item table. """
+        feedTableName = self.feedItemsTableName(feedId)
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        createStr = "create table {} (".format(feedTableName)
+        createStr += "title text, " # Item title
+        createStr += "author text, " # Item author
+        createStr += "link text, " # Item link
+        createStr += "description text, " # Item description
+        createStr += "categories text, " # Item categories
+        createStr += "pubdatetime integer, " # Date / time of item 's publication, as a time_t
+        createStr += "thumbnaillink text, " # Link to item 's thumbnail
+        createStr += "thumbnailwidth integer, " # Width of thumbnail
+        createStr += "thumbnailheight integer, " # Height of thumbnail
+        createStr += "guid text UNIQUE, " # Item guid(usually just the URL of the article)
+        createStr += "feedburneroriglink text, " # Feedburner link(possibly unnecessary?)
+        createStr += "readflag integer, " # 0 for Not Read, non - zero for Read
+        createStr += "enclosurelink text, " # Link to media enclosure(ie, podcast)
+        createStr += "enclosurelength integer, " # Length of enclosure
+        createStr += "enclosuretype text, " # Type of enclosure(such as "media/mpeg")
+        createStr += "contentencoded text " # Store < content: encoded > tag data
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create a feed item table: {}".format(sqlErr.text()))
+
+    def createFilteredWordsTable(self):
+        """ Creates the filtered words (aka language filter) table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Create filteredwords table - table to hold words that should not be displayed.
+        # Words in this table will be replaced with asterisks (or something similar) when
+        # displayed to the user.
+        createStr = "create table filteredwords ("
+        createStr += "word text "  # Word to filter
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the filtered words table: {}".format(sqlErr.text()))
+
+    def createItemsOfInterestTable(self):
+        """ Creates the Items of Interest table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Create items of interest table - table that holds links to interesting feed items
+        createStr = "create table itemsofinterest ("
+        createStr += "feedid integer, " # Feed ID of this item
+        createStr += "guid text "       # Item guid
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the Items of Interest table: {}".format(sqlErr.text()))
+
+    def createFilterTable(self):
+        """ Creates the filter table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Create items of interest table - table that holds links to interesting feed items
+        createStr = "create table feeditemfilters ("
+        createStr += "filterid integer primary key, "  # Filter ID
+        createStr += "feedid integer, "  # Feed ID
+        createStr += "field integer, "  # ID of field to query
+        createStr += "verb integer, "  # Query action to perform
+        createStr += "querystring text, "  # String to look for
+        createStr += "action integer "  # Action ID
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the filter table: {}".format(sqlErr.text()))
+
+    def createAdFilterTable(self):
+        """ Creates the ad filter table. """
+        queryObj = QtSql.QSqlQuery(self.db)
+
+        # Create ad filter table - table that holds strings of ad-related words to filter.
+        # When HTML elements are encountered with these words, the HTML elements will be
+        # removed.  Such elements contain undesirable advertisement-related content.
+        createStr = "create table adfilters ("
+        createStr += "word text "  # Word to filter
+        createStr += ")"
+
+        queryObj.prepare(createStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to create the ad filter table: {}".format(sqlErr.text()))
 
     def reportError(self, errorMessage):
         logging.error(errorMessage)
@@ -208,71 +399,20 @@ class Database:
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to set a global value: {}".format(sqlErr.text()))
 
+    def getFeedOrder(self):
+        """ Returns the list of feeds, in the order in which they were organized on the UI by the user.
+            This is returned as a list of ints. """
+        feedIdStr = self.getGlobalValue(kFeedOrderGlobalKey)
+        feedOrder = []
+        if feedIdStr:
+            feedOrderStr = feedIdStr.split(",")
+            if len(feedOrderStr) > 0:
+                feedOrder = [int(idStr) for idStr in feedOrderStr]
+        return feedOrder
 
-    def createFeedTable(self):
-        """ Creates the feed table. """
-        queryObj = QtSql.QSqlQuery(self.db)
-
-        createStr = "create table feeds ("
-        createStr += "feedid integer primary key, " # Unique Feed ID (must not be 0).  SQLite guarantees this field be unique
-        createStr += "name text, " # User - specified name of feed
-        createStr += "url text, " # Feed URL
-        createStr += "parentid integer, " # Page 's parent page (TODO: Figure out how to use this)
-        createStr += "added integer, " # Date and time the feed was added, as a time_t
-        createStr += "lastupdated integer, " # Date and time page was last updated, as a time_t
-        createStr += "title text, " # Feed title
-        createStr += "language text, " # Feed language
-        createStr += "description text, " # Feed description
-        createStr += "webpagelink text, " # URL of web site that owns this feed
-        createStr += "favicon blob, " # Favicon for feed's main web site
-        createStr += "image blob, " # Feed image(not a favicon)
-        createStr += "lastpurged integer default 0" # Date and time the feed was last purged
-    
-        createStr += ")"
-
-        queryObj.prepare(createStr)
-
-        queryObj.exec_()
-
-        # Check for errors
-        sqlErr = queryObj.lastError()
-
-        if sqlErr.type() != QtSql.QSqlError.NoError:
-            self.reportError("Error when attempting to create the feed table: {}".format(sqlErr.text()))
-
-
-    def createFeedItemsTable(self, feedId):
-        """ Creates a feed item table. """
-        feedTableName = self.feedItemsTableName(feedId)
-        queryObj = QtSql.QSqlQuery(self.db)
-
-        createStr = "create table {} (".format(feedTableName)
-        createStr += "title text, " # Item title
-        createStr += "author text, " # Item author
-        createStr += "link text, " # Item link
-        createStr += "description text, " # Item description
-        createStr += "categories text, " # Item categories
-        createStr += "pubdatetime integer, " # Date / time of item 's publication, as a time_t
-        createStr += "thumbnaillink text, " # Link to item 's thumbnail
-        createStr += "thumbnailwidth integer, " # Width of thumbnail
-        createStr += "thumbnailheight integer, " # Height of thumbnail
-        createStr += "guid text UNIQUE, " # Item guid(usually just the URL of the article)
-        createStr += "feedburneroriglink text, " # Feedburner link(possibly unnecessary?)
-        createStr += "readflag integer, " # 0 for Not Read, non - zero for Read
-        createStr += "enclosurelink text, " # Link to media enclosure(ie, podcast)
-        createStr += "enclosurelength integer, " # Length of enclosure
-        createStr += "enclosuretype text, " # Type of enclosure(such as "media/mpeg")
-        createStr += "contentencoded text " # Store < content: encoded > tag data
-        createStr += ")"
-
-        queryObj.prepare(createStr)
-        queryObj.exec_()
-
-        # Check for errors
-        sqlErr = queryObj.lastError()
-
-        if sqlErr.type() != QtSql.QSqlError.NoError:
-            self.reportError("Error when attempting to create a feed item table: {}".format(sqlErr.text()))
+    def setFeedOrder(self, feedOrderString):
+        """ Sets the order of feeds. """
+        self.setGlobalValue(kFeedOrderGlobalKey, feedOrderString)
 
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """

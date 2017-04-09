@@ -33,8 +33,6 @@ kAppName      = "RssReader"         # Only needed for finding the database path
 kAppNameForSettings = "PyRssReader" # Used for saving settings
 kLogFile = 'RssReader.log'
 
-kFeedOrderGlobalKey = "feed-order"
-
 kStarIcon = "star.png"
 
 # Settings groups
@@ -133,9 +131,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedItemFilterMatcher.initialize()
 
         feedList = self.db.getFeeds()
-        feedIdStr = self.db.getGlobalValue(kFeedOrderGlobalKey)
-        feedOrderListOfStrings = feedIdStr.split(",")
-        feedOrderList = [int(idStr) for idStr in feedOrderListOfStrings]
+        feedOrderList = self.db.getFeedOrder()
         self.feedTreeObj.addFeeds(feedList, feedOrderList)
 
         if self.proxy.usesProxy():
@@ -461,7 +457,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         self.stopFeedUpdateTimer()
         feedOrderString = self.feedTreeObj.generateFeedOrderString()
-        self.db.setGlobalValue(kFeedOrderGlobalKey, feedOrderString)
+        self.db.setFeedOrder(feedOrderString)
         print("Closing database...")
         self.db.close()
         self.saveSettings()
