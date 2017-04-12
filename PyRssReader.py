@@ -24,6 +24,7 @@ from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
 from ad_filter_dialog import AdFilterDialog
+from opml_exporter import OpmlExporter
 
 from feed import kItemsOfInterestFeedId
 
@@ -453,6 +454,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         """ Displays a message on the status bar. """
         self.statusBar.showMessage(message, timeout)
 
+    @QtCore.pyqtSlot()
+    def on_actionExport_OPML_triggered(self):
+        exporter = OpmlExporter(self.db)
+        exporter.export('d:/temp/testexport.xml')
 
     def closeEvent(self, event):
         self.stopFeedUpdateTimer()
