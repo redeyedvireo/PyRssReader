@@ -42,3 +42,6 @@ class FeedItem:
         else:
             feedItemText = self.m_description
         return feedItemText
+
+    def isValid(self):
+        return len(self.m_guid) > 0 and self.m_parentFeedId != -1

@@ -170,7 +170,11 @@ class TitleTree(QtCore.QObject):
 
         if len(feedItemList) > 0:
             for feedItem in feedItemList:
-                self.addFeedItem(feedItem)
+                # It shouldn't be necessary to check for validity, but somehow, uninitialized feed items sneak in.
+                if feedItem.isValid():
+                    self.addFeedItem(feedItem)
+                else:
+                    logging.error("TitleTree.addFeedItems(): Invalid feed item found.")
 
             self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
             self.model.sort(self.sortColumn, self.sortOrder)
