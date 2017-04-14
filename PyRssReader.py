@@ -25,6 +25,7 @@ from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
 from ad_filter_dialog import AdFilterDialog
 from opml_exporter import OpmlExporter
+from opml_importer import OpmlImporter
 
 from feed import kItemsOfInterestFeedId
 
@@ -457,7 +458,44 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionExport_OPML_triggered(self):
         exporter = OpmlExporter(self.db)
-        exporter.export('d:/temp/testexport.xml')
+
+        filepathTuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save OPML File")
+
+        if filepathTuple:
+            filepath = filepathTuple[0]
+            exporter.export(filepath)
+
+    @QtCore.pyqtSlot()
+    def on_actionImport_OPML_triggered(self):
+        importer = OpmlImporter(self.db)
+
+        filepathTuple = QtWidgets.QFileDialog.getOpenFileName(self, "Load OPML File")
+
+        if filepathTuple:
+            filepath = filepathTuple[0]
+            feeds = importer.importFeeds(filepath)
+
+            feedIds = []
+            for feed in feeds:
+                # Must add the feed to the database first, in order to have the feed ID set.
+                feed = self.db.addFeed(feed)
+                feedId = feed.m_feedId
+
+                if feedId > 0:
+                    # Update feed ID with the value from the database
+                    feedIds.append(feedId)
+                    self.feedTreeObj.addFeed(feed)
+
+            # Switch to last feed
+            self.onFeedSelected(feedId)
+
+            # Fetch feed items for all feeds
+            self.feedIdsToUpdate = feedIds
+            self.stopFeedUpdateTimer()
+            self.resetFeedUpdateMinuteCount()
+
+            self.updateNextFeed()
+
 
     def closeEvent(self, event):
         self.stopFeedUpdateTimer()

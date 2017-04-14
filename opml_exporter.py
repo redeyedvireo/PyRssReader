@@ -25,6 +25,8 @@ class OpmlExporter:
         body = etree.SubElement(root, 'body')
 
         for feed in feeds:
+            feedImageAsStr = feed.getFeedIconAsTextEncodedByteArray()
+
             element = etree.SubElement(body, 'outline',
                                        description=feed.m_feedDescription,
                                        title=feed.m_feedTitle,
@@ -32,7 +34,8 @@ class OpmlExporter:
                                        htmlUrl=feed.m_feedWebPageLink,
                                        type="rss",
                                        version="RSS",
-                                       language=feed.m_feedLanguage)
+                                       language=feed.m_feedLanguage,
+                                       image=feedImageAsStr)
 
         return doc
 

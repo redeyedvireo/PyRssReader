@@ -41,6 +41,20 @@ class Feed(object):
                 self.m_feedFavicon = pixmap
             return self.m_feedFavicon
 
+    def getFeedIconAsTextEncodedByteArray(self):
+        """ Returns the feed icon as a base64-encoded string.  This is used when exporting a feed as XML. """
+        pixmap = self.getFeedIcon()
+        if pixmap is not None:
+            buffer = QtCore.QBuffer()
+            buffer.open(QtCore.QIODevice.ReadWrite)
+            pixmap.save(buffer, "PNG")
+            base64ByteArray = buffer.data().toBase64()
+            testByteArray = bytearray(base64ByteArray)
+            base64ByteArrayStr = testByteArray.decode('utf-8')
+            return str(base64ByteArrayStr)
+        else:
+            return ""
+
     def feedName(self):
         if self.m_feedName:
             return self.m_feedName
