@@ -5,4 +5,4 @@ class Preferences:
         # Initialize default preferences
         self.feedUpdateInterval = 30
         self.updateOnAppStart = False
-
+        self.minimizeAppOnLoseFocus = False

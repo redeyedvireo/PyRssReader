@@ -24,6 +24,8 @@ class PrefsDialog(QtWidgets.QDialog):
         self.intervalSpin.setValue(self.preferences.feedUpdateInterval)
         self.updateOnStartCheckbox.setChecked(self.preferences.updateOnAppStart)
 
+        self.minimizeOnFocusOutCheckbox.setChecked(self.preferences.minimizeAppOnLoseFocus)
+
     def getProxySettings(self):
         """ Returns a Proxy object containing settings from the dialog. """
         self.proxy.proxyUrl = self.proxyHostnameLineEdit.text()
@@ -35,5 +37,6 @@ class PrefsDialog(QtWidgets.QDialog):
         """ Returns the feed update interval. """
         self.preferences.feedUpdateInterval = self.intervalSpin.value()
         self.preferences.updateOnAppStart = self.updateOnStartCheckbox.isChecked()
+        self.preferences.minimizeAppOnLoseFocus = self.minimizeOnFocusOutCheckbox.isChecked()
         return self.preferences
 

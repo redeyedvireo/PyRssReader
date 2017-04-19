@@ -98,6 +98,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.keyboardHandler = KeyboardHandler(self)
 
+        self.keyboardHandler.minimizeApplicationSignal.connect(self.onMinimizeApp)
+
         self.feedTreeObj = FeedTree(self.feedTree, self.db, self.keyboardHandler)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
@@ -456,6 +458,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.statusBar.showMessage(message, timeout)
 
     @QtCore.pyqtSlot()
+    def onMinimizeApp(self):
+        self.setWindowState(QtCore.Qt.WindowMinimized)
+
+    @QtCore.pyqtSlot()
     def on_actionExport_OPML_triggered(self):
         exporter = OpmlExporter(self.db)
 
@@ -496,6 +502,17 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             self.updateNextFeed()
 
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.WindowDeactivate:
+            # If this application does still have the focus, which would be true in the case
+            # of a dialog box being opened, don't minimize.
+            if self.preferences.minimizeAppOnLoseFocus:
+                if QtWidgets.QApplication.activeWindow() is None:
+                    self.onMinimizeApp()
+                    return True
+
+        return super(PyRssReaderWindow, self).event(event)
 
     def closeEvent(self, event):
         self.stopFeedUpdateTimer()
