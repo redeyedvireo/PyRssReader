@@ -27,6 +27,7 @@ class OpmlImporter:
 
                 feed.m_feedUrl = outline.get("xmlUrl")
                 feed.m_feedTitle = outline.get("title")
+                feed.m_feedName = feed.m_feedTitle  # This field is deprecated, but is still being set
                 feed.m_feedDescription = outline.get("description")
                 feed.m_feedWebPageLink = outline.get("htmlUrl")
                 feed.m_feedLanguage = outline.get("language")
