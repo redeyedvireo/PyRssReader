@@ -151,6 +151,22 @@ class Database:
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to create a feed item table: {}".format(sqlErr.text()))
 
+    def deleteFeedItemsTable(self, feedId):
+        """ Deletes a feed items table. """
+        feedItemsTableName = self.feedItemsTableName(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryStr = "drop table {}".format(feedItemsTableName)
+
+        queryObj.prepare(queryStr)
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete a feed items table: {}".format(sqlErr.text()))
+
     def createFilteredWordsTable(self):
         """ Creates the filtered words (aka language filter) table. """
         queryObj = QtSql.QSqlQuery(self.db)
@@ -410,8 +426,20 @@ class Database:
                 feedOrder = [int(idStr) for idStr in feedOrderStr]
         return feedOrder
 
-    def setFeedOrder(self, feedOrderString):
-        """ Sets the order of feeds. """
+    def removeFeedFromFeedOrder(self, feedId):
+        """ Removes the given feed ID from the feed order. """
+        feedOrderList = self.getFeedOrder()
+
+        try:
+            feedOrderList.remove(feedId)
+            self.setFeedOrder(feedOrderList)
+        except ValueError:
+            self.reportError("db.removeFeedFromFeedOrder: Feed ID {} was not found in the feed order.".format(feedId))
+
+    def setFeedOrder(self, feedOrderList):
+        """ Sets the order of feeds in the database. """
+        feedIdStrList = [ str(x) for x in feedOrderList]
+        feedOrderString = ",".join(feedIdStrList)
         self.setGlobalValue(kFeedOrderGlobalKey, feedOrderString)
 
     def getFeeds(self):
@@ -592,6 +620,29 @@ class Database:
         self.createFeedItemsTable(feedId)
         feed.m_feedId = feedId
         return feed
+
+    def deleteFeed(self, feedId):
+        """ Deletes a feed.  This involves:
+            1. Deleting the feed's feed item table
+            2. Deleting the feed's ID from the feed table
+            3. Removing the feed's ID from the feed order, stored in the globals table
+        """
+        self.deleteFeedItemsTable(feedId)
+
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryStr = "delete from feeds where feedid=?"
+        queryObj.prepare(queryStr)
+
+        queryObj.addBindValue(feedId)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to delete a feed from the feed table: {}".format(sqlErr.text()))
+
+        self.removeFeedFromFeedOrder(feedId)
 
     def updateFeedLastUpdatedField(self, feedId, lastUpdatedDate):
         """ Updates the last-updated field for the given feed. """

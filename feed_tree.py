@@ -14,6 +14,7 @@ class FeedTree(QtCore.QObject):
     feedUpdateRequestedSignal = QtCore.pyqtSignal(int)
     feedReadStateSignal = QtCore.pyqtSignal(int, bool)
     feedPurgeSignal = QtCore.pyqtSignal(int)
+    feedDeleteSignal = QtCore.pyqtSignal(int)
 
     def __init__(self, treeWidget, db, keyboardHandler):
         super(FeedTree, self).__init__()
@@ -45,6 +46,7 @@ class FeedTree(QtCore.QObject):
         self.m_actionMarkRead.triggered.connect(self.onMarkFeedAsRead)
         self.m_actionMarkUnread.triggered.connect(self.onMarkFeedAsUnread)
         self.m_actionPurge.triggered.connect(self.onPurgeFeed)
+        self.m_actionDeleteFeed.triggered.connect(self.onDeleteFeed)
 
         self.m_contextMenu.addAction(self.m_actionUpdate)
         self.m_contextMenu.addAction(self.m_actionMarkRead)
@@ -117,6 +119,17 @@ class FeedTree(QtCore.QObject):
 
             self.feedTree.addTopLevelItem(pNewItem)
             self.feedTree.setCurrentItem(pNewItem)
+
+    def removeFeed(self, feedId):
+        """ Removes a feed from the tree. """
+        feedTreeItem = self.findFeed(feedId)
+
+        if feedTreeItem is not None:
+            rootItem = self.feedTree.invisibleRootItem()
+            index = rootItem.indexOfChild(feedTreeItem)
+            rootItem.takeChild(index)
+        else:
+            logging.error("FeedTree.removeFeed: feedId {} not found in tree.".format(feedId))
 
     def updateAllFeedCounts(self):
         curItem = self.feedTree.invisibleRootItem()
@@ -228,7 +241,13 @@ class FeedTree(QtCore.QObject):
         self.feedPurgeSignal.emit(self.lastClickedFeedId)
         self.updateFeedCount(self.lastClickedFeedId)
 
-    def generateFeedOrderString(self):
+    def onDeleteFeed(self):
+        self.feedDeleteSignal.emit(self.lastClickedFeedId)
+
+        # Remove the feed from the feed tree
+        self.removeFeed(self.lastClickedFeedId)
+
+    def getFeedOrder(self):
         """ Generates a comma-separated list of feed IDs, used to store the feed order in the database. """
         feedIdList = []
         curItem = self.feedTree.invisibleRootItem()
@@ -240,5 +259,4 @@ class FeedTree(QtCore.QObject):
                 feedIdList.append(str(curfeedId))
             curItem = self.feedTree.itemBelow(curItem)
 
-        feedIdString = ",".join(feedIdList)
-        return feedIdString
+        return feedIdList

@@ -105,6 +105,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
         self.feedTreeObj.feedReadStateSignal.connect(self.onSetFeedReadState)
         self.feedTreeObj.feedPurgeSignal.connect(self.onPurgeSingleFeed)
+        self.feedTreeObj.feedDeleteSignal.connect(self.onDeleteFeed)
 
         self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
@@ -425,6 +426,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 # Fetch feed items
                 self.onFeedUpdateRequested(feedId)
 
+    @QtCore.pyqtSlot(int)
+    def onDeleteFeed(self, feedId):
+        self.db.deleteFeed(feedId)
+
     @QtCore.pyqtSlot()
     def on_actionCreate_Global_Filter_triggered(self):
         dlg = FilterManagerDialog(self, self.db)
@@ -516,8 +521,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         self.stopFeedUpdateTimer()
-        feedOrderString = self.feedTreeObj.generateFeedOrderString()
-        self.db.setFeedOrder(feedOrderString)
+        feedOrderList = self.feedTreeObj.getFeedOrder()
+        self.db.setFeedOrder(feedOrderList)
         print("Closing database...")
         self.db.close()
         self.saveSettings()
