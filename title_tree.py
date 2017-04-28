@@ -20,9 +20,10 @@ class TitleTree(QtCore.QObject):
 
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
-    def __init__(self, treeView, languageFilter, keyboardHandler, imagePrefetcher):
+    def __init__(self, db, treeView, languageFilter, keyboardHandler, imagePrefetcher):
         super(TitleTree, self).__init__()
 
+        self.db = db
         self.languageFilter = languageFilter
         self.titleTreeView = treeView
         self.keyboardHandler = keyboardHandler
@@ -35,6 +36,7 @@ class TitleTree(QtCore.QObject):
         self.titleTreeView.header().sortIndicatorChanged.connect(self.onSortIndicatorChanged)
         self.enableUserActions()
         self.m_Grouper = None
+        self.rowClicked = -1
         self.titleTreeView.installEventFilter(self)
 
         # Prefetch control
@@ -42,6 +44,28 @@ class TitleTree(QtCore.QObject):
 
         self.keyboardHandler.nextFeedItemSignal.connect(self.gotoNextFeedItem)
         self.keyboardHandler.previousFeedItemSignal.connect(self.gotoPreviousFeedItem)
+
+        self.initializeContextMenu()
+        self.titleTreeView.customContextMenuRequested.connect(self.onContextMenu)
+
+    def initializeContextMenu(self):
+        self.contextMenu = QtWidgets.QMenu()
+
+        self.actionMarkAsRead = QtWidgets.QAction("Mark as read")
+        self.actionMarkAsUnread = QtWidgets.QAction("Mark as unread")
+        self.actionDelete = QtWidgets.QAction("Delete")
+        self.actionDownloadEnclosure = QtWidgets.QAction("Download Enclosure")
+
+        # TODO: Add grouper stuff
+        self.actionMarkAsRead.triggered.connect(self.onMarkAsRead)
+        self.actionMarkAsUnread.triggered.connect(self.onMarkAsUnread)
+        self.actionDelete.triggered.connect(self.onDelete)
+        self.actionDownloadEnclosure.triggered.connect(self.onDownloadEnclosure)
+
+        self.contextMenu.addAction(self.actionMarkAsRead)
+        self.contextMenu.addAction(self.actionMarkAsUnread)
+        self.contextMenu.addAction(self.actionDelete)
+        self.contextMenu.addAction(self.actionDownloadEnclosure)
 
     def configureTree(self):
         self.model = QtGui.QStandardItemModel()
@@ -114,6 +138,35 @@ class TitleTree(QtCore.QObject):
     def onSortIndicatorChanged(self, logicalIndex, order):
         self.sortColumn = logicalIndex
         self.sortOrder = order
+
+    def onContextMenu(self, pos):
+        index = self.titleTreeView.indexAt(pos)
+        item = self.model.item(index.row(), kTitleColumn)
+        self.rowClicked = item.row()
+        self.feedItemGuid = item.guid()
+        self.feedId = item.feedId()
+        print("Row right-clicked: {}".format(self.rowClicked))
+
+        globalPos = self.titleTreeView.mapToGlobal(pos)
+
+        self.contextMenu.popup(globalPos)
+
+    def onMarkAsRead(self):
+        self.markRowAsRead(self.rowClicked)
+        self.db.setFeedItemReadFlag(self.feedId, self.feedItemGuid, True)
+
+    def onMarkAsUnread(self):
+        self.markRowAsUnread(self.rowClicked)
+        self.db.setFeedItemReadFlag(self.feedId, self.feedItemGuid, False)
+
+    def onDelete(self):
+        self.db.deleteFeedItem(self.feedId, self.feedItemGuid)
+
+        # Remove from UI
+        self.model.takeRow(self.rowClicked)
+
+    def onDownloadEnclosure(self):
+        print("onDownloadEnclosureTriggered")
 
     def addFeedItem(self, feedItem):
         bRead = feedItem.m_bRead
@@ -216,6 +269,10 @@ class TitleTree(QtCore.QObject):
     def markRowAsRead(self, row):
         """ Marks all tree items in the given row as read. """
         self.setRowReadState(row, True)
+
+    def markRowAsUnread(self, row):
+        """ Marks all tree items in the given row as unread. """
+        self.setRowReadState(row, False)
 
     def setRowReadState(self, row, readState):
         for column in range(0, kNumColumns):

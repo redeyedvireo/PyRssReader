@@ -107,7 +107,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedTreeObj.feedPurgeSignal.connect(self.onPurgeSingleFeed)
         self.feedTreeObj.feedDeleteSignal.connect(self.onDeleteFeed)
 
-        self.titleTreeObj = TitleTree(self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
+        self.titleTreeObj = TitleTree(self.db, self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
 
         self.rssContentViewObj = RssContentView(self, self.languageFilter, self.adFilter, self.imageCache,
