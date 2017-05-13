@@ -5,10 +5,15 @@ from prefetch_controller import PrefetchController
 from title_tree_view_item import TitleTreeViewItem, kEnclosureColumn, kTitleColumn, kDateColumn, kCreatorColumn, kTagsColumn, kNumColumns
 from title_tree_date_item import TitleTreeDateItem
 from title_tree_title_item import TitleTreeTitleItem
+from title_tree_enclosure_item import TitleTreeEnclosureItem
 from title_tree_categories_item import TitleTreeCategoriesItem
+from utility import getResourceFileIcon
 
 kRowHeight = 17
-kEnclosureColumnWidth = 40
+kEnclosureColumnWidth = 20
+
+kPaperClipIconName = "Paper Clip.png"
+
 
 class TitleTree(QtCore.QObject):
     # Signal emitted when a feed item is selected in the title tree.  Parameters are: feed ID, guid.
@@ -17,6 +22,9 @@ class TitleTree(QtCore.QObject):
     # Signal emitted when feed item images should be preselected.  The list is a list of tuples of the form:
     # (feedId, guids).
     prefetchImagesSignal = QtCore.pyqtSignal(list)
+
+    # Signal emitted when an enclosure should be downloaded.
+    downloadEnclosureSignal = QtCore.pyqtSignal(str)
 
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
@@ -70,7 +78,14 @@ class TitleTree(QtCore.QObject):
     def configureTree(self):
         self.model = QtGui.QStandardItemModel()
         self.model.setColumnCount(kNumColumns)
-        self.model.setHorizontalHeaderLabels(["Enclosure", "Title", "Date", "Creator", "Categories"])
+        self.model.setHorizontalHeaderLabels(["", "Title", "Date", "Creator", "Categories"])
+
+        # Set paper clip as header item for the Enclosure column
+        self.paperClipIcon = getResourceFileIcon(kPaperClipIconName)
+        headerItem = QtGui.QStandardItem()
+        headerItem.setIcon(self.paperClipIcon)
+        self.model.setHorizontalHeaderItem(kEnclosureColumn, headerItem)
+
         self.titleTreeView.setModel(self.model)
         self.titleTreeView.setSortingEnabled(True)
         self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
@@ -166,16 +181,18 @@ class TitleTree(QtCore.QObject):
         self.model.takeRow(self.rowClicked)
 
     def onDownloadEnclosure(self):
-        print("onDownloadEnclosureTriggered")
+        enclosureUrl = self.getEnclosureUrlForRow(self.rowClicked)
+        self.downloadEnclosureSignal.emit(enclosureUrl)
 
     def addFeedItem(self, feedItem):
+        enclosureUrl = feedItem.m_enclosureLink
         bRead = feedItem.m_bRead
         guid = feedItem.m_guid
         feedId = feedItem.m_parentFeedId
         itemList = []
 
         # Enclosure
-        enclosureItem = TitleTreeViewItem("", bRead, feedId, guid)
+        enclosureItem = TitleTreeEnclosureItem(enclosureUrl, bRead, feedId, guid)
         itemList.append(enclosureItem)
 
         # Title
@@ -260,6 +277,10 @@ class TitleTree(QtCore.QObject):
     def getFeedIdForRow(self, row):
         item = self.model.item(row, kTitleColumn)
         return item.feedId()
+
+    def getEnclosureUrlForRow(self, row):
+        item = self.model.item(row, kEnclosureColumn)
+        return item.getEnclosureUrl()
 
     def selectRow(self, row):
         index = self.model.index(row, 0)

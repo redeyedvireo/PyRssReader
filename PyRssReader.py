@@ -26,6 +26,7 @@ from language_filter_dialog import LanguageFilterDialog
 from ad_filter_dialog import AdFilterDialog
 from opml_exporter import OpmlExporter
 from opml_importer import OpmlImporter
+from enclosure_downloader import EnclosureDownloader
 
 from feed import kItemsOfInterestFeedId
 
@@ -56,10 +57,13 @@ kProxyUserId = "proxyuserid"
 kGeneralPreferencesGroup = "preferences"
 kFeedUpdateInterval = "feedupdateinterval"
 kUpdateOnAppStart = "updateonappstart"
+kEnclosureDirectory = "enclosuredirectory"
 
 # Image cache size (number of cache entries)
 kMaxCacheSize = 100
 
+# For status bar messages (don't clear the message)
+kDontClearMessage = 0
 
 # ---------------------------------------------------------------
 class PyRssReaderWindow(QtWidgets.QMainWindow):
@@ -109,6 +113,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.titleTreeObj = TitleTree(self.db, self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
+        self.titleTreeObj.downloadEnclosureSignal.connect(self.onDownloadEnclosure)
 
         self.rssContentViewObj = RssContentView(self, self.languageFilter, self.adFilter, self.imageCache,
                                                 self.keyboardHandler, self.proxy)
@@ -120,6 +125,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedUpdateTimer.timeout.connect(self.onFeedUpdateTimerTimeout)
         self.feedUpdateTimer.setInterval(60000)     # One-minute interval
         self.minutesSinceLastFeedUpdate = 0         # Minutes since last update of feeds
+
+        self.enclosureDownloader = None
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -181,6 +188,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             return databasePath
 
+    def getDefaultEnclosureDirectory(self):
+        """ Returns the default location for downloading enclosures.  This is the standard Downloads directory. """
+        downloadDirectory = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DownloadLocation)
+        return downloadDirectory
 
     def loadSettings(self):
         """ Loads application settings. """
@@ -229,6 +240,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.beginGroup(kGeneralPreferencesGroup)
         self.preferences.feedUpdateInterval = int(settingsObj.value(kFeedUpdateInterval, 30))
         self.preferences.updateOnAppStart = settingsObj.value(kUpdateOnAppStart, False, type=bool)
+        self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, self.getDefaultEnclosureDirectory())
         settingsObj.endGroup()
 
     def saveSettings(self):
@@ -267,6 +279,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.beginGroup(kGeneralPreferencesGroup)
         settingsObj.setValue(kFeedUpdateInterval, self.preferences.feedUpdateInterval)
         settingsObj.setValue(kUpdateOnAppStart, self.preferences.updateOnAppStart)
+        settingsObj.setValue(kEnclosureDirectory, self.preferences.enclosureDirectory)
         settingsObj.endGroup()
 
     def addRssContentViewToLayout(self):
@@ -456,15 +469,33 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.setFeedReadFlagAllItems(feedId, readState)
         self.titleTreeObj.setReadStateOfAllRows(readState)
 
-
     @QtCore.pyqtSlot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):
         """ Displays a message on the status bar. """
         self.statusBar.showMessage(message, timeout)
 
+    @QtCore.pyqtSlot(str)
+    def onDownloadEnclosure(self, enclosureUrl):
+        # Don't clear message, until the enclosure has downloaded
+        self.showStatusBarMessage("Downloading enclosure: {}".format(enclosureUrl), kDontClearMessage)
+
+        self.enclosureDownloader = EnclosureDownloader(enclosureUrl, self.preferences.enclosureDirectory, self.proxy)
+        self.enclosureDownloader.enclosureDownloadedSignal.connect(self.onEnclosureDownloaded)
+        self.enclosureDownloader.start()
+
+    @QtCore.pyqtSlot(str)
+    def onEnclosureDownloaded(self, filename):
+        self.showStatusBarMessage("{} downloaded.".format(filename))
+        self.enclosureDownloader = None
+
     @QtCore.pyqtSlot()
     def onMinimizeApp(self):
         self.setWindowState(QtCore.Qt.WindowMinimized)
+
+    @QtCore.pyqtSlot()
+    def on_actionOpen_Enclosure_Directory_triggered(self):
+        urlStr = "file:///{}".format(self.preferences.enclosureDirectory)
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr, QtCore.QUrl.TolerantMode))
 
     @QtCore.pyqtSlot()
     def on_actionExport_OPML_triggered(self):

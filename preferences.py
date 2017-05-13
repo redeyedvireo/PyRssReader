@@ -6,3 +6,4 @@ class Preferences:
         self.feedUpdateInterval = 30
         self.updateOnAppStart = False
         self.minimizeAppOnLoseFocus = False
+        self.enclosureDirectory = ""

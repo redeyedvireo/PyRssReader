@@ -39,3 +39,6 @@ def getResourceFilePixmap(filename):
     pixmap.loadFromData(imageData)
 
     return pixmap
+
+def getResourceFileIcon(filename):
+    return QtGui.QIcon(getResourceFilePixmap(filename))

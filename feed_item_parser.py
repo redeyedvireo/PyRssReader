@@ -171,7 +171,7 @@ def getEnclosure(item):
 
     enclosureElement = item.find('enclosure')
     if enclosureElement is not None:
-        enclosureUrl = enclosureElement.find('url')
+        enclosureUrl = getStringAttribute(enclosureElement, 'url', "")
         enclosureLength = getIntegerAttribute(enclosureElement, 'length', 0)
         enclosureType = getStringAttribute(enclosureElement, 'type', "")
     return (enclosureUrl, enclosureLength, enclosureType)

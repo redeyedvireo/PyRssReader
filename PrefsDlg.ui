@@ -216,6 +216,9 @@
    </item>
    <item>
     <widget class="QCheckBox" name="useEnclosureSubdirectories">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
       <string>Use separate subdirectory for each feed</string>
      </property>
