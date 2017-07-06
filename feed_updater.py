@@ -23,6 +23,7 @@ class FeedUpdater(QtCore.QObject):
         self.feedId = feedId
         feed = self.db.getFeed(feedId)
         self.lastUpdatedDate = feed.m_feedLastUpdated
+        self.lastPurgedDate = feed.m_feedLastPurged
         guids = self.db.getFeedItemGuids(feedId)
         self.proxy = proxy
 
@@ -39,7 +40,8 @@ class FeedUpdater(QtCore.QObject):
 
         finalFeedItemList = []
         for feedItem in feedItemList:
-            if feedItem.m_publicationDatetime >= self.lastUpdatedDate:
+            if feedItem.m_publicationDatetime >= self.lastUpdatedDate and \
+                feedItem.m_publicationDatetime >= self.lastPurgedDate:
                 finalFeedItemList.append(feedItem)
 
         # Pass this on up to the main window
