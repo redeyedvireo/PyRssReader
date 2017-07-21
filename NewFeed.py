@@ -22,6 +22,10 @@ class NewFeedDialog(QtWidgets.QDialog):
             feedUrl = self.feedUrlEdit.text()
             self.feed = self.feedIdentifier.identifyFeed(feedUrl)
 
+            if not self.feed.isValid():
+                QtWidgets.QMessageBox.critical(self, "RssReader", "Feed not valid")
+                return
+
             self.stackedWidget.setCurrentIndex(1)
             self.nextButton.setText("Add Feed")
             self.feedUrlLabel.setText(feedUrl)

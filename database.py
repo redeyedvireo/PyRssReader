@@ -1023,7 +1023,7 @@ class Database:
         # Check for errors
         sqlErr = queryObj.lastError()
         if sqlErr.type() != QtSql.QSqlError.NoError:
-            self.reportError("Error when attempting to get feed item's read flag: {}".format(sqlErr.text()))
+            self.reportError("Error when attempting to get feed item's read flag: {}, on feed {}".format(sqlErr.text(), feedId))
             return False
 
         bReturn = False

@@ -31,7 +31,12 @@ def parseFeed(feedItemRawText):
     try:
         root = etree.fromstring(rawText)
     except Exception as inst:
-        errMsg = "parseFeed: Exception when parsing feed item text: {}: {}".format(rawText, inst)
+        if len(rawText) > 50:
+            feedTextToDisplay = "<Feed text too large>"
+        else:
+            feedTextToDisplay = rawText
+
+        errMsg = "parseFeed: Exception: {} when parsing feed item text:\n{}".format(inst, feedTextToDisplay)
         print(errMsg)
         logging.error(errMsg)
         return []

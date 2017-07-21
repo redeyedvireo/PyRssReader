@@ -24,7 +24,12 @@ class FeedIdentifier:
         try:
             root = etree.fromstring(feedText)
         except Exception as inst:
-            errMsg = "parseFeed: Exception when parsing feed item text: {}: {}".format(feedText, inst)
+            if len(feedText) > 50:
+                feedTextToDisplay = "<Feed text too large>"
+            else:
+                feedTextToDisplay = feedText
+
+            errMsg = "parseFeed: Exception: {} when parsing feed item text:\n{}".format(inst, feedTextToDisplay)
             print(errMsg)
             logging.error(errMsg)
             return self.feed

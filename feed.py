@@ -27,6 +27,10 @@ class Feed(object):
         self.m_feedFavicon = QtGui.QPixmap()        # Favicon for the feed's main web site (for display in feed tree)
         self.m_feedImage = QtGui.QPixmap()          # Image from the feed itself. This is generally not an icon.
 
+    def isValid(self):
+        """ Simplistic method to determine if a feed is valid.  (If it has no feed URL, it is not valid). """
+        return len(self.m_feedUrl) > 0
+
     def getFeedIcon(self):
         if not isinstance(self.m_feedImage, str) and not self.m_feedImage.isNull():
             if isinstance(self.m_feedImage, QtCore.QByteArray):
