@@ -15,3 +15,8 @@ pip3 install python-dateutil
 Cachetools:
 To install:
 pip3 install cachetools
+
+Requests:  (used in Pocket access):
+To install:
+pip3 install requests
+(though, they recommend installing pipenv, and using pipenv install requests)

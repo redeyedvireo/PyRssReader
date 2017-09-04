@@ -539,6 +539,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.updateNextFeed()
 
 
+    @QtCore.pyqtSlot()
+    def on_actionAdd_to_Pocket_triggered(self):
+        print("Add to Pocket action triggered.")
+
     def event(self, event):
         if event.type() == QtCore.QEvent.WindowDeactivate:
             # If this application does still have the focus, which would be true in the case

@@ -264,6 +264,7 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb
    <addaction name="actionCreate_Global_Filter"/>
    <addaction name="actionEdit_Language_Filter"/>
    <addaction name="actionEdit_Ad_Filter"/>
+   <addaction name="actionAdd_to_Pocket"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -348,6 +349,18 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb
   <action name="actionImport_OPML">
    <property name="text">
     <string>Import OPML...</string>
+   </property>
+  </action>
+  <action name="actionAdd_to_Pocket">
+   <property name="icon">
+    <iconset>
+     <normaloff>Resources/pocket.png</normaloff>Resources/pocket.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add to Pocket</string>
+   </property>
+   <property name="toolTip">
+    <string>Adds the current article to Pocket</string>
    </property>
   </action>
  </widget>
