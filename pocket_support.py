@@ -15,14 +15,15 @@ class PocketSupport:
     kRedirectUri = "https://google.com"
 
 
-    def __init__(self):
+    def __init__(self, db):
+        self.db = db
         self.requestToken = None
         self.isAuthorized = False
         self.accessToken = None
         self.username = None
 
     def obtainRequestToken(self):
-        """ Obtain the request token. """
+        """ Obtain the request token.  Returns True if successful, or False if not. """
         requestUrl = 'https://getpocket.com/v3/oauth/request'
 
         data = json.dumps({"consumer_key": self.kConsumerKey,
@@ -33,10 +34,12 @@ class PocketSupport:
         if response.status_code == 200:
             responseJson = response.json()
             self.requestToken = responseJson['code']
+            return True
         else:
             errorMessage = "Obtain request token error: {}: {}".format(response.status_code, response.text)
             print(errorMessage)
             logging.error(errorMessage)
+            return False
 
     def obtainAuthorizationFromUserForTheApp(self):
         # Provide authorization from the user, which involves going to the Pocket web site, with the request token.
@@ -44,8 +47,8 @@ class PocketSupport:
 
         webbrowser.open_new(authorizationUrl)
 
-    def convertRequestTokenToPocketAccessToken(self):
-        """ Converts a request token to a Pocket access token. """
+    def obtainAccessToken(self):
+        """ Converts a request token to a Pocket access token.  Returns True if successful, or False if not. """
         requestUrl = 'https://getpocket.com/v3/oauth/authorize'
 
         data = json.dumps({"consumer_key": self.kConsumerKey,
@@ -57,13 +60,15 @@ class PocketSupport:
             responseJson = response.json()
             self.username = responseJson['username']
             self.accessToken = responseJson['access_token']
+            return True
 
         else:
             errorMessage = "Convert request token to access token error: {}: {}".format(response.status_code, response.text)
             print(errorMessage)
             logging.error(errorMessage)
+            return False
 
-    def addArticleToPocket(self, url, title):
+    def saveArticle(self, url, title):
         """ Adds an article to Pocket. """
         if self.accessToken is None:
             return
@@ -84,3 +89,34 @@ class PocketSupport:
             errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
             print(errorMessage)
             logging.error(errorMessage)
+
+    def addArticleToPocket(self, url, title):
+        """ Adds an article to Pocket.  This is the function to use from outside this class to save articles.
+            The class expects that the Pocket access token has been saved in the database; the class, by itself,
+            cannot completely retrieve the access token, because there will need to be a UI component that asks
+            the user to indicate that the request was granted. """
+        if self.accessToken is None:
+            self.accessToken = self.db.getPocketAccessToken()
+        self.saveArticle(url, title)
+
+    def doStepOneOfAuthorization(self):
+        """ Performs step 1 of authorization, which is to obtain the request token, and to show the Pocket web page for
+            authorization.  Returns True if no error occurs.
+            If this function returns True, the application should display a dialog box asking if the redirect web page
+            has appeared (which, currently, is the Google serach page.)  If the user clicks Yes, it is OK to proceed
+            to step 2 of authorization (obtaining the access token). """
+        if not self.obtainRequestToken():
+            return False
+
+        self.obtainAuthorizationFromUserForTheApp()
+        return True
+
+    def doStepTwoOfAuthorization(self):
+        """ Performs step 2 of authorization, which is to obtain the access token.  Returns True if successful,
+            or False if not. """
+        if self.obtainAccessToken():
+            self.db.setPocketUsernameAndAccessToken(self.username, self.accessToken)
+            return True
+        else:
+            return False
+

@@ -21,6 +21,10 @@ kDatabaseVersionId = "databaseversion"
 #
 kFeedOrderGlobalKey = "feed-order"
 
+kPocketUsernameKey = "pocket-username"
+kPocketAccessToken = "pocket-accesstoken"
+
+
 class Database:
     def __init__(self):
         super(Database, self).__init__()
@@ -414,6 +418,25 @@ class Database:
 
         if sqlErr.type() != QtSql.QSqlError.NoError:
             self.reportError("Error when attempting to set a global value: {}".format(sqlErr.text()))
+
+
+    def globalValueExists(self, key):
+        """ Checks if a global value exists. """
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj.prepare("select count(datatype) from globals where key=?")
+        queryObj.addBindValue(key)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            return False
+        else:
+            atLeastOne = queryObj.next()
+            return atLeastOne
+
 
     def getFeedOrder(self):
         """ Returns the list of feeds, in the order in which they were organized on the UI by the user.
@@ -1382,3 +1405,22 @@ class Database:
             self.deleteFeedItemFilter(filterId)
 
         self.endTransaction()
+
+
+    def setPocketUsernameAndAccessToken(self, username, accessToken):
+        """ Sets the Pocket username and access token as global values. """
+        self.setGlobalValue(kPocketUsernameKey, username)
+        self.setGlobalValue(kPocketAccessToken, accessToken)
+
+    def getPocketAccessToken(self):
+        """ Returns the Pocket access token. """
+        return self.getGlobalValue(kPocketAccessToken)
+
+    def getPocketUsername(self):
+        """ Returns the Pocket username. """
+        return self.getGlobalValue(kPocketUsernameKey)
+
+    def isPocketInitialized(self):
+        """ Returns True if Pocket has been initialized.  This simply means that the Pocket access token has been
+            obtained. """
+        return self.globalValueExists(kPocketAccessToken)

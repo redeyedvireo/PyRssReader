@@ -27,6 +27,7 @@ from ad_filter_dialog import AdFilterDialog
 from opml_exporter import OpmlExporter
 from opml_importer import OpmlImporter
 from enclosure_downloader import EnclosureDownloader
+from pocket_support import PocketSupport
 
 from feed import kItemsOfInterestFeedId
 
@@ -127,6 +128,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.minutesSinceLastFeedUpdate = 0         # Minutes since last update of feeds
 
         self.enclosureDownloader = None
+
+        self.pocketSupport = PocketSupport(self.db)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -541,7 +544,30 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionAdd_to_Pocket_triggered(self):
-        print("Add to Pocket action triggered.")
+        print("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
+        if not self.db.isPocketInitialized():
+            self.initializePocket()
+
+        if not self.db.isPocketInitialized():
+            errMsg = "Could not obtain Pocket authorization:"
+            QtWidgets.QMessageBox.critical(self, kAppName, errMsg)
+        else:
+            self.pocketSupport.addArticleToPocket(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
+
+    def initializePocket(self):
+        """ Initializes Pocket (ie, obtains the Pocket access token.)  This must be done from the UI, because a
+            dialog box will need to be presented asking the user if the access was authorized.  This will be
+            indicated by the appearance of the Google search page. """
+        if self.pocketSupport.doStepOneOfAuthorization():
+            # At this point, Pocket should have redirected the user to the redirect page, which is the Google search page.
+            # Need to ask the user if this has happened.
+
+            message = "When the Google search site appears, click Yes.  If it does not appear, click No."
+            button = QtWidgets.QMessageBox.question(self, kAppName, message)
+
+            if button == QtWidgets.QMessageBox.Yes:
+                self.pocketSupport.doStepTwoOfAuthorization()
+
 
     def event(self, event):
         if event.type() == QtCore.QEvent.WindowDeactivate:

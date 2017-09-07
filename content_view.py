@@ -30,6 +30,7 @@ class RssContentView(QtWidgets.QTextBrowser):
         self.m_feedHeaderHtml = ""
         self.m_processedFeedContents = ""
         self.rawFeedContents = ""
+        self.filteredTitle = ""             # Language-filtered title
         self.dummyImage = QtGui.QPixmap()
         self.imageList = []
         self.currentFeedItem = None
@@ -109,8 +110,8 @@ class RssContentView(QtWidgets.QTextBrowser):
         self.currentFeed = feed
 
         # Title
-        filteredTitle = self.languageFilter.filterString(feedItem.m_title)
-        strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", filteredTitle)
+        self.filteredTitle = self.languageFilter.filterString(feedItem.m_title)
+        strTitleLink = self.m_feedHeaderHtml.replace("%1", feedItem.m_link).replace("%2", self.filteredTitle)
 
         htmlBody = feedItem.getFeedItemText()
         self.rawFeedContents = htmlBody
