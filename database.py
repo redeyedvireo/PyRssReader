@@ -423,7 +423,7 @@ class Database:
     def globalValueExists(self, key):
         """ Checks if a global value exists. """
         queryObj = QtSql.QSqlQuery(self.db)
-        queryObj.prepare("select count(datatype) from globals where key=?")
+        queryObj.prepare("select datatype from globals where key=?")
         queryObj.addBindValue(key)
 
         queryObj.exec_()

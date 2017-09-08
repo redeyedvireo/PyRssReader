@@ -129,7 +129,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.enclosureDownloader = None
 
-        self.pocketSupport = PocketSupport(self.db)
+        self.pocketSupport = PocketSupport(self.db, self.proxy)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -158,6 +158,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if self.m_currentFeedId >= 0:
             self.onFeedSelected(self.m_currentFeedId)
             self.feedTreeObj.setCurrentFeed(self.m_currentFeedId)
+
+        self.pocketSupport.initialize()
 
         self.resetFeedUpdateMinuteCount()
         self.startFeedUpdateTimer()

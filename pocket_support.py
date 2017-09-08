@@ -15,12 +15,28 @@ class PocketSupport:
     kRedirectUri = "https://google.com"
 
 
-    def __init__(self, db):
+    def __init__(self, db, proxy):
         self.db = db
+        self.proxy = proxy
+        self.proxyDict = None
         self.requestToken = None
         self.isAuthorized = False
         self.accessToken = None
         self.username = None
+
+    def initialize(self):
+        """ Initializes the proxy headers. """
+        if self.proxy.usesProxy():
+            self.proxyDict = { 'http' : 'http://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
+                                                                     self.proxy.proxyUrl, self.proxy.proxyPort),
+                               'https' : 'https://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
+                                                                       self.proxy.proxyUrl, self.proxy.proxyPort) }
+
+    def usingProxy(self):
+        if self.proxyDict is not None:
+            return True
+        else:
+            return False
 
     def obtainRequestToken(self):
         """ Obtain the request token.  Returns True if successful, or False if not. """
@@ -29,7 +45,10 @@ class PocketSupport:
         data = json.dumps({"consumer_key": self.kConsumerKey,
                            "redirect_uri": self.kRedirectUri})
 
-        response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        if self.usingProxy():
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
+        else:
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
         if response.status_code == 200:
             responseJson = response.json()
@@ -54,7 +73,10 @@ class PocketSupport:
         data = json.dumps({"consumer_key": self.kConsumerKey,
                            "code": self.requestToken})
 
-        response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        if self.usingProxy():
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
+        else:
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
         if response.status_code == 200:
             responseJson = response.json()
@@ -80,7 +102,10 @@ class PocketSupport:
                            'consumer_key': self.kConsumerKey,
                            'access_token': self.accessToken})
 
-        response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        if self.usingProxy():
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
+        else:
+            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
         if response.status_code == 200:
             responseJson = response.json()
