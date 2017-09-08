@@ -244,7 +244,9 @@ class TitleTree(QtCore.QObject):
                 if feedItem.isValid():
                     self.addFeedItem(feedItem)
                 else:
-                    logging.error("TitleTree.addFeedItems(): Invalid feed item found.")
+                    errMessage = "TitleTree.addFeedItems(): Invalid feed item found in feed {}: Feed title: {}, guid: {}."\
+                        .format(feed.feedName(), feedItem.m_title, feedItem.m_guid)
+                    logging.error(errMessage)
 
             self.titleTreeView.sortByColumn(self.sortColumn, self.sortOrder)
             self.model.sort(self.sortColumn, self.sortOrder)
