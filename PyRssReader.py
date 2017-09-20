@@ -554,7 +554,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             errMsg = "Could not obtain Pocket authorization:"
             QtWidgets.QMessageBox.critical(self, kAppName, errMsg)
         else:
-            self.pocketSupport.addArticleToPocket(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
+            result = self.pocketSupport.addArticleToPocket(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
+
+            if result is True:
+                QtWidgets.QMessageBox.information(self, "Add to Pocket", "The article was successfully added to Pocket.")
+            else:
+                QtWidgets.QMessageBox.critical(self, "Add to Pocket", "Could not add the article to Pocket.")
 
     def initializePocket(self):
         """ Initializes Pocket (ie, obtains the Pocket access token.)  This must be done from the UI, because a

@@ -91,9 +91,9 @@ class PocketSupport:
             return False
 
     def saveArticle(self, url, title):
-        """ Adds an article to Pocket. """
+        """ Adds an article to Pocket.  Returns True if successful, False otherwise. """
         if self.accessToken is None:
-            return
+            return False
 
         requestUrl = 'https://getpocket.com/v3/add'
 
@@ -109,20 +109,23 @@ class PocketSupport:
 
         if response.status_code == 200:
             responseJson = response.json()
+            return True
 
         else:
             errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
             print(errorMessage)
             logging.error(errorMessage)
+            return False
 
     def addArticleToPocket(self, url, title):
         """ Adds an article to Pocket.  This is the function to use from outside this class to save articles.
             The class expects that the Pocket access token has been saved in the database; the class, by itself,
             cannot completely retrieve the access token, because there will need to be a UI component that asks
-            the user to indicate that the request was granted. """
+            the user to indicate that the request was granted.
+            Returns True if successful, False otherwise. """
         if self.accessToken is None:
             self.accessToken = self.db.getPocketAccessToken()
-        self.saveArticle(url, title)
+        return self.saveArticle(url, title)
 
     def doStepOneOfAuthorization(self):
         """ Performs step 1 of authorization, which is to obtain the request token, and to show the Pocket web page for
