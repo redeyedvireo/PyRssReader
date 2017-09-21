@@ -290,6 +290,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def addRssContentViewToLayout(self):
         self.vertSplitter.addWidget(self.rssContentViewObj)
 
+    @QtCore.pyqtSlot()
+    def on_actionAbout_Qt_triggered(self):
+        app.aboutQt()
+
+    @QtCore.pyqtSlot()
+    def on_actionAbout_RssReader_triggered(self):
+        QtWidgets.QMessageBox.about(self, "About PyRssReader", "PyRssReader by Jeff Geraci")
+
     def onFeedSelected(self, feedId):
         print("onFeedSelected: {} was selected.".format(feedId))
         self.m_currentFeedId = feedId
