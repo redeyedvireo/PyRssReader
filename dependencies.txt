@@ -20,3 +20,7 @@ Requests:  (used in Pocket access):
 To install:
 pip3 install requests
 (though, they recommend installing pipenv, and using pipenv install requests)
+
+PyInstaller:
+To install:
+pip3 install pyinstaller

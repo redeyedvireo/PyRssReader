@@ -1,3 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/*
 *.log
+__pycache__/*
+dist/*
+build/*
+PyRssReader.spec
