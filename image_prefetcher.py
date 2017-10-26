@@ -52,7 +52,7 @@ class ImagePrefetcher(QtCore.QObject):
         url = imageTuple[0]
         image = imageTuple[1]
         self.imageCache.addImage(url, image)
-        print("Just added image: {} (cache length: {})".format(url, self.imageCache.cacheSize()))
+        #print("Just added image: {} (cache length: {})".format(url, self.imageCache.cacheSize()))
 
     @QtCore.pyqtSlot()
     def onPrefetchDone(self):

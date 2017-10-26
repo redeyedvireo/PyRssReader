@@ -210,7 +210,7 @@ class RssContentView(QtWidgets.QTextBrowser):
         imageFetchList = []
         for imageUrl in self.imageList:
             if not self.imageCache.contains(imageUrl):
-                print("The image cache did not contain: {}".format(imageUrl))
+                #print("The image cache did not contain: {}".format(imageUrl))
                 imageFetchList.append(imageUrl)
 
         self.imageFetchThread = ImageFetchThread(imageFetchList, self.currentFeed, self.proxy)
