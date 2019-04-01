@@ -603,10 +603,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.close()
         self.saveSettings()
 
-# ---------------------------------------------------------------
-if __name__ == "__main__":
+def main():
     app = QtWidgets.QApplication(sys.argv)
     wind = PyRssReaderWindow()
     wind.show()
 
     sys.exit(app.exec_())
+
+# ---------------------------------------------------------------
+if __name__ == "__main__":
+    main()
