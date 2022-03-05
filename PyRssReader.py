@@ -2,6 +2,7 @@ import sys
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
+from content_view_new import RssContentViewNew
 from database import Database
 from language_filter import LanguageFilter
 from ad_filter import AdFilter
@@ -116,8 +117,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
         self.titleTreeObj.downloadEnclosureSignal.connect(self.onDownloadEnclosure)
 
-        self.rssContentViewObj = RssContentView(self, self.languageFilter, self.adFilter, self.imageCache,
+        # self.rssContentViewObj = RssContentView(self, self.languageFilter, self.adFilter, self.imageCache,
+        #                                         self.keyboardHandler, self.proxy)
+
+        self.rssContentViewObj = RssContentViewNew(self, self.languageFilter, self.adFilter, self.imageCache,
                                                 self.keyboardHandler, self.proxy)
+
         self.addRssContentViewToLayout()
         self.rssContentViewObj.reselectFeedItemSignal.connect(self.onReselectFeedItem)
         self.rssContentViewObj.urlHovered.connect(self.showStatusBarMessage)

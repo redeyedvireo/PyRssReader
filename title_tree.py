@@ -310,12 +310,13 @@ class TitleTree(QtCore.QObject):
 
     def prefetchImages(self):
         """ Prefetches images for the next few feeds. """
-        fetchList = []
-        for row in self.prefetchController.prefetchList():
-            feedId = self.getFeedIdForRow(row)
-            guid = self.getGuidForRow(row)
-            fetchList.append( (feedId, guid) )
-        self.imagePrefetcher.prefetchImages(fetchList, self.feed)
+        pass        # We don't need to do this with WebEngine
+        # fetchList = []
+        # for row in self.prefetchController.prefetchList():
+        #     feedId = self.getFeedIdForRow(row)
+        #     guid = self.getGuidForRow(row)
+        #     fetchList.append( (feedId, guid) )
+        # self.imagePrefetcher.prefetchImages(fetchList, self.feed)
 
     def GetColumnWidths(self):
         """ Returns the widths of all columns """
