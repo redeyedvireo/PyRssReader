@@ -292,7 +292,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionAbout_Qt_triggered(self):
-        app.aboutQt()
+        QtWidgets.QMessageBox.aboutQt(self, 'About Qt')
 
     @QtCore.pyqtSlot()
     def on_actionAbout_RssReader_triggered(self):
