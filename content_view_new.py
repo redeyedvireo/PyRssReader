@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import logging
+from custom_web_engine_page import CustomWebEnginePage
 
 from utility import getResourceFilePixmap, getResourceFileText
 
@@ -89,12 +90,11 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
     # self.m_processedFeedContents = self.fixHtml(self.m_processedFeedContents)
 
-    self.setHtml(self.m_processedFeedContents)
+    webPage = CustomWebEnginePage(self)
+  
+    webPage.setHtml(self.m_processedFeedContents)
 
-    webPage = self.page()
-
-    webEngineSettings = webPage.settings()
-    webEngineSettings.fontFamily = 'verdana'
+    self.setPage(webPage)
 
     # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
     #self.fixDocument()
