@@ -1,4 +1,4 @@
-# pyinstaller cli.py --onefile -w --name pyrss.exe --add-data "TimeTracker.ui;TimeTracker.ui" --add-data "edit_charge_codes.ui;edit_charge_codes.ui"
+# This wraps PyRssReader into an executable file.
 
 $arguments = 'cli.py',
              '-w',
@@ -55,15 +55,5 @@ $arguments = 'cli.py',
 			 '--add-binary',
 			 'Resources/star.png;Resources'
 			 
-#pyinstaller cli.py -w --name pyrss.exe ^
-#    --add-data "ad_filter_dialog.ui;." ^
-#    --add-data "FeedPropertiesDlg.ui;." ^
-#    --add-data "filter_dialog.ui;." ^
-#    --add-data "filter_manager_dialog.ui;." ^
-#    --add-data "language_filter_dialog.ui;." ^
-#    --add-data "NewFeedDlg.ui;." ^
-#    --add-data "PrefsDlg.ui;." ^
-#    --add-data "PurgeDlg.ui;." ^
-#    --add-data "PyRssReaderWindow.ui;."
 
 pyinstaller $arguments 2>&1 > .\pyinstaller-build.log
