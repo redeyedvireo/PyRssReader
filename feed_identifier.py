@@ -96,7 +96,7 @@ class FeedIdentifier:
     def readFeedImage(self, parsedFeed):
         if 'image' in parsedFeed.feed:
             imageRoot = parsedFeed.feed.image
-            feedImageUrl = imageRoot.href
+            feedImageUrl = imageRoot.href if 'href' in imageRoot else ''
 
             if feedImageUrl is not None:
                 resourceFetcher = ResourceFetcher(feedImageUrl, self.proxy)

@@ -17,6 +17,8 @@ from PyQt5 import QtCore
 def parseFeed(feedItemRawText):
     parsedFeed = feedparser.parse(feedItemRawText)
 
+    feedTitle = parsedFeed.feed.title if 'title' in parsedFeed.feed else '<unknown feed title>'
+
     feedItemList = []
 
     for entry in parsedFeed.entries:
@@ -26,23 +28,17 @@ def parseFeed(feedItemRawText):
             feedItem.m_title = entry.title
             feedItem.m_author = entry.author if 'author' in entry else ''
             feedItem.m_link = entry.link
-            feedItem.m_description = entry.summary_detail if 'summary_detail' in entry else ''
-
+            feedItem.m_description = getFeedItemDescription(entry)
             feedItem.m_encodedContent = getFeedItemContent(entry)
 
             if len(feedItem.m_encodedContent) == 0:
-                errMsg = f"parseFeed: {feedItem.m_title} has no content:"
+                errMsg = f"parseFeed: {feedItem.m_title} has no content (Feed: {feedTitle})"
                 logging.error(errMsg)
 
             if 'tags' in entry:
                 feedItem.m_categories = [tag.term for tag in entry.tags]
 
-            if 'published_parsed' in entry:
-                feedItem.m_publicationDatetime = datetime.datetime.fromtimestamp(mktime(entry.published_parsed), timezone.utc)
-            else:
-                feedItem.m_publicationDatetime = pubDateTime = datetime.datetime.now(timezone.utc)
-                errMsg = f'parseFeed: Feed item {feedItem.m_title} has no pubDateTime.  Using now() instead'
-                logging.error(errMsg)
+            feedItem.m_publicationDatetime = getFeedItemDate(entry, feedTitle)
 
             feedItem.m_guid = entry.id
             feedItem.m_thumbnailLink = ''
@@ -55,18 +51,34 @@ def parseFeed(feedItemRawText):
 
             feedItemList.append(feedItem)
         except Exception as inst:
-            errMsg = f"parseFeed: Exception: {inst} when parsing feed item:"
-            logging.error(errMsg)
+            logging.error(f"parseFeed: Exception: {inst} when parsing feed item (Feed: {feedTitle})")
 
     return feedItemList
 
 def getFeedItemContent(entry):
-    if 'summary' in entry:
+    if 'dc_content' in entry:
+        return entry.dc_content
+    elif 'summary' in entry:
         return entry.summary
     elif 'content' in entry:
         return entry.content[0].value
     else:
         return ''
+
+def getFeedItemDescription(entry):
+    if 'summary' in entry:
+        return entry.summary
+    else:
+        return ''
+
+def getFeedItemDate(entry, feedTitle):
+    if 'published_parsed' in entry:
+        return datetime.datetime.fromtimestamp(mktime(entry.published_parsed), timezone.utc)
+    elif 'updated_parsed' in entry:
+        return datetime.datetime.fromtimestamp(mktime(entry.updated_parsed), timezone.utc)
+    else:
+        logging.error(f'parseFeed: Feed item {entry.title} has no pubDateTime (Feed: {feedTitle}).  Using now() instead')
+        return datetime.datetime.now(timezone.utc)
 
 def parseFeedOLD(feedItemRawText):
     """ Parses a feed item, from raw text received from the server.
