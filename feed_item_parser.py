@@ -1,9 +1,11 @@
 import logging
+import feedparser
 from lxml import etree
 from lxml.etree import fromstring
 import dateutil.parser
 import datetime
 from datetime import timezone
+from time import mktime
 from feed_item import FeedItem
 from PyQt5 import QtCore
 
@@ -13,6 +15,62 @@ from PyQt5 import QtCore
 
 
 def parseFeed(feedItemRawText):
+    parsedFeed = feedparser.parse(feedItemRawText)
+
+    feedItemList = []
+
+    for entry in parsedFeed.entries:
+        feedItem = FeedItem()
+
+        try:
+            feedItem.m_title = entry.title
+            feedItem.m_author = entry.author if 'author' in entry else ''
+            feedItem.m_link = entry.link
+            feedItem.m_description = entry.summary_detail if 'summary_detail' in entry else ''
+
+            feedItem.m_encodedContent = getFeedItemContent(entry)
+
+            if len(feedItem.m_encodedContent) == 0:
+                errMsg = f"parseFeed: {feedItem.m_title} has no content:"
+                print(errMsg)
+                logging.error(errMsg)
+
+            if 'tags' in entry:
+                feedItem.m_categories = [tag.term for tag in entry.tags]
+
+            if 'published_parsed' in entry:
+                feedItem.m_publicationDatetime = datetime.datetime.fromtimestamp(mktime(entry.published_parsed), timezone.utc)
+            else:
+                feedItem.m_publicationDatetime = pubDateTime = datetime.datetime.now(timezone.utc)
+                errMsg = f'parseFeed: Feed item {feedItem.m_title} has no pubDateTime.  Using now() instead'
+                logging.error(errMsg)
+
+            feedItem.m_guid = entry.id
+            feedItem.m_thumbnailLink = ''
+            feedItem.m_thumbnailSize = QtCore.QSize(0, 0)
+
+            if 'enclosures' in entry and len(entry.enclosures) > 0:
+                feedItem.m_enclosureLink = entry.enclosures[0].href
+                feedItem.m_enclosureLength = entry.enclosures[0].length if 'length' in entry.enclosures[0] else 0
+                feedItem.m_enclosureType = entry.enclosures[0].type
+
+            feedItemList.append(feedItem)
+        except Exception as inst:
+            errMsg = f"parseFeed: Exception: {inst} when parsing feed item:"
+            print(errMsg)
+            logging.error(errMsg)
+
+    return feedItemList
+
+def getFeedItemContent(entry):
+    if 'summary' in entry:
+        return entry.summary
+    elif 'content' in entry:
+        return entry.content[0].value
+    else:
+        return ''
+
+def parseFeedOLD(feedItemRawText):
     """ Parses a feed item, from raw text received from the server.
         Returns a list of feedItem objects. """
 

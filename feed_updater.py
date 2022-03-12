@@ -1,5 +1,6 @@
 import datetime
 from feed_update_thread import FeedUpdateThread
+from feed_update_thread_debug import FeedUpdateThreadDebug
 from proxy import Proxy
 from PyQt5 import QtCore
 
@@ -31,6 +32,7 @@ class FeedUpdater(QtCore.QObject):
         self.feedUpdateMessageSignal.emit(updateMessage, kMessageTimeout)
 
         self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids, self.proxy)
+        # self.feedUpdateThread = FeedUpdateThreadDebug(feed.m_feedUrl, guids, self.proxy)
         self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
         self.feedUpdateThread.start()
 
