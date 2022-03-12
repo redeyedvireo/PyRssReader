@@ -59,3 +59,6 @@ $arguments = 'cli.py',
 			 
 
 pyinstaller $arguments 2>&1 > .\pyinstaller-build.log
+
+# Zip the output directory
+7z a -tzip dist\pyrss.zip dist\pyrss
