@@ -66,7 +66,6 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
   def setContents(self, feedItem, feed):
     """ Sets a feed item's HTML into the text browser. """
-    print(f"Setting contents for {feedItem.m_title}")
     self.currentFeedItem = feedItem
     self.currentFeed = feed
 

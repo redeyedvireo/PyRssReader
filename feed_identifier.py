@@ -54,7 +54,6 @@ class FeedIdentifier:
                 feedTextToDisplay = feedText
 
             errMsg = "parseFeed: Exception: {} when parsing feed item text:\n{}".format(inst, feedTextToDisplay)
-            print(errMsg)
             logging.error(errMsg)
             return self.feed
 

@@ -143,7 +143,7 @@ class TitleTree(QtCore.QObject):
         item = self.model.item(index.row(), kTitleColumn)
         self.feedItemGuid = item.guid()
         self.feedId = item.feedId()
-        print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
+        # print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
         self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
         self.markRowAsRead(item.row())
         self.prefetchController.rowSelected(item.row())

@@ -255,7 +255,6 @@ class Database:
 
     def reportError(self, errorMessage):
         logging.error(errorMessage)
-        print(errorMessage)
 
         # TODO: Decide if throwing an error is the right thing to do.
         #raise DbError(errorMessage)
@@ -917,6 +916,9 @@ class Database:
 
         feedTableName = self.feedItemsTableName(feedId)
 
+        if not self.tableExists(feedTableName):
+            return None
+
         queryObj = QtSql.QSqlQuery(self.db)
 
         queryStr = "select "
@@ -1035,6 +1037,9 @@ class Database:
             False is returned if the feed item doesn't exist. """
         feedTableName = self.feedItemsTableName(feedId)
 
+        if not self.tableExists(feedTableName):
+            return False
+
         queryObj = QtSql.QSqlQuery(self.db)
         queryStr = "select readflag from {} where guid=?".format(feedTableName)
         queryObj.prepare(queryStr)
@@ -1074,6 +1079,24 @@ class Database:
             return False
 
         return queryObj.next()
+
+    def tableExists(self, tableName):
+        queryObj = QtSql.QSqlQuery(self.db)
+        queryStr = f"select name from sqlite_master where type='table' and name='{tableName}'"
+        queryObj.prepare(queryStr)
+
+        queryObj.exec_()
+
+        # Check for errors
+        sqlErr = queryObj.lastError()
+        if sqlErr.type() != QtSql.QSqlError.NoError:
+            self.reportError("Error when attempting to determine if a table exists: {}".format(sqlErr.text()))
+            return False
+
+        hasFirstItem = queryObj.next()
+        # logging.info(f'Tablename: {tableName} -> hasFirstItem: {hasFirstItem}')
+
+        return hasFirstItem
 
     def getItemsOfInterest(self):
         """ Retrieves all the items of interest, as a list of tuples of the form: (feedId, guid). """

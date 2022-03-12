@@ -197,8 +197,7 @@ class FeedTree(QtCore.QObject):
     def onItemActivated(self, current, previous):
         feedId = current.data(0, QtCore.Qt.UserRole)
         self.lastClickedFeedId = feedId
-        print("Item clicked: {}, feed ID: {}".format(current.text(0), feedId))
-        #logging.info("Item clicked: {}".format(item.text(column)))
+        # logging.info(f"Item clicked: {current.text(0)}, feed ID: {feedId}")
         self.feedSelectedSignal.emit(feedId)
 
     def onContextMenu(self, pos):

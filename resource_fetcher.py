@@ -29,18 +29,15 @@ class ResourceFetcher:
             else:
                 errMsg = "Unknown URL Exception."
 
-            print(errMsg)
             logging.error(errMsg)
 
             self.data = self.createNullImage()
         except ValueError as e:
             errMsg = "ValueError exception when fetching image: {}: {}".format(url, e)
-            print(errMsg)
             logging.error(errMsg)
             self.data = self.createNullImage()
         except Exception as inst:
             errMsg = "Exception when fetching {}: {}".format(url, inst)
-            print(errMsg)
             logging.error(errMsg)
             self.data = self.createNullImage()
 

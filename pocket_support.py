@@ -56,7 +56,6 @@ class PocketSupport:
             return True
         else:
             errorMessage = "Obtain request token error: {}: {}".format(response.status_code, response.text)
-            print(errorMessage)
             logging.error(errorMessage)
             return False
 
@@ -86,7 +85,6 @@ class PocketSupport:
 
         else:
             errorMessage = "Convert request token to access token error: {}: {}".format(response.status_code, response.text)
-            print(errorMessage)
             logging.error(errorMessage)
             return False
 
@@ -113,7 +111,6 @@ class PocketSupport:
 
         else:
             errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
-            print(errorMessage)
             logging.error(errorMessage)
             return False
 

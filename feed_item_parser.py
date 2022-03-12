@@ -32,7 +32,6 @@ def parseFeed(feedItemRawText):
 
             if len(feedItem.m_encodedContent) == 0:
                 errMsg = f"parseFeed: {feedItem.m_title} has no content:"
-                print(errMsg)
                 logging.error(errMsg)
 
             if 'tags' in entry:
@@ -57,7 +56,6 @@ def parseFeed(feedItemRawText):
             feedItemList.append(feedItem)
         except Exception as inst:
             errMsg = f"parseFeed: Exception: {inst} when parsing feed item:"
-            print(errMsg)
             logging.error(errMsg)
 
     return feedItemList
@@ -95,7 +93,6 @@ def parseFeedOLD(feedItemRawText):
             feedTextToDisplay = rawText
 
         errMsg = "parseFeed: Exception: {} when parsing feed item text:\n{}".format(inst, feedTextToDisplay)
-        print(errMsg)
         logging.error(errMsg)
         return []
 

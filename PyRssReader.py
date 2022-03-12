@@ -73,7 +73,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         super(PyRssReaderWindow, self).__init__()
         uic.loadUi('PyRssReaderWindow.ui', self)
 
-        logging.basicConfig(filename=kLogFile, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+        console = logging.StreamHandler()
+        fileHandler = logging.FileHandler(kLogFile, 'a')
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
+                                handlers=[ fileHandler, console ])
 
         self.db = Database()
         self.proxy = Proxy()
@@ -304,7 +307,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(self, "About PyRssReader", "PyRssReader by Jeff Geraci")
 
     def onFeedSelected(self, feedId):
-        print("onFeedSelected: {} was selected.".format(feedId))
         self.m_currentFeedId = feedId
         self.currentFeed = self.db.getFeed(feedId)
         if self.m_currentFeedId != kItemsOfInterestFeedId:
@@ -322,7 +324,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             feedItemList = []
             for ioiTuple in ioiList:
                 feedItem = self.db.getFeedItem(ioiTuple[1], ioiTuple[0])
-                feedItemList.append(feedItem)
+
+                if feedItem is not None:
+                    feedItemList.append(feedItem)
+                else:
+                    logging.error(f'Feed item {ioiTuple[1]} not found in feed {ioiTuple[0]}')
 
             self.titleTreeObj.addFeedItems(feedItemList, self.currentFeed, False)
 
@@ -331,11 +337,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj.addFeedItems(feedItemList, self.currentFeed, sameFeed)
 
     def onFeedItemSelected(self, feedId, feedItemGuid):
-        print("onFeedItemSelected: guid: {}, from feed: {}".format(feedItemGuid, feedId))
         feedItem = self.db.getFeedItem(feedItemGuid, feedId)
-        self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
-        self.feedTreeObj.updateFeedCount(feedId)
-        self.rssContentViewObj.setContents(feedItem, self.currentFeed)
+
+        if feedItem is not None:
+            self.db.setFeedItemReadFlag(feedId, feedItemGuid, True)
+            self.feedTreeObj.updateFeedCount(feedId)
+            self.rssContentViewObj.setContents(feedItem, self.currentFeed)
+        else:
+            logging.error(f'Feed item {feedItemGuid} does not exist (feed ID: {feedId})')
 
     @QtCore.pyqtSlot()
     def onReselectFeedItem(self):
@@ -343,7 +352,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.titleTreeObj.reselectFeedItem()
 
     def onFeedUpdateRequested(self, feedId):
-        print("onFeedUpdateRequested for feed: {}".format(feedId))
         if feedId > 0:
             self.feedUpdater.updateFeed(feedId, self.proxy)
         else:
