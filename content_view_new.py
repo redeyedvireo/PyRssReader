@@ -94,7 +94,15 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
   
     self.webPage.setHtml(self.m_processedFeedContents)
 
+    settings = self.webPage.settings()
+    settings.setFontFamily(QtWebEngineWidgets.QWebEngineSettings.FontFamily.StandardFont, 'Verdana')
+    settings.setFontSize(QtWebEngineWidgets.QWebEngineSettings.FontSize.DefaultFontSize, 14)
+    # settings.setAttribute(QtWebEngineWidgets.QWebEngineSettings.FontFamily.SansSerifFont, True)
+
     self.setPage(self.webPage)
+
+    viewSettings = self.settings()
+    viewSettings.setFontFamily(QtWebEngineWidgets.QWebEngineSettings.FontFamily.SansSerifFont, 'Verdana')
 
     # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
     #self.fixDocument()
