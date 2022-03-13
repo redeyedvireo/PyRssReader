@@ -25,6 +25,7 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.filteredTitle = ""             # Language-filtered title
     self.currentFeedItem = None
     self.currentFeed = None
+    self.webPage = None
 
     QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -89,11 +90,11 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.m_processedFeedContents = self.adFilter.filterHtml(self.m_processedFeedContents)
     # self.m_processedFeedContents = self.fixHtml(self.m_processedFeedContents)
 
-    webPage = CustomWebEnginePage(self)
+    self.webPage = CustomWebEnginePage(self)
   
-    webPage.setHtml(self.m_processedFeedContents)
+    self.webPage.setHtml(self.m_processedFeedContents)
 
-    self.setPage(webPage)
+    self.setPage(self.webPage)
 
     # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
     #self.fixDocument()
@@ -109,7 +110,6 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
   @QtCore.pyqtSlot('QPoint')
   def onContextMenu(self, point):
-    print("Context menu requested")
     # menu = self.createStandardContextMenu()
     menu = QtWidgets.QMenu()
     # menu.addSeparator()
@@ -129,8 +129,11 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     menu.exec(self.mapToGlobal(point))
 
   def onCopyWebSource(self):
+      self.webPage.toHtml(self.toHtmlCallback)
+
+  def toHtmlCallback(self, html):
       clipboard = QtWidgets.QApplication.clipboard()
-      clipboard.setText(self.toHtml())
+      clipboard.setText(html)
 
   def onCopyRawFeedItemSource(self):
       clipboard = QtWidgets.QApplication.clipboard()
