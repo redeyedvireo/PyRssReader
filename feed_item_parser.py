@@ -58,10 +58,10 @@ def parseFeed(feedItemRawText):
 def getFeedItemContent(entry):
     if 'dc_content' in entry:
         return entry.dc_content
-    elif 'summary' in entry:
-        return entry.summary
     elif 'content' in entry:
         return entry.content[0].value
+    elif 'summary' in entry:
+        return entry.summary
     else:
         return ''
 
