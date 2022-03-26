@@ -39,13 +39,12 @@ class Database:
 
         if self.db.open():
             if dbExists:
-                print("Database open")
+                logging.info("Database open")
                 self.updateDatabase()
             else:
                 # Create the database, and all tables
                 self.createNewDatabase()
         else:
-            print("Error: could not open database.")
             logging.error("Could not open database")
 
     def close(self):

@@ -142,11 +142,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
-        print("Initializing application...")
+        logging.info("Starting application...")
         self.loadSettings()
 
         dbDir = self.getDatabasePath()
-        print("DB dir: {}".format(dbDir))
+        logging.info("Database: {}".format(dbDir))
         self.db.open(dbDir)
 
         self.languageFilter.initialize()
@@ -567,7 +567,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionAdd_to_Pocket_triggered(self):
-        print("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
+        logging.info("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
         if not self.db.isPocketInitialized():
             self.initializePocket()
 
@@ -615,9 +615,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.stopFeedUpdateTimer()
         feedOrderList = self.feedTreeObj.getFeedOrder()
         self.db.setFeedOrder(feedOrderList)
-        logging.info("Closing database...")
         self.db.close()
         self.saveSettings()
+        logging.info("Shutting down...")
         logging.shutdown()
 
 def main():
