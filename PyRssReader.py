@@ -617,9 +617,15 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.saveSettings()
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    wind = PyRssReaderWindow()
-    wind.show()
+    try:
+        app = QtWidgets.QApplication(sys.argv)
+        wind = PyRssReaderWindow()
+        wind.show()
+
+    except Exception as inst:
+        logging.error(f'Exception Occurred: type: {type(inst)}')
+        logging.error(f'Exception args: {inst.args}')
+        logging.error(f'Exception object: {inst}')
 
     sys.exit(app.exec_())
 
