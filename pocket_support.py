@@ -100,18 +100,24 @@ class PocketSupport:
                            'consumer_key': self.kConsumerKey,
                            'access_token': self.accessToken})
 
-        if self.usingProxy():
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
-        else:
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        try:
+            if self.usingProxy():
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
+            else:
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
-        if response.status_code == 200:
-            responseJson = response.json()
-            return True
+            if response.status_code == 200:
+                responseJson = response.json()
+                return True
 
-        else:
-            errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
-            logging.error(errorMessage)
+            else:
+                errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
+                logging.error(errorMessage)
+                return False
+        except Exception as inst:
+            logging.error(f'[PocketSuppoert.saveArticle] Exception: type: {type(inst)}')
+            logging.error(f'Exception args: {inst.args}')
+            logging.error(f'Exception object: {inst}')
             return False
 
     def addArticleToPocket(self, url, title):

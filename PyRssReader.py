@@ -623,7 +623,7 @@ def main():
         wind.show()
 
     except Exception as inst:
-        logging.error(f'Exception Occurred: type: {type(inst)}')
+        logging.error(f'[main] Exception: type: {type(inst)}')
         logging.error(f'Exception args: {inst.args}')
         logging.error(f'Exception object: {inst}')
 
