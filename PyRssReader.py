@@ -609,12 +609,16 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         return super(PyRssReaderWindow, self).event(event)
 
     def closeEvent(self, event):
+        self.shutdownApp()
+
+    def shutdownApp(self):
         self.stopFeedUpdateTimer()
         feedOrderList = self.feedTreeObj.getFeedOrder()
         self.db.setFeedOrder(feedOrderList)
-        print("Closing database...")
+        logging.info("Closing database...")
         self.db.close()
         self.saveSettings()
+        logging.shutdown()
 
 def main():
     try:
@@ -626,6 +630,7 @@ def main():
         logging.error(f'[main] Exception: type: {type(inst)}')
         logging.error(f'Exception args: {inst.args}')
         logging.error(f'Exception object: {inst}')
+        wind.shutdownApp()
 
     sys.exit(app.exec_())
 
