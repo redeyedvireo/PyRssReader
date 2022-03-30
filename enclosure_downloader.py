@@ -23,10 +23,11 @@ class EnclosureDownloader(QtCore.QThread):
             resourceFetcher = ResourceFetcher(self.enclosureUrl, self.proxy)
             enclosureData = resourceFetcher.getData()
 
-            # Save data to file
-            if os.path.exists(self.downloadDirectory):
-                fileObj = open(self.enclosurePath, 'wb')
-                fileObj.write(enclosureData)
-                fileObj.close()
+            if enclosureData is not None:
+                # Save data to file
+                if os.path.exists(self.downloadDirectory):
+                    fileObj = open(self.enclosurePath, 'wb')
+                    fileObj.write(enclosureData)
+                    fileObj.close()
 
         self.enclosureDownloadedSignal.emit(self.filename)

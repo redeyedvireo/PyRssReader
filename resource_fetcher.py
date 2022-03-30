@@ -31,15 +31,15 @@ class ResourceFetcher:
 
             logging.error(errMsg)
 
-            self.data = self.createNullImage()
+            self.data = None
         except ValueError as e:
             errMsg = "ValueError exception when fetching image: {}: {}".format(url, e)
             logging.error(errMsg)
-            self.data = self.createNullImage()
+            self.data = None
         except Exception as inst:
             errMsg = "Exception when fetching {}: {}".format(url, inst)
             logging.error(errMsg)
-            self.data = self.createNullImage()
+            self.data = None
 
     def getData(self):
         return self.data
@@ -47,7 +47,10 @@ class ResourceFetcher:
     def getDataAsPixmap(self):
         """ Returns the data as a pixmap. """
         pixmap = QtGui.QPixmap()
-        pixmap.loadFromData(self.data)
+
+        if self.data is not None:
+            pixmap.loadFromData(self.data)
+            
         return pixmap
 
     def createNullImage(self):

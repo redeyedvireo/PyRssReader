@@ -22,6 +22,10 @@ class FeedUpdateThreadDebug(QtCore.QObject):
         resourceFetcher = ResourceFetcher(self.feedUrl, self.proxy)
         feedText = resourceFetcher.getData()
 
+        if feedText is None:
+            self.feedUpdateDoneSignal.emit([])
+            return
+
         if DEBUG:
             debugParseFeed(feedText)
             return

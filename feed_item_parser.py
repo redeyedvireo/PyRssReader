@@ -15,7 +15,10 @@ from PyQt5 import QtCore
 
 
 def parseFeed(feedItemRawText):
-    parsedFeed = feedparser.parse(feedItemRawText)
+    try:
+        parsedFeed = feedparser.parse(feedItemRawText)
+    except Exception as inst:
+        logging.error(f'Exception {inst} parsing raw feed text. (Feed: {feedTitle})')
 
     feedTitle = parsedFeed.feed.title if 'title' in parsedFeed.feed else '<unknown feed title>'
 
@@ -56,14 +59,27 @@ def parseFeed(feedItemRawText):
     return feedItemList
 
 def getFeedItemContent(entry):
+    # Each tuple has the following structure: (<length of content>, content)
+    fieldTuples = []
+
     if 'dc_content' in entry:
-        return entry.dc_content
-    elif 'content' in entry:
-        return entry.content[0].value
-    elif 'summary' in entry:
-        return entry.summary
-    else:
+        fieldTuples.append((len(entry.dcContent), entry.dcContent))
+
+    if 'content' in entry:
+        fieldTuples.append((len(entry.content[0].value), entry.content[0].value))
+
+    if 'summary' in entry:
+        fieldTuples.append((len(entry.summary), entry.summary))
+
+    if len(fieldTuples) == 0:
+        # All are empty
         return ''
+
+    # Choose the one with the longest length
+    fieldTuples.sort(reverse=True, key=lambda y: y[0])
+
+    largestItem = fieldTuples[0]
+    return largestItem[1]
 
 def getFeedItemDescription(entry):
     if 'summary' in entry:
