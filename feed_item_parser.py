@@ -63,7 +63,7 @@ def getFeedItemContent(entry):
     fieldTuples = []
 
     if 'dc_content' in entry:
-        fieldTuples.append((len(entry.dcContent), entry.dcContent))
+        fieldTuples.append((len(entry.dc_content), entry.dc_content))
 
     if 'content' in entry:
         fieldTuples.append((len(entry.content[0].value), entry.content[0].value))
