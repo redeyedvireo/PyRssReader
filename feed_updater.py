@@ -31,8 +31,8 @@ class FeedUpdater(QtCore.QObject):
         updateMessage = "Updating {}".format(feed.m_feedTitle)
         self.feedUpdateMessageSignal.emit(updateMessage, kMessageTimeout)
 
-        # self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids, self.proxy)
-        self.feedUpdateThread = FeedUpdateThreadDebug(feed.m_feedUrl, guids, self.proxy)
+        self.feedUpdateThread = FeedUpdateThread(feed.m_feedUrl, guids, self.proxy)
+        # self.feedUpdateThread = FeedUpdateThreadDebug(feed.m_feedUrl, guids, self.proxy)
         self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
         self.feedUpdateThread.start()
 
