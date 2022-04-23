@@ -43,7 +43,8 @@ def parseFeed(feedItemRawText):
 
             feedItem.m_publicationDatetime = getFeedItemDate(entry, feedTitle)
 
-            feedItem.m_guid = entry.id
+            feedItem.m_guid = getFeedId(entry)
+
             feedItem.m_thumbnailLink = ''
             feedItem.m_thumbnailSize = QtCore.QSize(0, 0)
 
@@ -95,6 +96,14 @@ def getFeedItemDate(entry, feedTitle):
     else:
         logging.error(f'parseFeed: Feed item {entry.title} has no pubDateTime (Feed: {feedTitle}).  Using now() instead')
         return datetime.datetime.now(timezone.utc)
+
+def getFeedId(entry):
+    if 'id' in entry:
+        return entry['id']
+    elif 'link' in entry:
+        return entry['link']
+    else:
+        return ''
 
 def parseFeedOLD(feedItemRawText):
     """ Parses a feed item, from raw text received from the server.
