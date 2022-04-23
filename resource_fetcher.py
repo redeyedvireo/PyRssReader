@@ -10,8 +10,7 @@ class ResourceFetcher:
 
         try:
             if self.proxy.usesProxy():
-                proxy_handler = ProxyHandler({'http': 'http://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort),
-                                              'https': 'https://{}:{}@{}:{}'.format(self.proxy.proxyUser, self.proxy.proxyPassword, self.proxy.proxyUrl, self.proxy.proxyPort)})
+                proxy_handler = ProxyHandler(self.proxy.proxyDict)
                 proxy_auth_handler = HTTPBasicAuthHandler()
                 opener = request.build_opener(proxy_handler, proxy_auth_handler, HTTPHandler)
 
@@ -50,7 +49,7 @@ class ResourceFetcher:
 
         if self.data is not None:
             pixmap.loadFromData(self.data)
-            
+
         return pixmap
 
     def createNullImage(self):
