@@ -1,5 +1,6 @@
 import sys
 import logging
+from logging.handlers import RotatingFileHandler
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pathlib import Path
 from content_view_new import RssContentViewNew
@@ -36,7 +37,7 @@ from feed import kItemsOfInterestFeedId
 kDatabaseName = "Feeds.db"
 kAppName      = "RssReader"         # Only needed for finding the database path
 kAppNameForSettings = "PyRssReader" # Used for saving settings
-kLogFile = 'RssReader.log'
+kLogFile = 'PyRssReader.log'
 
 kStarIcon = "star.png"
 
@@ -67,6 +68,8 @@ kMaxCacheSize = 100
 # For status bar messages (don't clear the message)
 kDontClearMessage = 0
 
+kMaxLogileSize = 1024 * 1024
+
 # ---------------------------------------------------------------
 class PyRssReaderWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -74,9 +77,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         uic.loadUi('PyRssReaderWindow.ui', self)
 
         console = logging.StreamHandler()
-        fileHandler = logging.FileHandler(kLogFile, 'a')
+        fileHandler = logging.FileHandler(self.getLogfilePath(), 'a')
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
                                 handlers=[ fileHandler, console ])
+
+        handler = RotatingFileHandler(kLogFile, maxBytes=kMaxLogileSize, backupCount=9)
+
+        # Add the handler to the root logger
+        logging.getLogger('').addHandler(handler)
 
         self.db = Database()
         self.proxy = Proxy()
@@ -174,6 +182,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         if self.preferences.updateOnAppStart:
             self.on_actionUpdate_Feeds_triggered()
+
+    def getLogfilePath(self):
+        return f'{self.getDatabaseDirectory()}\\{kLogFile}'
 
     # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
