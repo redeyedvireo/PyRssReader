@@ -172,7 +172,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                                                       QtWidgets.QLineEdit.Password)
             if password[1]:
                 self.proxy.proxyPassword = password[0]
-                self.proxy.setProxyDict()
 
         if self.m_currentFeedId >= 0:
             self.onFeedSelected(self.m_currentFeedId)
@@ -262,7 +261,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.proxy.proxyPort = int(settingsObj.value(kProxyPort, 0))
         self.proxy.proxyUser = settingsObj.value(kProxyUserId, "")
         self.proxy.proxyPassword = settingsObj.value(kProxyPassword, "")
-        self.proxy.setProxyDict()
         settingsObj.endGroup()
 
         # General Preferences

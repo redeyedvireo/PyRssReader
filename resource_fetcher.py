@@ -10,7 +10,7 @@ class ResourceFetcher:
 
         try:
             if self.proxy.usesProxy():
-                proxy_handler = ProxyHandler(self.proxy.proxyDict)
+                proxy_handler = ProxyHandler(self.proxy.getProxyDict())
                 proxy_auth_handler = HTTPBasicAuthHandler()
                 opener = request.build_opener(proxy_handler, proxy_auth_handler, HTTPHandler)
 

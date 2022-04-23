@@ -39,7 +39,7 @@ class PocketSupport:
 
         try:
             if self.usingProxy():
-                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.getProxyDict())
             else:
                 response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
@@ -76,7 +76,7 @@ class PocketSupport:
 
         try:
             if self.usingProxy():
-                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.getProxyDict())
             else:
                 response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
@@ -115,7 +115,7 @@ class PocketSupport:
 
         try:
             if self.usingProxy():
-                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.getProxyDict())
             else:
                 response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
