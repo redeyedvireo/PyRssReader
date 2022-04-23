@@ -7,6 +7,11 @@ class Proxy:
         self.proxyUser = ""
         self.proxyPassword = ""
 
+        self.proxyDict = { 'http': 'http://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
+                                                            self.proxy.proxyUrl, self.proxy.proxyPort),
+                            'https': 'https://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
+                                                            self.proxy.proxyUrl, self.proxy.proxyPort) }
+
     def __str__(self):
         return "Host: {}, Port: {}, User: {}, Password: {}".format(self.proxyUrl, self.proxyPort, self.proxyUser, self.proxyPassword)
 
