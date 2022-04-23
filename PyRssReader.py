@@ -57,6 +57,7 @@ kLastViewedFeedId = "lastviewedfeedid"
 kProxyHostname = "proxyhostname"
 kProxyPort = "proxyport"
 kProxyUserId = "proxyuserid"
+kProxyPassword = "proxypassword"
 kGeneralPreferencesGroup = "preferences"
 kFeedUpdateInterval = "feedupdateinterval"
 kUpdateOnAppStart = "updateonappstart"
@@ -165,7 +166,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         feedOrderList = self.db.getFeedOrder()
         self.feedTreeObj.addFeeds(feedList, feedOrderList)
 
-        if self.proxy.usesProxy():
+        # If proxy not saved in prefs, prompt user for it
+        if self.proxy.usesProxy() and len(self.proxy.proxyPassword) == 0:
             password = QtWidgets.QInputDialog.getText(self, "Password", "Enter Proxy Password for user {}".format(self.proxy.proxyUser),
                                                       QtWidgets.QLineEdit.Password)
             if password[1]:
@@ -259,6 +261,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.proxy.proxyUrl = settingsObj.value(kProxyHostname, "")
         self.proxy.proxyPort = int(settingsObj.value(kProxyPort, 0))
         self.proxy.proxyUser = settingsObj.value(kProxyUserId, "")
+        self.proxy.proxyPassword = settingsObj.value(kProxyPassword, "")
+        self.proxy.setProxyDict()
         settingsObj.endGroup()
 
         # General Preferences
@@ -298,6 +302,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.setValue(kProxyHostname, self.proxy.proxyUrl)
         settingsObj.setValue(kProxyPort, self.proxy.proxyPort)
         settingsObj.setValue(kProxyUserId, self.proxy.proxyUser)
+        settingsObj.setValue(kProxyPassword, self.proxy.proxyPassword)
         settingsObj.endGroup()
 
         # General Preferences
@@ -427,6 +432,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.proxy = prefsDialog.getProxySettings()
             self.rssContentViewObj.setProxy(self.proxy)
             self.preferences = prefsDialog.getPreferences()
+            self.saveSettings()
 
 
     @QtCore.pyqtSlot()

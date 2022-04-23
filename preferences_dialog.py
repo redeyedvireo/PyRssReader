@@ -40,6 +40,8 @@ class PrefsDialog(QtWidgets.QDialog):
         self.proxy.proxyUrl = self.proxyHostnameLineEdit.text()
         self.proxy.proxyPort = self.proxyPortSpinBox.value()
         self.proxy.proxyUser = self.proxyUserIdLineEdit.text()
+        self.proxy.proxyPassword = self.proxyPasswordLineEdit.text()
+        self.proxy.setProxyDict()
         return self.proxy
 
     def getPreferences(self):
