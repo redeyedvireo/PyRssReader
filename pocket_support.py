@@ -18,7 +18,6 @@ class PocketSupport:
     def __init__(self, db, proxy):
         self.db = db
         self.proxy = proxy
-        self.proxyDict = None
         self.requestToken = None
         self.isAuthorized = False
         self.accessToken = None
@@ -26,17 +25,10 @@ class PocketSupport:
 
     def initialize(self):
         """ Initializes the proxy headers. """
-        if self.proxy.usesProxy():
-            self.proxyDict = { 'http' : 'http://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
-                                                                     self.proxy.proxyUrl, self.proxy.proxyPort),
-                               'https' : 'https://{}:{}@{}:{}/'.format(self.proxy.proxyUser, self.proxy.proxyPassword,
-                                                                       self.proxy.proxyUrl, self.proxy.proxyPort) }
+        pass
 
     def usingProxy(self):
-        if self.proxyDict is not None:
-            return True
-        else:
-            return False
+        return self.proxy.usesProxy()
 
     def obtainRequestToken(self):
         """ Obtain the request token.  Returns True if successful, or False if not. """
@@ -45,18 +37,28 @@ class PocketSupport:
         data = json.dumps({"consumer_key": self.kConsumerKey,
                            "redirect_uri": self.kRedirectUri})
 
-        if self.usingProxy():
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
-        else:
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        try:
+            if self.usingProxy():
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
+            else:
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
-        if response.status_code == 200:
-            responseJson = response.json()
-            self.requestToken = responseJson['code']
-            return True
-        else:
-            errorMessage = "Obtain request token error: {}: {}".format(response.status_code, response.text)
-            logging.error(errorMessage)
+            if response.status_code == 200:
+                responseJson = response.json()
+                self.requestToken = responseJson['code']
+                return True
+            else:
+                errorMessage = "Obtain request token error: {}: {}".format(response.status_code, response.text)
+                logging.error(errorMessage)
+                return False
+
+        except requests.exceptions.ProxyError as err:
+            logging.error(f'[PocketSupport.obtainRequestToken] Proxy error: {inst.args}')
+
+        except Exception as inst:
+            logging.error(f'[PocketSupport.obtainRequestToken] Exception: type: {type(inst)}')
+            logging.error(f'Exception args: {inst.args}')
+            logging.error(f'Exception object: {inst}')
             return False
 
     def obtainAuthorizationFromUserForTheApp(self):
@@ -72,25 +74,36 @@ class PocketSupport:
         data = json.dumps({"consumer_key": self.kConsumerKey,
                            "code": self.requestToken})
 
-        if self.usingProxy():
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
-        else:
-            response = requests.post(requestUrl, headers=self.kHeaders, data=data)
+        try:
+            if self.usingProxy():
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
+            else:
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
-        if response.status_code == 200:
-            responseJson = response.json()
-            self.username = responseJson['username']
-            self.accessToken = responseJson['access_token']
-            return True
+            if response.status_code == 200:
+                responseJson = response.json()
+                self.username = responseJson['username']
+                self.accessToken = responseJson['access_token']
+                return True
 
-        else:
-            errorMessage = "Convert request token to access token error: {}: {}".format(response.status_code, response.text)
-            logging.error(errorMessage)
+            else:
+                errorMessage = "Convert request token to access token error: {}: {}".format(response.status_code, response.text)
+                logging.error(errorMessage)
+                return False
+
+        except requests.exceptions.ProxyError as err:
+            logging.error(f'[PocketSupport.obtainAccessToken] Proxy error: {inst.args}')
+
+        except Exception as inst:
+            logging.error(f'[PocketSupport.obtainAccessToken] Exception: type: {type(inst)}')
+            logging.error(f'Exception args: {inst.args}')
+            logging.error(f'Exception object: {inst}')
             return False
 
     def saveArticle(self, url, title):
         """ Adds an article to Pocket.  Returns True if successful, False otherwise. """
         if self.accessToken is None:
+            logging.error(f'[PocketSupport.saveArticle] accedsToken is None.  Aboring.')
             return False
 
         requestUrl = 'https://getpocket.com/v3/add'
@@ -102,7 +115,7 @@ class PocketSupport:
 
         try:
             if self.usingProxy():
-                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxyDict)
+                response = requests.post(requestUrl, headers=self.kHeaders, data=data, proxies=self.proxy.proxyDict)
             else:
                 response = requests.post(requestUrl, headers=self.kHeaders, data=data)
 
@@ -111,11 +124,14 @@ class PocketSupport:
                 return True
 
             else:
-                errorMessage = "Add article to Pocket error: {}: {}".format(response.status_code, response.text)
-                logging.error(errorMessage)
+                logging.error(f'Add article to Pocket error: {response.status_code}: {response.text}')
                 return False
+
+        except requests.exceptions.ProxyError as err:
+            logging.error(f'[PocketSupport.saveArticle] Proxy error: {inst.args}')
+
         except Exception as inst:
-            logging.error(f'[PocketSuppoert.saveArticle] Exception: type: {type(inst)}')
+            logging.error(f'[PocketSupport.saveArticle] Exception: type: {type(inst)}')
             logging.error(f'Exception args: {inst.args}')
             logging.error(f'Exception object: {inst}')
             return False
