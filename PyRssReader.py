@@ -78,14 +78,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         uic.loadUi('PyRssReaderWindow.ui', self)
 
         console = logging.StreamHandler()
-        fileHandler = logging.FileHandler(self.getLogfilePath(), 'a')
+        rotatingFileHandler = RotatingFileHandler(self.getLogfilePath(), maxBytes=kMaxLogileSize, backupCount=9)
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
-                                handlers=[ fileHandler, console ])
-
-        handler = RotatingFileHandler(kLogFile, maxBytes=kMaxLogileSize, backupCount=9)
-
-        # Add the handler to the root logger
-        logging.getLogger('').addHandler(handler)
+                                handlers=[ rotatingFileHandler, console ])
 
         self.db = Database()
         self.proxy = Proxy()
