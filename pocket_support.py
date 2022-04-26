@@ -53,7 +53,8 @@ class PocketSupport:
                 return False
 
         except requests.exceptions.ProxyError as err:
-            logging.error(f'[PocketSupport.obtainRequestToken] Proxy error: {inst.args}')
+            logging.error(f'[PocketSupport.obtainRequestToken] Proxy error: {err.args}')
+            return False
 
         except Exception as inst:
             logging.error(f'[PocketSupport.obtainRequestToken] Exception: type: {type(inst)}')
@@ -92,7 +93,8 @@ class PocketSupport:
                 return False
 
         except requests.exceptions.ProxyError as err:
-            logging.error(f'[PocketSupport.obtainAccessToken] Proxy error: {inst.args}')
+            logging.error(f'[PocketSupport.obtainAccessToken] Proxy error: {err.args}')
+            return False
 
         except Exception as inst:
             logging.error(f'[PocketSupport.obtainAccessToken] Exception: type: {type(inst)}')
@@ -128,7 +130,8 @@ class PocketSupport:
                 return False
 
         except requests.exceptions.ProxyError as err:
-            logging.error(f'[PocketSupport.saveArticle] Proxy error: {inst.args}')
+            logging.error(f'[PocketSupport.saveArticle] Proxy error: {err.args}')
+            return False
 
         except Exception as inst:
             logging.error(f'[PocketSupport.saveArticle] Exception: type: {type(inst)}')
