@@ -16,6 +16,5 @@ class Proxy:
     def getProxyDict(self):
         """ Returns the proxy dictionary, needed for HTTP requests. """
         return {
-            'http': 'http://{}:{}@{}:{}/'.format(self.proxyUser, self.proxyPassword, self.proxyUrl, self.proxyPort),
-            'https': 'https://{}:{}@{}:{}/'.format(self.proxyUser, self.proxyPassword, self.proxyUrl, self.proxyPort)
+            'https': 'http://{}:{}@{}:{}/'.format(self.proxyUser, self.proxyPassword, self.proxyUrl, self.proxyPort)
         }
