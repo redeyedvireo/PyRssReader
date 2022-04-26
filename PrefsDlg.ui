@@ -336,7 +336,11 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QLineEdit" name="proxyPasswordLineEdit"/>
+      <widget class="QLineEdit" name="proxyPasswordLineEdit">
+       <property name="echoMode">
+        <enum>QLineEdit::Password</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
