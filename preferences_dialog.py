@@ -15,6 +15,7 @@ class PrefsDialog(QtWidgets.QDialog):
         self.proxyHostnameLineEdit.setText(self.proxy.proxyUrl)
         self.proxyPortSpinBox.setValue(self.proxy.proxyPort)
         self.proxyUserIdLineEdit.setText(self.proxy.proxyUser)
+        self.proxyPasswordLineEdit.setText(self.proxy.proxyPassword)
 
         # Set proxy type to HTML, and disable it.
         self.proxyTypeCombo.setCurrentIndex(2)
