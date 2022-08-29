@@ -16,9 +16,18 @@ class FeedIdentifier:
         self.feed = None
 
     def identifyFeed(self, feedUrl):
-        parsedFeed = feedparser.parse(feedUrl)
+        # Fetch the feed manually, since feedparser doesn't know about proxies.
+        resourceFetcher = ResourceFetcher(feedUrl, self.proxy)
+        feedText = resourceFetcher.getData()
+
+        parsedFeed = feedparser.parse(feedText)
 
         self.feed = Feed()
+
+        if parsedFeed.bozo:
+            exc = parsedFeed.bozo_exception
+            logging.info(f'Got Bozo error in feed: exception type: {type(exc).__name__}')
+            return self.feed
 
         self.feed.m_feedUrl = feedUrl
         self.feed.m_feedTitle = self.getFeedData(parsedFeed, 'title', 'Untitled Feed')
@@ -112,7 +121,7 @@ class FeedIdentifier:
 
                 resourceFetcher = ResourceFetcher(feedImageUrl, self.proxy)
                 self.feed.m_feedImage = resourceFetcher.getDataAsPixmap()
-    
+
     def getWebsiteFavicon(self):
         """ Attempts to retrieve the favicon from the feed's web site. """
         if self.feed.m_feedWebPageLink:
