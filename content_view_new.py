@@ -26,6 +26,7 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.currentFeedItem = None
     self.currentFeed = None
     self.webPage = None
+    self.hoveredLink = ''
 
     QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -91,7 +92,7 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     # self.m_processedFeedContents = self.fixHtml(self.m_processedFeedContents)
 
     self.webPage = CustomWebEnginePage(self)
-  
+
     self.webPage.setHtml(self.m_processedFeedContents)
 
     settings = self.webPage.settings()
@@ -114,6 +115,7 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
   @QtCore.pyqtSlot('QString')
   def onLinkHovered(self, url):
+    self.hoveredLink = url
     self.urlHovered.emit(url, 0)
 
   @QtCore.pyqtSlot('QPoint')
@@ -121,6 +123,9 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     # menu = self.createStandardContextMenu()
     menu = QtWidgets.QMenu()
     # menu.addSeparator()
+
+    if len(self.hoveredLink) > 0:
+      menu.addAction("Copy link to clipboard", self.onCopyHoveredLinkToClipboard)
 
     if self.hasSelection():
       selText = self.selectedText()
@@ -169,6 +174,10 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
       if selText:
           urlStr = "http://en.wikipedia.org/wiki/{}".format(selText.strip().replace(" ", "_"))
           QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr))
+
+  def onCopyHoveredLinkToClipboard(self):
+      clipboard = QtWidgets.QApplication.clipboard()
+      clipboard.setText(self.hoveredLink)
 
   def runLanguageFilter(self):
     self.reselectFeedItemSignal.emit()
