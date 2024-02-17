@@ -105,9 +105,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedIdsToUpdate = []
 
         # This is a persistent object, so it won't go out of scope while fetching feeds
-        self.feedUpdater = FeedUpdater(self.db)
-        self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
-        self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
+        # self.feedUpdater = FeedUpdater(self.db)
+        # self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
+        # self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
 
         self.keyboardHandler = KeyboardHandler(self)
 
@@ -308,6 +308,15 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def addRssContentViewToLayout(self):
         self.vertSplitter.addWidget(self.rssContentViewObj)
 
+    def createFeedUpdater(self):
+        """ Create the feed updater object.  This needs to be defined at class scope so that
+            it doesn't go out of scope while updating many feeds, but it also must be
+            destroyed after updating a feed to prevent memory leaks.
+        """
+        self.feedUpdater = FeedUpdater(self.db)
+        self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
+        self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
+
     @QtCore.pyqtSlot()
     def on_actionAbout_Qt_triggered(self):
         QtWidgets.QMessageBox.aboutQt(self, 'About Qt')
@@ -363,6 +372,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def onFeedUpdateRequested(self, feedId):
         if feedId > 0:
+            self.createFeedUpdater()
             self.feedUpdater.updateFeed(feedId, self.proxy)
         else:
             logging.error("onFeedUpdateRequested: Invalid feedId: {}".format(feedId))
@@ -391,6 +401,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.feedIdsToUpdate = self.db.getFeedIds()
 
+        self.createFeedUpdater()
         self.updateNextFeed()
 
     def updateNextFeed(self):
@@ -406,6 +417,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 # Only want to do this if the timer is not running.  If the timer is running, calling
                 # start() on it will restart it from 0.
                 self.startFeedUpdateTimer()
+
+            # Delete the feed updater to free its memory
+            del self.feedUpdater
 
     @QtCore.pyqtSlot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
