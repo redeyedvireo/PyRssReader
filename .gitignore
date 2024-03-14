@@ -2,6 +2,7 @@
 .idea/*
 *.log
 __pycache__/*
+test/__pycache__/*
 dist/*
 build/*
 *.spec
