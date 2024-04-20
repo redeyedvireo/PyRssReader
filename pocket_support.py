@@ -123,6 +123,7 @@ class PocketSupport:
 
             if response.status_code == 200:
                 responseJson = response.json()
+                logging.info(f'Article saved successfully to Pocket: {title}')
                 return True
 
             else:
