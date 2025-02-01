@@ -28,6 +28,12 @@ First, create a virtual environment:
 
 (though, they recommend installing pipenv, and using `pipenv install requests`)
 
+#### Beautiful Soup 4
+`pip install beautifulsoup4`
+
+#### Feedparser
+`pip install feedparser`
+
 #### PyInstaller
 `pip install pyinstaller`
 
