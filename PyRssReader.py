@@ -22,7 +22,7 @@ from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 from ui_PyRssReaderWindow import Ui_RssReaderWindow
-from utility import getResourceFilePixmap, getLogfilePath
+from utility import getDatabasePath, getDefaultEnclosureDirectory, getResourceFilePixmap, getLogfilePath
 from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
@@ -147,7 +147,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         logging.info("Starting application...")
         self.loadSettings()
 
-        dbDir = self.getDatabasePath()
+        dbDir = getDatabasePath(kAppName, kDatabaseName)
         logging.info("Database: {}".format(dbDir))
         self.db.open(dbDir)
 
@@ -177,37 +177,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         if self.preferences.updateOnAppStart:
             self.on_actionUpdate_Feeds_triggered()
-
-    # TODO: This should be a static method (or class method?) of Database
-    def getDatabasePath(self):
-        return "{}\\{}".format(self.getDatabaseDirectory(), kDatabaseName)
-
-    # TODO: This should be a static method (or class method?) of Database
-    def getDatabaseDirectory(self):
-        procEnv = QtCore.QProcessEnvironment.systemEnvironment()
-
-        if procEnv.contains("APPDATA"):
-            # Indicates Windows platform
-            appDataPath = procEnv.value("APPDATA")
-
-            databasePath = "{}\\{}".format(appDataPath, kAppName)
-
-            #  Create directory if non - existent
-            dbDir = Path(databasePath)
-
-            if not dbDir.exists():
-                # Directory doesn't exist - create it.
-                if not dbDir.mkdir():
-                    errMsg = "Could not create the data directory: {}".format(databasePath)
-                    QtWidgets.QMessageBox.critical(self, kAppName, errMsg)
-                    return ""
-
-            return databasePath
-
-    def getDefaultEnclosureDirectory(self):
-        """ Returns the default location for downloading enclosures.  This is the standard Downloads directory. """
-        downloadDirectory = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.StandardLocation.DownloadLocation)
-        return downloadDirectory
 
     def loadSettings(self):
         """ Loads application settings. """
@@ -257,7 +226,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.beginGroup(kGeneralPreferencesGroup)
         self.preferences.feedUpdateInterval = int(settingsObj.value(kFeedUpdateInterval, 30))
         self.preferences.updateOnAppStart = settingsObj.value(kUpdateOnAppStart, False, type=bool)
-        self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, self.getDefaultEnclosureDirectory())
+        self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, getDefaultEnclosureDirectory())
         settingsObj.endGroup()
 
     def saveSettings(self):
@@ -518,7 +487,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     @QtCore.Slot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):
         """ Displays a message on the status bar. """
-        self.statusBar.showMessage(message, timeout)
+        self.ui.statusBar.showMessage(message, timeout)
 
     @QtCore.Slot(str)
     def onDownloadEnclosure(self, enclosureUrl):

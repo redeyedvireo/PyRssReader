@@ -1,8 +1,10 @@
-from PySide6 import QtGui
+from PySide6 import QtCore, QtGui
 import sys, os, os.path
+from pathlib import Path
 import time
 import datetime
 from datetime import timezone
+import logging
 
 def julianDayToDate(julianDay):
     """ Returns a Python datetime object corresponding to the given Julian day. """
@@ -56,3 +58,36 @@ def getScriptPath():
 
 def getLogfilePath(logFileName):
     return os.path.join(getScriptPath(), logFileName)
+
+def getDatabaseDirectory(appName: str):
+    procEnv = QtCore.QProcessEnvironment.systemEnvironment()
+
+    if procEnv.contains("APPDATA"):
+        # Indicates Windows platform
+        appDataPath = procEnv.value("APPDATA")
+
+        databasePath = "{}\\{}".format(appDataPath, appName)
+
+        #  Create directory if non - existent
+        dbDir = Path(databasePath)
+
+        if not dbDir.exists():
+            # Directory doesn't exist - create it.
+            if not dbDir.mkdir():
+                logging.error("Could not create the data directory: {}".format(databasePath))
+                return None
+
+        return databasePath
+    else:
+        return None
+
+def getDatabasePath(appName: str, databaseName: str) -> str | None:
+    databaseDir = getDatabaseDirectory(appName)
+    if databaseDir is None:
+        return None
+    return os.path.join(databaseDir, databaseName)
+
+def getDefaultEnclosureDirectory():
+    """ Returns the default location for downloading enclosures.  This is the standard Downloads directory. """
+    downloadDirectory = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.StandardLocation.DownloadLocation)
+    return downloadDirectory

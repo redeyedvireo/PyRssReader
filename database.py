@@ -70,7 +70,7 @@ class Database:
 
     def createGlobalsTable(self):
         """ Creates the globals table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         createStr = "create table globals ("
         createStr += "key text UNIQUE, "
@@ -82,17 +82,17 @@ class Database:
 
         queryObj.prepare(createStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to the globals table: {}".format(sqlErr.text()))
 
     def createFeedTable(self):
         """ Creates the feed table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         createStr = "create table feeds ("
         createStr += "feedid integer primary key, "  # Unique Feed ID (must not be 0).  SQLite guarantees this field to be unique
@@ -113,18 +113,18 @@ class Database:
 
         queryObj.prepare(createStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create the feed table: {}".format(sqlErr.text()))
 
     def createFeedItemsTable(self, feedId):
         """ Creates a feed item table. """
         feedTableName = self.feedItemsTableName(feedId)
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         createStr = "create table {} (".format(feedTableName)
         createStr += "title text, " # Item title
@@ -146,33 +146,33 @@ class Database:
         createStr += ")"
 
         queryObj.prepare(createStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create a feed item table: {}".format(sqlErr.text()))
 
     def deleteFeedItemsTable(self, feedId):
         """ Deletes a feed items table. """
         feedItemsTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryStr = "drop table {}".format(feedItemsTableName)
 
         queryObj.prepare(queryStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete a feed items table: {}".format(sqlErr.text()))
 
     def createFilteredWordsTable(self):
         """ Creates the filtered words (aka language filter) table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Create filteredwords table - table to hold words that should not be displayed.
         # Words in this table will be replaced with asterisks (or something similar) when
@@ -182,17 +182,17 @@ class Database:
         createStr += ")"
 
         queryObj.prepare(createStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create the filtered words table: {}".format(sqlErr.text()))
 
     def createItemsOfInterestTable(self):
         """ Creates the Items of Interest table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Create items of interest table - table that holds links to interesting feed items
         createStr = "create table itemsofinterest ("
@@ -201,17 +201,17 @@ class Database:
         createStr += ")"
 
         queryObj.prepare(createStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create the Items of Interest table: {}".format(sqlErr.text()))
 
     def createFilterTable(self):
         """ Creates the filter table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Create items of interest table - table that holds links to interesting feed items
         createStr = "create table feeditemfilters ("
@@ -224,17 +224,17 @@ class Database:
         createStr += ")"
 
         queryObj.prepare(createStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create the filter table: {}".format(sqlErr.text()))
 
     def createAdFilterTable(self):
         """ Creates the ad filter table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Create ad filter table - table that holds strings of ad-related words to filter.
         # When HTML elements are encountered with these words, the HTML elements will be
@@ -244,12 +244,12 @@ class Database:
         createStr += ")"
 
         queryObj.prepare(createStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to create the ad filter table: {}".format(sqlErr.text()))
 
     def reportError(self, errorMessage):
@@ -264,52 +264,52 @@ class Database:
         pass
 
     def beginTransaction(self):
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("begin transaction")
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error beginning a transaction: {}".format(sqlErr.text()))
 
     def endTransaction(self):
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("end transaction")
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error ending a transaction: {}".format(sqlErr.text()))
 
     def vacuumDatabase(self):
         """ Performs a 'vacuum' operation on the database.  This compacts the database file. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("vacuum;")
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to vacuum the database: {}".format(sqlErr.text()))
 
     def getGlobalValue(self, key):
         """ Returns the value of a 'global value' for the given key. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("select datatype from globals where key = ?")
         queryObj.bindValue(0, key)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve a global value key: {}".format(sqlErr.text()))
             return None
 
@@ -336,11 +336,11 @@ class Database:
         queryObj.prepare(createStr)
         queryObj.bindValue(0, key)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve a page: {}".format(sqlErr.text()))
             return None
 
@@ -360,16 +360,16 @@ class Database:
         """ Sets the value of the given key to the given value. """
 
         # See if the key exists
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("select datatype from globals where key = ?")
         queryObj.bindValue(0, key)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to determine if a global value exists: {}".format(sqlErr.text()))
             return
 
@@ -409,27 +409,27 @@ class Database:
             queryObj.addBindValue(dataType)
             queryObj.addBindValue(value)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to set a global value: {}".format(sqlErr.text()))
 
 
     def globalValueExists(self, key):
         """ Checks if a global value exists. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("select datatype from globals where key=?")
         queryObj.addBindValue(key)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             return False
         else:
             atLeastOne = queryObj.next()
@@ -466,15 +466,15 @@ class Database:
     def getFeeds(self):
         """ Returns a list of feed objects, consisting of all feeds. """
         feedList = []
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("select feedid, parentid, name, title, description, language, url, added, lastupdated, webpagelink, favicon, image, lastpurged from feeds")
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all feeds: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
@@ -506,15 +506,15 @@ class Database:
     def getFeedIds(self):
         """ Returns a list of feed IDs. """
         feedList = []
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryObj.prepare("select feedid from feeds")
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve feed IDs: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
@@ -530,7 +530,7 @@ class Database:
         """ Returns data for a single feed. """
         feed = Feed()
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select feedid, parentid, name, title, description, language, url, added, lastupdated, "
         queryStr += "webpagelink, favicon, image, lastpurged from feeds where feedid=?"
@@ -539,12 +539,12 @@ class Database:
 
         queryObj.addBindValue(feedId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return feed
@@ -585,7 +585,7 @@ class Database:
         tempImageBuffer.open(QtCore.QIODevice.WriteOnly)
         feed.m_feedImage.save(tempImageBuffer, "PNG")   # Write pixmap into bytes in PNG format
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Note that feedid is not specified here.  Since feedid is the primary key, it's value is chosen by
         # SQLite to be a unique value.
@@ -607,21 +607,21 @@ class Database:
         queryObj.addBindValue(imageBytes)
         queryObj.addBindValue(dateToJulianDay(feed.m_feedLastPurged))
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to add a feed: {}".format(sqlErr.text()))
             return
 
         # Retrieve the feed ID (it is set by SQLite when the row was created)
         queryObj.prepare("select last_insert_rowid();")
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve the last inserted row id: {}".format(sqlErr.text()))
             # Note that if an error occurs here, and we exit, the above-created row will still be present, thus
             # leaving the database in an inconsistent state.  But, without the rowid of the newly-created row,
@@ -650,24 +650,24 @@ class Database:
         """
         self.deleteFeedItemsTable(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryStr = "delete from feeds where feedid=?"
         queryObj.prepare(queryStr)
 
         queryObj.addBindValue(feedId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete a feed from the feed table: {}".format(sqlErr.text()))
 
         self.removeFeedFromFeedOrder(feedId)
 
     def updateFeedLastUpdatedField(self, feedId, lastUpdatedDate):
         """ Updates the last-updated field for the given feed. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Determine number of unread items
         queryStr = "update feeds set lastupdated=? where feedid=?"
@@ -675,16 +675,16 @@ class Database:
         queryObj.addBindValue(dateToJulianDay(lastUpdatedDate))
         queryObj.addBindValue(feedId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to update the last-updated field: {}".format(sqlErr.text()))
 
     def updateFeedLastPurgedField(self, feedId, lastPurgedDate):
         """ Updates the last-purged field for the given feed. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Determine number of unread items
         queryStr = "update feeds set lastpurged=? where feedid=?"
@@ -692,27 +692,27 @@ class Database:
         queryObj.addBindValue(dateToJulianDay(lastPurgedDate))
         queryObj.addBindValue(feedId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to update the last-purged field: {}".format(sqlErr.text()))
 
     def getFeedItemUnreadCount(self, feedId):
         """ Returns the number of unread feed items in the given feed. """
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         # Determine number of unread items
         queryStr = "select title from {} where readflag='0'".format(feedTableName)
         queryObj.prepare(queryStr)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve number of unread items in feed: {}".format(sqlErr.text()))
             return 0
 
@@ -740,17 +740,17 @@ class Database:
             readFlag:  True: read, False: unread. """
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "update {} set readflag=?".format(feedTableName)
 
         queryObj.prepare(queryStr)
         queryObj.addBindValue(1 if readFlag else 0)
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to set the read flag for all feed items in feed {}: {}".format(feedId, sqlErr.text()))
 
 
@@ -760,7 +760,7 @@ class Database:
         guidList = []
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select "
         queryStr += "guid"
@@ -768,11 +768,11 @@ class Database:
 
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all guids: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
@@ -788,7 +788,7 @@ class Database:
         feedItemList = []
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select "
         queryStr += "title, author, link, description, categories, pubdatetime, "
@@ -799,11 +799,11 @@ class Database:
 
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all feed items: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return []
@@ -870,7 +870,7 @@ class Database:
 
     def addFeedItem(self, feedItem, feedId):
         """ Adds the given feed item to the given feed. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         feedTableName = self.feedItemsTableName(feedId)
 
@@ -899,12 +899,12 @@ class Database:
         queryObj.addBindValue(feedItem.m_enclosureType)
         queryObj.addBindValue(feedItem.m_encodedContent)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
 
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error adding a feed item: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
 
@@ -918,7 +918,7 @@ class Database:
         if not self.tableExists(feedTableName):
             return None
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select "
         queryStr += "title, author, link, description, categories, pubdatetime, "
@@ -931,11 +931,11 @@ class Database:
 
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve a single feed item: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return feedItem
@@ -972,18 +972,18 @@ class Database:
         """ Deletes the given feed item. """
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "delete from {} where guid=?".format(feedTableName)
 
         queryObj.prepare(queryStr)
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete a feed item: {}".format(sqlErr.text()))
 
     def deleteFeedItemsByDate(self, feedId, targetDate, deleteUnreadItems):
@@ -994,7 +994,7 @@ class Database:
         """
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         if deleteUnreadItems:
             queryStr = "delete from {} where pubdatetime<=?".format(feedTableName)
@@ -1004,18 +1004,18 @@ class Database:
 
         queryObj.addBindValue(dateToJulianDay(targetDate))
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete feed items by date: {}".format(sqlErr.text()))
 
     def setFeedItemReadFlag(self, feedId, guid, readFlag):
         """ Sets the read flag of the given feed item."""
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "update {} set readflag=? where guid=?".format(feedTableName)
 
@@ -1024,11 +1024,11 @@ class Database:
         queryObj.addBindValue(1 if readFlag else 0)
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to set feed item's read flag: {}".format(sqlErr.text()))
 
     def isFeedItemRead(self, feedId, guid):
@@ -1039,17 +1039,17 @@ class Database:
         if not self.tableExists(feedTableName):
             return False
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryStr = "select readflag from {} where guid=?".format(feedTableName)
         queryObj.prepare(queryStr)
 
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to get feed item's read flag: {}, on feed {}".format(sqlErr.text(), feedId))
             return False
 
@@ -1064,31 +1064,31 @@ class Database:
         """ Returns True if the given feed item exists, False otherwise. """
         feedTableName = self.feedItemsTableName(feedId)
 
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryStr = "select title from {} where guid=?".format(feedTableName)
         queryObj.prepare(queryStr)
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to determine if a feed item exists: {}".format(sqlErr.text()))
             return False
 
         return queryObj.next()
 
     def tableExists(self, tableName):
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
         queryStr = f"select name from sqlite_master where type='table' and name='{tableName}'"
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to determine if a table exists: {}".format(sqlErr.text()))
             return False
 
@@ -1099,17 +1099,17 @@ class Database:
 
     def getItemsOfInterest(self):
         """ Retrieves all the items of interest, as a list of tuples of the form: (feedId, guid). """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select feedid, guid from itemsofinterest"
 
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when retrieving items of interest: {}".format(sqlErr.text()))
             return
 
@@ -1124,7 +1124,7 @@ class Database:
 
     def addItemOfInterest(self, feedId, guid):
         """ Adds a feed item to the Items of Interest feed. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "insert into itemsofinterest (feedid, guid) values (?, ?)"
 
@@ -1132,16 +1132,16 @@ class Database:
         queryObj.addBindValue(feedId)
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when adding an item of interest: {}".format(sqlErr.text()))
 
     def deleteItemOfInterest(self, feedId, guid):
         """ Deletes an item of interest. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "delete from itemsofinterest where feedid=? and guid=?"
 
@@ -1149,11 +1149,11 @@ class Database:
         queryObj.addBindValue(feedId)
         queryObj.addBindValue(guid)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when deleting an item of interest: {}".format(sqlErr.text()))
 
     def feedItemsTableName(self, feedId):
@@ -1162,17 +1162,17 @@ class Database:
 
     def getFilteredWords(self):
         """ Reads the filtered words from the database, and returns them as a list. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select word from filteredwords"
 
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all filtered words: {}".format(sqlErr.text()))
 
         allFilteredWords = []
@@ -1187,32 +1187,32 @@ class Database:
 
     def addFilteredWord(self, newWord):
         """ Adds a word to the language filter table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "insert into filteredwords (word) values (?)"
         queryObj.prepare(queryStr)
         queryObj.addBindValue(newWord)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to add a new filtered word: {}".format(sqlErr.text()))
 
     def deleteFilteredWord(self, word):
         """ Deletes a word from the language filter table. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "delete from filteredwords where word=?"
         queryObj.prepare(queryStr)
         queryObj.addBindValue(word)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete a filtered word: {}".format(sqlErr.text()))
 
     def addFilteredWords(self, wordList):
@@ -1235,17 +1235,17 @@ class Database:
 
     def getAdFilters(self):
         """ Reads the URLS/domains for filtering ads, and returns them as a list. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select word from adfilters"
 
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all ad filters: {}".format(sqlErr.text()))
 
         allFilters = []
@@ -1260,32 +1260,32 @@ class Database:
 
     def addAdFilter(self, word):
         """ Adds an ad filter word to the database. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "insert into adfilters (word) values (?)"
         queryObj.prepare(queryStr)
         queryObj.addBindValue(word)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to add a new ad filter word: {}".format(sqlErr.text()))
 
     def deleteAdFilter(self, word):
         """ Deletes an ad filter word from the database. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "delete from adfilters where word=?"
         queryObj.prepare(queryStr)
         queryObj.addBindValue(word)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete an ad filter word: {}".format(sqlErr.text()))
 
     def addAdFilters(self, wordList):
@@ -1308,16 +1308,16 @@ class Database:
 
     def getFeedItemFilters(self):
         """ Returns a list of all the global feed item filters. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "select filterid, feedid, field, verb, querystring, action from feeditemfilters"
         queryObj.prepare(queryStr)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to retrieve all feed item filters: {}".format(sqlErr.text()))
             return []
 
@@ -1339,7 +1339,7 @@ class Database:
 
     def addFeedItemFilter(self, filter):
         """ Adds a feed item filter. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "insert into feeditemfilters "
         queryStr += "(feedid, field, verb, querystring, action) "
@@ -1353,16 +1353,16 @@ class Database:
         queryObj.addBindValue(filter.m_queryStr)
         queryObj.addBindValue(filter.m_action)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to add a feed item filter: {}".format(sqlErr.text()))
 
     def deleteFeedItemFilter(self, filterId):
         """ Deletes a filter. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "delete from feeditemfilters where filterid=?"
 
@@ -1370,16 +1370,16 @@ class Database:
 
         queryObj.addBindValue(filterId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to delete a feed item filter: {}".format(sqlErr.text()))
 
     def updateFeedItemFilter(self, filter):
         """ Updates all fields of a filter. """
-        queryObj = QtSql.QSqlQuery(self.db)
+        queryObj = QtSql.QSqlQuery()
 
         queryStr = "update feeditemfilters set "
         queryStr += "feedid=?, field=?, verb=?, querystring=?, action=? "
@@ -1394,11 +1394,11 @@ class Database:
         queryObj.addBindValue(filter.m_action)
         queryObj.addBindValue(filter.m_filterId)
 
-        queryObj.exec_()
+        queryObj.exec()
 
         # Check for errors
         sqlErr = queryObj.lastError()
-        if sqlErr.type() != QtSql.QSqlError.NoError:
+        if sqlErr.type() != QtSql.QSqlError.ErrorType.NoError:
             self.reportError("Error when attempting to update a feed item filter: {}".format(sqlErr.text()))
 
     def addFeedItemFilters(self, filterList):
