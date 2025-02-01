@@ -1,13 +1,13 @@
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from image_prefetch_thread import ImagePrefetchThread
 
 
 class ImagePrefetcher(QtCore.QObject):
     # Signal emitted when image prefetching is starting.
-    imagePrefetchStartingSignal =  QtCore.pyqtSignal()
+    imagePrefetchStartingSignal =  QtCore.Signal()
 
     # Signal emitted when all images have been fetched.
-    imagePrefetchDoneSignal = QtCore.pyqtSignal()
+    imagePrefetchDoneSignal = QtCore.Signal()
 
     def __init__(self, db, imageCache, proxy):
         super(ImagePrefetcher, self).__init__()
@@ -46,7 +46,7 @@ class ImagePrefetcher(QtCore.QObject):
         self.feed = None
         self.imagePrefetchThread.start()
 
-    @QtCore.pyqtSlot(tuple)
+    @QtCore.Slot(tuple)
     def onImagePrefetched(self, imageTuple):
         """ Called when an image has been fetched. """
         url = imageTuple[0]
@@ -54,7 +54,7 @@ class ImagePrefetcher(QtCore.QObject):
         self.imageCache.addImage(url, image)
         #print("Just added image: {} (cache length: {})".format(url, self.imageCache.cacheSize()))
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onPrefetchDone(self):
         if self.feedItemList is not None:
             # There is a prefetch request pending

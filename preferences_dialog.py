@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from proxy import Proxy
 
 
@@ -30,7 +30,7 @@ class PrefsDialog(QtWidgets.QDialog):
         # Enclosures
         self.directoryLineEdit.setText(self.preferences.enclosureDirectory)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_browseButton_clicked(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Enclosure Directory")
         if directory:

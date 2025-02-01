@@ -1,7 +1,7 @@
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PySide6 import QtCore, QtGui, QtWidgets
 from pathlib import Path
 from content_view_new import RssContentViewNew
 from database import Database
@@ -21,7 +21,8 @@ from purge_dialog import PurgeDialog
 from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
-from utility import getResourceFilePixmap
+from ui_PyRssReaderWindow import Ui_RssReaderWindow
+from utility import getResourceFilePixmap, getLogfilePath
 from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
@@ -75,12 +76,9 @@ kMaxLogileSize = 1024 * 1024
 class PyRssReaderWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(PyRssReaderWindow, self).__init__()
-        uic.loadUi('PyRssReaderWindow.ui', self)
 
-        console = logging.StreamHandler()
-        rotatingFileHandler = RotatingFileHandler(self.getLogfilePath(), maxBytes=kMaxLogileSize, backupCount=9)
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
-                                handlers=[ rotatingFileHandler, console ])
+        self.ui = Ui_RssReaderWindow()
+        self.ui.setupUi(self)
 
         self.db = Database()
         self.proxy = Proxy()
@@ -94,7 +92,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.imagePrefetcher.imagePrefetchStartingSignal.connect(self.prefetchStatusbarWidget.prefetchOn)
         self.imagePrefetcher.imagePrefetchDoneSignal.connect(self.prefetchStatusbarWidget.prefetchOff)
-        self.statusBar.addPermanentWidget(self.prefetchStatusbarWidget)
+        self.ui.statusBar.addPermanentWidget(self.prefetchStatusbarWidget)
 
         self.feedItemFilterMatcher = FeedItemFilterMatcher(self.db)
         self.feedPurger = FeedPurger(self.db, self)
@@ -113,14 +111,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.keyboardHandler.minimizeApplicationSignal.connect(self.onMinimizeApp)
 
-        self.feedTreeObj = FeedTree(self.feedTree, self.db, self.keyboardHandler)
+        self.feedTreeObj = FeedTree(self.ui.feedTree, self.db, self.keyboardHandler)
         self.feedTreeObj.feedSelectedSignal.connect(self.onFeedSelected)
         self.feedTreeObj.feedUpdateRequestedSignal.connect(self.onFeedUpdateRequested)
         self.feedTreeObj.feedReadStateSignal.connect(self.onSetFeedReadState)
         self.feedTreeObj.feedPurgeSignal.connect(self.onPurgeSingleFeed)
         self.feedTreeObj.feedDeleteSignal.connect(self.onDeleteFeed)
 
-        self.titleTreeObj = TitleTree(self.db, self.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
+        self.titleTreeObj = TitleTree(self.db, self.ui.titleTree, self.languageFilter, self.keyboardHandler, self.imagePrefetcher)
         self.titleTreeObj.feedItemSelectedSignal.connect(self.onFeedItemSelected)
         self.titleTreeObj.downloadEnclosureSignal.connect(self.onDownloadEnclosure)
 
@@ -164,7 +162,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         # If proxy not saved in prefs, prompt user for it
         if self.proxy.usesProxy() and len(self.proxy.proxyPassword) == 0:
             password = QtWidgets.QInputDialog.getText(self, "Password", "Enter Proxy Password for user {}".format(self.proxy.proxyUser),
-                                                      QtWidgets.QLineEdit.Password)
+                                                      QtWidgets.QLineEdit.EchoMode.Password)
             if password[1]:
                 self.proxy.proxyPassword = password[0]
 
@@ -179,9 +177,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         if self.preferences.updateOnAppStart:
             self.on_actionUpdate_Feeds_triggered()
-
-    def getLogfilePath(self):
-        return f'{self.getDatabaseDirectory()}\\{kLogFile}'
 
     # TODO: This should be a static method (or class method?) of Database
     def getDatabasePath(self):
@@ -211,12 +206,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def getDefaultEnclosureDirectory(self):
         """ Returns the default location for downloading enclosures.  This is the standard Downloads directory. """
-        downloadDirectory = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DownloadLocation)
+        downloadDirectory = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.StandardLocation.DownloadLocation)
         return downloadDirectory
 
     def loadSettings(self):
         """ Loads application settings. """
-        settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
+        settingsObj = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, kAppName, kAppNameForSettings)
 
         # Window size and position
         settingsObj.beginGroup(kWindowSettingsGroup)
@@ -227,10 +222,10 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.move(settingsObj.value(kPos))
 
         if settingsObj.contains(kHorizSplitterSizes):
-            self.horizSplitter.restoreState(settingsObj.value(kHorizSplitterSizes))
+            self.ui.horizSplitter.restoreState(settingsObj.value(kHorizSplitterSizes))
 
         if settingsObj.contains(kVertSplitterSizes):
-            self.vertSplitter.restoreState(settingsObj.value(kVertSplitterSizes))
+            self.ui.vertSplitter.restoreState(settingsObj.value(kVertSplitterSizes))
 
         settingsObj.endGroup()
 
@@ -241,7 +236,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.titleTreeObj.SetColumnWidths(columnList)
         sortColumn = int(settingsObj.value(kSortColumn, kDateColumn))
         self.titleTreeObj.setSortColumn(sortColumn)
-        sortOrder = int(settingsObj.value(kColumnSortOrder, QtCore.Qt.DescendingOrder))
+        sortOrder = settingsObj.value(kColumnSortOrder, QtCore.Qt.SortOrder.DescendingOrder)
         self.titleTreeObj.setSortOrder(sortOrder)
         settingsObj.endGroup()
 
@@ -267,14 +262,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     def saveSettings(self):
         """ Saves application settings. """
-        settingsObj = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, kAppName, kAppNameForSettings)
+        settingsObj = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, kAppName, kAppNameForSettings)
 
         # Window size and position
         settingsObj.beginGroup(kWindowSettingsGroup)
         settingsObj.setValue(kSize, self.size())
         settingsObj.setValue(kPos, self.pos())
-        settingsObj.setValue(kHorizSplitterSizes, self.horizSplitter.saveState())
-        settingsObj.setValue(kVertSplitterSizes, self.vertSplitter.saveState())
+        settingsObj.setValue(kHorizSplitterSizes, self.ui.horizSplitter.saveState())
+        settingsObj.setValue(kVertSplitterSizes, self.ui.vertSplitter.saveState())
         settingsObj.endGroup()
 
         # Title tree data
@@ -306,7 +301,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.endGroup()
 
     def addRssContentViewToLayout(self):
-        self.vertSplitter.addWidget(self.rssContentViewObj)
+        self.ui.vertSplitter.addWidget(self.rssContentViewObj)
 
     def createFeedUpdater(self):
         """ Create the feed updater object.  This needs to be defined at class scope so that
@@ -317,11 +312,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.feedUpdater.feedItemUpdateSignal.connect(self.onFeedItemUpdate)
         self.feedUpdater.feedUpdateMessageSignal.connect(self.showStatusBarMessage)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionAbout_Qt_triggered(self):
         QtWidgets.QMessageBox.aboutQt(self, 'About Qt')
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionAbout_RssReader_triggered(self):
         QtWidgets.QMessageBox.about(self, "About PyRssReader", "PyRssReader by Jeff Geraci")
 
@@ -330,13 +325,13 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.currentFeed = self.db.getFeed(feedId)
         if self.m_currentFeedId != kItemsOfInterestFeedId:
             feed = self.db.getFeed(feedId)
-            self.feedNameLabel.setText(feed.m_feedName)
-            self.feedImageLabel.setPixmap(feed.m_feedFavicon)
+            self.ui.feedNameLabel.setText(feed.m_feedName)
+            self.ui.feedImageLabel.setPixmap(feed.m_feedFavicon)
             self.populateFeedItemView(feedId)
         else:
-            self.feedNameLabel.setText("Items of Interest")
+            self.ui.feedNameLabel.setText("Items of Interest")
             starPixmap = getResourceFilePixmap(kStarIcon)
-            self.feedImageLabel.setPixmap(starPixmap)
+            self.ui.feedImageLabel.setPixmap(starPixmap)
             ioiList = self.db.getItemsOfInterest()
 
             # Read the actual feed items
@@ -365,7 +360,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         else:
             logging.error(f'Feed item {feedItemGuid} does not exist (feed ID: {feedId})')
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onReselectFeedItem(self):
         """ Causes the current feed item to be reselected. """
         self.titleTreeObj.reselectFeedItem()
@@ -386,7 +381,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
     def resetFeedUpdateMinuteCount(self):
         self.minutesSinceLastFeedUpdate = 0
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onFeedUpdateTimerTimeout(self):
         """ Slot to handle the feed update timer. """
         self.minutesSinceLastFeedUpdate += 1
@@ -394,7 +389,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Time to update feeds
             self.on_actionUpdate_Feeds_triggered()
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionUpdate_Feeds_triggered(self):
         self.stopFeedUpdateTimer()
         self.resetFeedUpdateMinuteCount()
@@ -421,7 +416,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Delete the feed updater to free its memory
             del self.feedUpdater
 
-    @QtCore.pyqtSlot(int, list)
+    @QtCore.Slot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
         self.db.addFeedItems(feedItemList, feedId)
         self.feedItemFilterMatcher.filterFeedItems(feedId, feedItemList)
@@ -432,20 +427,20 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         QtCore.QTimer.singleShot(0, self.updateNextFeed)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionPreferences_triggered(self):
         prefsDialog = PrefsDialog(self, self.proxy, self.preferences)
-        if prefsDialog.exec() == QtWidgets.QDialog.Accepted:
+        if prefsDialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             self.proxy = prefsDialog.getProxySettings()
             self.rssContentViewObj.setProxy(self.proxy)
             self.preferences = prefsDialog.getPreferences()
             self.saveSettings()
 
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionPurge_Old_News_triggered(self):
         purgeDlg = PurgeDialog(self)
-        if purgeDlg.exec() == QtWidgets.QDialog.Accepted:
+        if purgeDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             priorDays = purgeDlg.getDays()
             purgeUnreadItems = purgeDlg.purgeUnreadItems()
 
@@ -453,16 +448,16 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.onFeedSelected(self.m_currentFeedId)   # Force repopulation of title tree
 
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def onPurgeSingleFeed(self, feedId):
         purgeDlg = PurgeDialog(self)
-        if purgeDlg.exec() == QtWidgets.QDialog.Accepted:
+        if purgeDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             priorDays = purgeDlg.getDays()
             purgeUnreadItems = purgeDlg.purgeUnreadItems()
 
             self.feedPurger.purgeSingleFeed(feedId, priorDays, purgeUnreadItems)
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def onFeedPurged(self, feedId):
         self.feedTreeObj.updateFeedCount(feedId)
 
@@ -470,11 +465,11 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Update title tree with new set of feed items
             self.populateFeedItemView(feedId, True)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionAdd_Feed_triggered(self):
         dlg = NewFeedDialog(self, self.proxy)
 
-        if dlg.exec() == QtWidgets.QDialog.Accepted:
+        if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             feed = dlg.getFeed()
 
             # Must add the feed to the database first, in order to have the feed ID set.
@@ -490,42 +485,42 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
                 # Fetch feed items
                 self.onFeedUpdateRequested(feedId)
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def onDeleteFeed(self, feedId):
         self.db.deleteFeed(feedId)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionCreate_Global_Filter_triggered(self):
         dlg = FilterManagerDialog(self, self.db)
         dlg.exec()
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionEdit_Language_Filter_triggered(self):
         dlg = LanguageFilterDialog(self, self.db)
-        if dlg.exec() == QtWidgets.QDialog.Accepted:
+        if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             self.languageFilter.initialize()
             # Reselecting the feed will repopulate title tree and content view.
             self.onFeedSelected(self.m_currentFeedId)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionEdit_Ad_Filter_triggered(self):
         dlg = AdFilterDialog(self, self.db)
-        if dlg.exec() == QtWidgets.QDialog.Accepted:
+        if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             # Reselecting the feed will repopulate title tree and content view.
             self.onFeedSelected(self.m_currentFeedId)
 
-    @QtCore.pyqtSlot(int, bool)
+    @QtCore.Slot(int, bool)
     def onSetFeedReadState(self, feedId, readState):
         """ Marks all items in the given feed as read. """
         self.db.setFeedReadFlagAllItems(feedId, readState)
         self.titleTreeObj.setReadStateOfAllRows(readState)
 
-    @QtCore.pyqtSlot(str, int)
+    @QtCore.Slot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):
         """ Displays a message on the status bar. """
         self.statusBar.showMessage(message, timeout)
 
-    @QtCore.pyqtSlot(str)
+    @QtCore.Slot(str)
     def onDownloadEnclosure(self, enclosureUrl):
         # Don't clear message, until the enclosure has downloaded
         self.showStatusBarMessage("Downloading enclosure: {}".format(enclosureUrl), kDontClearMessage)
@@ -534,21 +529,21 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.enclosureDownloader.enclosureDownloadedSignal.connect(self.onEnclosureDownloaded)
         self.enclosureDownloader.start()
 
-    @QtCore.pyqtSlot(str)
+    @QtCore.Slot(str)
     def onEnclosureDownloaded(self, filename):
         self.showStatusBarMessage("{} downloaded.".format(filename))
         self.enclosureDownloader = None
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onMinimizeApp(self):
-        self.setWindowState(QtCore.Qt.WindowMinimized)
+        self.setWindowState(QtCore.Qt.WindowState.WindowMinimized)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionOpen_Enclosure_Directory_triggered(self):
         urlStr = "file:///{}".format(self.preferences.enclosureDirectory)
-        QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr, QtCore.QUrl.TolerantMode))
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(urlStr, QtCore.QUrl.ParsingMode.TolerantMode))
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionExport_OPML_triggered(self):
         exporter = OpmlExporter(self.db)
 
@@ -558,7 +553,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             filepath = filepathTuple[0]
             exporter.export(filepath)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionImport_OPML_triggered(self):
         importer = OpmlImporter(self.db)
 
@@ -590,7 +585,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.updateNextFeed()
 
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_actionAdd_to_Pocket_triggered(self):
         logging.info("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
         if not self.db.isPocketInitialized():
@@ -603,7 +598,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             result = self.pocketSupport.addArticleToPocket(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
 
             if result is True:
-                QtWidgets.QMessageBox.information(self, "Add to Pocket", "The article was successfully added to Pocket.")
+                QtWidgets.QMessageBox.information(self, "Add to Pocket", "The article was successfully added to Pocket.", QtWidgets.QMessageBox.StandardButton.Ok)
             else:
                 QtWidgets.QMessageBox.critical(self, "Add to Pocket", "Could not add the article to Pocket.")
 
@@ -618,12 +613,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             message = "When the Google search site appears, click Yes.  If it does not appear, click No."
             button = QtWidgets.QMessageBox.question(self, kAppName, message)
 
-            if button == QtWidgets.QMessageBox.Yes:
+            if button == QtWidgets.QMessageBox.StandardButton.Yes:
                 self.pocketSupport.doStepTwoOfAuthorization()
 
 
-    def event(self, event):
-        if event.type() == QtCore.QEvent.WindowDeactivate:
+    def event(self, event: QtCore.QEvent):
+        if event.type() == QtCore.QEvent.Type.WindowDeactivate:
             # If this application does still have the focus, which would be true in the case
             # of a dialog box being opened, don't minimize.
             if self.preferences.minimizeAppOnLoseFocus:
@@ -646,18 +641,30 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         logging.shutdown()
 
 def main():
+    console = logging.StreamHandler()
+    rotatingFileHandler = RotatingFileHandler(getLogfilePath(kLogFile), maxBytes=kMaxLogileSize, backupCount=9)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
+                            handlers=[ rotatingFileHandler, console ])
+
+    wind = None
+    returnVal = 0
+
     try:
         app = QtWidgets.QApplication(sys.argv)
         wind = PyRssReaderWindow()
         wind.show()
+        returnVal = app.exec()
 
     except Exception as inst:
         logging.error(f'[main] Exception: type: {type(inst)}')
         logging.error(f'Exception args: {inst.args}')
         logging.error(f'Exception object: {inst}')
-        wind.shutdownApp()
+        returnVal = 1
 
-    sys.exit(app.exec_())
+        if wind is not None:
+            wind.shutdownApp()
+
+    return returnVal
 
 # ---------------------------------------------------------------
 if __name__ == "__main__":

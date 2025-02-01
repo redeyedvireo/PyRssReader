@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from feed_item_filter import FeedItemFilter
 
 

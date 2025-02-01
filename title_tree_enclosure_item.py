@@ -1,4 +1,4 @@
-from PyQt5 import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 from title_tree_view_item import TitleTreeViewItem
 from utility import getResourceFileIcon
 

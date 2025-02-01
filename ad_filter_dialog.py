@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 class AdFilterDialog(QtWidgets.QDialog):
     def __init__(self, parent, db):
@@ -18,13 +18,13 @@ class AdFilterDialog(QtWidgets.QDialog):
         for word in self.adWords:
             self.listWidget.addItem(word)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onAccepted(self):
         self.db.deleteAdFilters(self.removedAdWords)
         self.db.addAdFilters(self.newAdWords)
         self.accept()
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_addButton_clicked(self):
         newWord = self.addWordEdit.text()
         self.addWordEdit.clear()
@@ -38,7 +38,7 @@ class AdFilterDialog(QtWidgets.QDialog):
             if newWord in self.removedAdWords:
                 self.removedAdWords.remove(newWord)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_deleteButton_clicked(self):
         item = self.listWidget.currentItem()
 

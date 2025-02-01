@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtWidgets
+from PySide6 import QtWidgets
 
 class PurgeDialog(QtWidgets.QDialog):
     def __init__(self, parent):

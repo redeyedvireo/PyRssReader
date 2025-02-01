@@ -1,10 +1,10 @@
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from img_finder import ImgFinder
 from resource_fetcher import ResourceFetcher
 
 class ImagePrefetchThread(QtCore.QThread):
     # Indicates an image has been fetched.  The parameter is a tuple of the form: (url, pixmap).
-    imageReadySignal = QtCore.pyqtSignal(tuple)
+    imageReadySignal = QtCore.Signal(tuple)
 
     def __init__(self, feedItemList, feed, proxy):
         super(ImagePrefetchThread, self).__init__()

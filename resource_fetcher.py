@@ -1,7 +1,7 @@
 import logging
 from urllib import request
 from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
-from PyQt5 import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 
 class ResourceFetcher:
     def __init__(self, url, proxy):

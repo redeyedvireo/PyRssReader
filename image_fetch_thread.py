@@ -1,10 +1,10 @@
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from resource_fetcher import ResourceFetcher
 
 class ImageFetchThread(QtCore.QThread):
     # imageFetchDoneSignal is emitted when all images have been downloaded.  The parameter is a list
     # consisting of tuples of the form: (url, pixmap).
-    imageFetchDoneSignal = QtCore.pyqtSignal(list)
+    imageFetchDoneSignal = QtCore.Signal(list)
 
     def __init__(self, urlList, feed, proxy):
         super(ImageFetchThread, self).__init__()

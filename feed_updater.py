@@ -2,7 +2,7 @@ import datetime
 from feed_update_thread import FeedUpdateThread
 from feed_update_thread_debug import FeedUpdateThreadDebug
 from proxy import Proxy
-from PyQt5 import QtCore
+from PySide6 import QtCore
 
 # Show feed update messages for 10 seconds
 kMessageTimeout = 10000
@@ -10,8 +10,8 @@ kMessageTimeout = 10000
 class FeedUpdater(QtCore.QObject):
     # Emitted when feed items are available to be stored into the database.
     # Parameters: feedID, list of feed items
-    feedItemUpdateSignal = QtCore.pyqtSignal(int, list)
-    feedUpdateMessageSignal = QtCore.pyqtSignal(str, int)
+    feedItemUpdateSignal = QtCore.Signal(int, list)
+    feedUpdateMessageSignal = QtCore.Signal(str, int)
 
     def __init__(self, db):
         super(FeedUpdater, self).__init__()
@@ -36,7 +36,7 @@ class FeedUpdater(QtCore.QObject):
         self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
         self.feedUpdateThread.start()
 
-    @QtCore.pyqtSlot(list)
+    @QtCore.Slot(list)
     def onFeedUpdateDone(self, feedItemList):
         self.db.updateFeedLastUpdatedField(self.feedId, datetime.datetime.today())
 

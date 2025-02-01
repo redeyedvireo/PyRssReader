@@ -1,5 +1,5 @@
-from PyQt5 import QtGui
-import os, os.path
+from PySide6 import QtGui
+import sys, os, os.path
 import time
 import datetime
 from datetime import timezone
@@ -42,3 +42,17 @@ def getResourceFilePixmap(filename):
 
 def getResourceFileIcon(filename):
     return QtGui.QIcon(getResourceFilePixmap(filename))
+
+def getScriptPath():
+  if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the PyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app
+    # path into variable _MEIPASS'.
+    application_path, executable = os.path.split(sys.executable)
+  else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+  return application_path
+
+def getLogfilePath(logFileName):
+    return os.path.join(getScriptPath(), logFileName)

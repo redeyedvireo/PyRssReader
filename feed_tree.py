@@ -1,5 +1,5 @@
 import logging
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from feed import Feed
 from utility import getResourceFilePixmap
 from feed import kItemsOfInterestFeedId
@@ -10,11 +10,11 @@ kStarIcon = "star.png"
 kRowHeight = 20
 
 class FeedTree(QtCore.QObject):
-    feedSelectedSignal = QtCore.pyqtSignal(int)
-    feedUpdateRequestedSignal = QtCore.pyqtSignal(int)
-    feedReadStateSignal = QtCore.pyqtSignal(int, bool)
-    feedPurgeSignal = QtCore.pyqtSignal(int)
-    feedDeleteSignal = QtCore.pyqtSignal(int)
+    feedSelectedSignal = QtCore.Signal(int)
+    feedUpdateRequestedSignal = QtCore.Signal(int)
+    feedReadStateSignal = QtCore.Signal(int, bool)
+    feedPurgeSignal = QtCore.Signal(int)
+    feedDeleteSignal = QtCore.Signal(int)
 
     def __init__(self, treeWidget, db, keyboardHandler):
         super(FeedTree, self).__init__()
@@ -34,12 +34,12 @@ class FeedTree(QtCore.QObject):
     def InitializeContextMenu(self):
         self.m_contextMenu = QtWidgets.QMenu()
 
-        self.m_actionUpdate = QtWidgets.QAction("Update Feed")
-        self.m_actionMarkRead = QtWidgets.QAction("Mark Feed As Read")
-        self.m_actionMarkUnread = QtWidgets.QAction("Mark Feed As Unread")
-        self.m_actionPurge = QtWidgets.QAction("Purge Feed")
-        self.m_actionDeleteFeed = QtWidgets.QAction("Delete Feed")
-        self.m_feedProperties = QtWidgets.QAction("Feed Properties")
+        self.m_actionUpdate = QtGui.QAction("Update Feed")
+        self.m_actionMarkRead = QtGui.QAction("Mark Feed As Read")
+        self.m_actionMarkUnread = QtGui.QAction("Mark Feed As Unread")
+        self.m_actionPurge = QtGui.QAction("Purge Feed")
+        self.m_actionDeleteFeed = QtGui.QAction("Delete Feed")
+        self.m_feedProperties = QtGui.QAction("Feed Properties")
 
         self.m_actionUpdate.triggered.connect(self.onActionUpdate)
         self.m_feedProperties.triggered.connect(self.onFeedProperties)

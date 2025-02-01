@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class FeedPropertiesDialog(QtWidgets.QDialog):
@@ -11,7 +11,7 @@ class FeedPropertiesDialog(QtWidgets.QDialog):
 
     def populateDialog(self):
         self.feed = self.db.getFeed(self.feedId)
-        
+
         self.titleLabel.setText(self.feed.m_feedTitle)
         self.urlLabel.setText(self.feed.m_feedUrl)
         self.dateAddedLabel.setText(str(self.feed.m_feedDateAdded))

@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import datetime
 import time
 from dateutil.relativedelta import *
@@ -6,8 +6,8 @@ from dateutil.relativedelta import *
 class FeedPurger(QtCore.QObject):
 
     # Emitted when a feed has been purged.  The parameter is the feed ID
-    feedPurgedSignal = QtCore.pyqtSignal(int)
-    messageSignal = QtCore.pyqtSignal(str, int)
+    feedPurgedSignal = QtCore.Signal(int)
+    messageSignal = QtCore.Signal(str, int)
 
     def __init__(self, db, parent):
         super(FeedPurger, self).__init__(parent)

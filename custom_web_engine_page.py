@@ -1,6 +1,6 @@
-from PyQt5 import QtCore, QtGui, QtWebEngineWidgets
+from PySide6 import QtCore, QtGui, QtWebEngineCore
 
-class CustomWebEnginePage(QtWebEngineWidgets.QWebEnginePage):
+class CustomWebEnginePage(QtWebEngineCore.QWebEnginePage):
   def __init__(self, parent) -> None:
       super(CustomWebEnginePage, self).__init__(parent)
       webEngineSettings = self.settings()
@@ -9,7 +9,7 @@ class CustomWebEnginePage(QtWebEngineWidgets.QWebEnginePage):
 
 
   def acceptNavigationRequest(self, url,  _type, isMainFrame):
-      if _type == QtWebEngineWidgets.QWebEnginePage.NavigationTypeLinkClicked:
+      if _type == QtWebEngineCore.QWebEnginePage.NavigationType.NavigationTypeLinkClicked:
           QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
           return False
       return super().acceptNavigationRequest(url,  _type, isMainFrame)

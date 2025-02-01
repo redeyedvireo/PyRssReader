@@ -1,5 +1,5 @@
 import logging
-from PyQt5 import QtCore, QtSql
+from PySide6 import QtCore, QtSql
 from pathlib import Path
 from exceptions import DbError
 from feed import Feed
@@ -529,14 +529,14 @@ class Database:
     def getFeed(self, feedId):
         """ Returns data for a single feed. """
         feed = Feed()
-        
+
         queryObj = QtSql.QSqlQuery(self.db)
-        
+
         queryStr = "select feedid, parentid, name, title, description, language, url, added, lastupdated, "
         queryStr += "webpagelink, favicon, image, lastpurged from feeds where feedid=?"
-        
+
         queryObj.prepare(queryStr)
-        
+
         queryObj.addBindValue(feedId)
 
         queryObj.exec_()
@@ -548,7 +548,7 @@ class Database:
             self.reportError("Error when attempting to retrieve a single feeds: {}".format(sqlErr.text()))
             # TODO: Maybe an exception should be thrown here
             return feed
-        
+
         while queryObj.next():
             feed.m_feedId = queryObj.record().value(0)
             feed.m_parentId = queryObj.record().value(1)
@@ -566,7 +566,7 @@ class Database:
 
             feed.m_feedImage = queryObj.record().value(11)
             feed.m_feedLastPurged = julianDayToDate(queryObj.record().value(12))  # Convert to time
-            
+
         return feed
 
 

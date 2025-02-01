@@ -1,5 +1,5 @@
 import logging
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from language_filter import LanguageFilter
 from prefetch_controller import PrefetchController
 from title_tree_view_item import TitleTreeViewItem, kEnclosureColumn, kTitleColumn, kDateColumn, kCreatorColumn, kTagsColumn, kNumColumns
@@ -17,14 +17,14 @@ kPaperClipIconName = "Paper Clip.png"
 
 class TitleTree(QtCore.QObject):
     # Signal emitted when a feed item is selected in the title tree.  Parameters are: feed ID, guid.
-    feedItemSelectedSignal = QtCore.pyqtSignal(int, str)
+    feedItemSelectedSignal = QtCore.Signal(int, str)
 
     # Signal emitted when feed item images should be preselected.  The list is a list of tuples of the form:
     # (feedId, guids).
-    prefetchImagesSignal = QtCore.pyqtSignal(list)
+    prefetchImagesSignal = QtCore.Signal(list)
 
     # Signal emitted when an enclosure should be downloaded.
-    downloadEnclosureSignal = QtCore.pyqtSignal(str)
+    downloadEnclosureSignal = QtCore.Signal(str)
 
     movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
 
@@ -59,10 +59,10 @@ class TitleTree(QtCore.QObject):
     def initializeContextMenu(self):
         self.contextMenu = QtWidgets.QMenu()
 
-        self.actionMarkAsRead = QtWidgets.QAction("Mark as read")
-        self.actionMarkAsUnread = QtWidgets.QAction("Mark as unread")
-        self.actionDelete = QtWidgets.QAction("Delete")
-        self.actionDownloadEnclosure = QtWidgets.QAction("Download Enclosure")
+        self.actionMarkAsRead = QtGui.QAction("Mark as read")
+        self.actionMarkAsUnread = QtGui.QAction("Mark as unread")
+        self.actionDelete = QtGui.QAction("Delete")
+        self.actionDownloadEnclosure = QtGui.QAction("Download Enclosure")
 
         # TODO: Add grouper stuff
         self.actionMarkAsRead.triggered.connect(self.onMarkAsRead)

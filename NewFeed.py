@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from feed_identifier import FeedIdentifier
 
 class NewFeedDialog(QtWidgets.QDialog):
@@ -12,11 +12,11 @@ class NewFeedDialog(QtWidgets.QDialog):
         self.nextButton.setEnabled(False)
         self.stackedWidget.setCurrentIndex(0)
 
-    @QtCore.pyqtSlot('QString')
+    @QtCore.Slot('QString')
     def on_feedUrlEdit_textEdited(self, text):
         self.nextButton.setEnabled(len(text) > 0)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_nextButton_clicked(self):
         if self.stackedWidget.currentIndex() == 0:
             feedUrl = self.feedUrlEdit.text()

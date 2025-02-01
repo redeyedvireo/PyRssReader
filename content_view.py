@@ -2,7 +2,7 @@ import logging
 import webbrowser
 import re
 from bs4 import BeautifulSoup
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
 from image_fetch_thread import ImageFetchThread
 from utility import getResourceFileText, getResourceFilePixmap
@@ -15,8 +15,8 @@ WEBURLTAGS = "https://"
 class RssContentView(QtWidgets.QTextBrowser):
     # Emitted when the current feed item should be re-selected.  This is usually due to the language filter
     # being changed, which requires the current feed item to be re-read, and re-filtered.
-    reselectFeedItemSignal = QtCore.pyqtSignal()
-    urlHovered = QtCore.pyqtSignal(str, int)
+    reselectFeedItemSignal = QtCore.Signal()
+    urlHovered = QtCore.Signal(str, int)
 
     def __init__(self, parent, languageFilter, adFilter, imageCache, keyboardHandler, proxy):
         super(RssContentView, self).__init__(parent)
@@ -196,7 +196,7 @@ class RssContentView(QtWidgets.QTextBrowser):
             else:
                 document.addResource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(imgUrl), self.dummyImage)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def changeImages(self):
         document = self.document()
         for imgUrl in self.imageList:
@@ -204,7 +204,7 @@ class RssContentView(QtWidgets.QTextBrowser):
         self.reload()
         self.repaint()
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def fetchImages(self):
         """ Fetches all images. """
         imageFetchList = []
@@ -233,7 +233,7 @@ class RssContentView(QtWidgets.QTextBrowser):
     def linkClicked(self, url):
         webbrowser.open(url.toString())
 
-    @QtCore.pyqtSlot('QPoint')
+    @QtCore.Slot('QPoint')
     def onContextMenu(self, point):
         print("Context menu requested")
         menu = self.createStandardContextMenu()

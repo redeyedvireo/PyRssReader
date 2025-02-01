@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from filter_dialog import FilterDialog
 from feed_item_filter import FeedItemFilter
 
@@ -85,10 +85,10 @@ class FilterManagerDialog(QtWidgets.QDialog):
         self.nextFilterId -= 1      # Update the value for next time
         return value
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_addButton_clicked(self):
         filterDlg = FilterDialog(self)
-        if filterDlg.exec() == QtWidgets.QDialog.Accepted:
+        if filterDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             newFilter = filterDlg.getFilter()
             id = self.takeNextFilterId()
             newFilter.m_filterId = id
@@ -96,7 +96,7 @@ class FilterManagerDialog(QtWidgets.QDialog):
             self.addFilter(newFilter)
             self.newFilterMap[id] = newFilter
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_deleteButton_clicked(self):
         #  Get selected filter
         filterId = self.getCurrentFilterId()
@@ -116,13 +116,13 @@ class FilterManagerDialog(QtWidgets.QDialog):
 
         self.filterList.takeItem(self.filterList.currentRow())
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_editButton_clicked(self):
         filterId = self.getCurrentFilterId()
         filter = self.getFilter(filterId)
         filterDlg = FilterDialog(self)
         filterDlg.setFilter(filter)
-        if filterDlg.exec() == QtWidgets.QDialog.Accepted:
+        if filterDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             newFilter = filterDlg.getFilter()
             self.replaceFilter(newFilter)
 

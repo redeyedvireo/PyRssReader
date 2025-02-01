@@ -7,7 +7,7 @@ import datetime
 from datetime import timezone
 from time import mktime
 from feed_item import FeedItem
-from PyQt5 import QtCore
+from PySide6 import QtCore
 
 # Dependencies:
 # pip3 install lxml

@@ -1,4 +1,4 @@
-from PyQt5 import uic, QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class LanguageFilterDialog(QtWidgets.QDialog):
@@ -19,14 +19,14 @@ class LanguageFilterDialog(QtWidgets.QDialog):
         for word in self.filteredWords:
             self.listWidget.addItem(word)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def onAccepted(self):
         self.db.deleteFilteredWords(self.removedFilteredWords)
         self.db.addFilteredWords(self.newFilteredWords)
         self.accept()
 
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_addButton_clicked(self):
         newWord = self.addWordEdit.text()
         self.addWordEdit.clear()
@@ -40,7 +40,7 @@ class LanguageFilterDialog(QtWidgets.QDialog):
             if newWord in self.removedFilteredWords:
                 self.removedFilteredWords.remove(newWord)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_deleteButton_clicked(self):
         item = self.listWidget.currentItem()
         if item is not None:

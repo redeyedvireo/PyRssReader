@@ -1,12 +1,12 @@
-from PyQt5 import QtCore
+from PySide6 import QtCore
 
 
 class KeyboardHandler(QtCore.QObject):
-    nextFeedItemSignal = QtCore.pyqtSignal()
-    previousFeedItemSignal = QtCore.pyqtSignal()
-    nextFeedSignal = QtCore.pyqtSignal()
-    previousFeedSignal = QtCore.pyqtSignal()
-    minimizeApplicationSignal = QtCore.pyqtSignal()
+    nextFeedItemSignal = QtCore.Signal()
+    previousFeedItemSignal = QtCore.Signal()
+    nextFeedSignal = QtCore.Signal()
+    previousFeedSignal = QtCore.Signal()
+    minimizeApplicationSignal = QtCore.Signal()
 
     # The key table maps keypresses to signals
     keyTable = [ { 'signal': 'nextFeedItemSignal', 'keys': [QtCore.Qt.Key_Plus, QtCore.Qt.Key_6] },

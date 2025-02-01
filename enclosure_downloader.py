@@ -1,11 +1,11 @@
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from urllib.parse import urlparse
 import os.path
 from resource_fetcher import ResourceFetcher
 
 
 class EnclosureDownloader(QtCore.QThread):
-    enclosureDownloadedSignal = QtCore.pyqtSignal(str)
+    enclosureDownloadedSignal = QtCore.Signal(str)
 
     def __init__(self, url, downloadDirectory, proxy):
         super(EnclosureDownloader, self).__init__()

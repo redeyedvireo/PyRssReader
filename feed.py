@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 kItemsOfInterestFeedId = 2147483647
 

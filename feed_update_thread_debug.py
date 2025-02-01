@@ -1,4 +1,4 @@
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from feed_item_parser import parseFeed
 from feed_item_debugger import debugParseFeed
 from resource_fetcher import ResourceFetcher
@@ -9,7 +9,7 @@ DEBUG = False
 
 
 class FeedUpdateThreadDebug(QtCore.QObject):
-    feedUpdateDoneSignal = QtCore.pyqtSignal(list)
+    feedUpdateDoneSignal = QtCore.Signal(list)
 
     def __init__(self, feedUrl, existingGuids, proxy):
         super(FeedUpdateThreadDebug, self).__init__()

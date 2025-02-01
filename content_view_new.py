@@ -1,7 +1,6 @@
-from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
+from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineCore, QtWebEngineWidgets
 import logging
 from custom_web_engine_page import CustomWebEnginePage
-
 from utility import getResourceFilePixmap, getResourceFileText
 
 WEBURLTAG = "http://"
@@ -10,8 +9,8 @@ WEBURLTAGS = "https://"
 class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
   # Emitted when the current feed item should be re-selected.  This is usually due to the language filter
   # being changed, which requires the current feed item to be re-read, and re-filtered.
-  reselectFeedItemSignal = QtCore.pyqtSignal()
-  urlHovered = QtCore.pyqtSignal(str, int)
+  reselectFeedItemSignal = QtCore.Signal()
+  urlHovered = QtCore.Signal(str, int)
 
   def __init__(self, parent, languageFilter, adFilter, imageCache, keyboardHandler, proxy) -> None:
     super(RssContentViewNew, self).__init__(parent)
@@ -49,13 +48,13 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
     self.installEventFilter(self)
 
-    self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
     self.customContextMenuRequested.connect(self.onContextMenu)
 
 
   def eventFilter(self, obj, event):
       if obj == self:
-          if event.type() == QtCore.QEvent.KeyRelease:
+          if event.type() == QtCore.QEvent.Type.KeyRelease:
               keyCode = event.key()
               self.keyboardHandler.handleKey(keyCode)
               return False
@@ -96,14 +95,14 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.webPage.setHtml(self.m_processedFeedContents)
 
     settings = self.webPage.settings()
-    settings.setFontFamily(QtWebEngineWidgets.QWebEngineSettings.FontFamily.StandardFont, 'Verdana')
-    settings.setFontSize(QtWebEngineWidgets.QWebEngineSettings.FontSize.DefaultFontSize, 14)
+    settings.setFontFamily(QtWebEngineCore.QWebEngineSettings.FontFamily.StandardFont, 'Verdana')
+    settings.setFontSize(QtWebEngineCore.QWebEngineSettings.FontSize.DefaultFontSize, 14)
     # settings.setAttribute(QtWebEngineWidgets.QWebEngineSettings.FontFamily.SansSerifFont, True)
 
     self.setPage(self.webPage)
 
     viewSettings = self.settings()
-    viewSettings.setFontFamily(QtWebEngineWidgets.QWebEngineSettings.FontFamily.SansSerifFont, 'Verdana')
+    viewSettings.setFontFamily(QtWebEngineCore.QWebEngineSettings.FontFamily.SansSerifFont, 'Verdana')
 
     # This is currently not used, but I'm leaving this hook in here in case it is needed in the future.
     #self.fixDocument()
@@ -113,12 +112,12 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     # Set focus onto the content view, so that arrow keys will scroll the content view
     self.setFocus()
 
-  @QtCore.pyqtSlot('QString')
+  @QtCore.Slot(str)
   def onLinkHovered(self, url):
     self.hoveredLink = url
     self.urlHovered.emit(url, 0)
 
-  @QtCore.pyqtSlot('QPoint')
+  @QtCore.Slot(QtCore.QPoint)
   def onContextMenu(self, point):
     # menu = self.createStandardContextMenu()
     menu = QtWidgets.QMenu()
