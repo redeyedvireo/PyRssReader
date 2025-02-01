@@ -2,32 +2,33 @@
 A Python RSS Reader
 
 To run:
-python pyrssreader.py
+`python pyrssreader.py`
 
 
-Dependencies, and how to install them.
+## Installing Dependencies
 
-PyQt:
-To install:
-pip3 install PyQt5
+First, create a virtual environment:
 
-lxml:
-To install:
-pip3 install lxml
+`py -m venv venv\`
 
-Dateutil:
-To install
-pip3 install python-dateutil
+#### Pyside6
+`pip install Pyside6`
 
-Cachetools:
-To install:
-pip3 install cachetools
+#### lxml
+`pip install lxml`
 
-Requests:  (used in Pocket access):
-To install:
-pip3 install requests
-(though, they recommend installing pipenv, and using pipenv install requests)
+#### Dateutil
+`pip install python-dateutil`
 
-PyInstaller:
-To install:
-pip3 install pyinstaller
+#### Cachetools
+`pip install cachetools`
+
+#### Requests  (used in Pocket access):
+`pip install requests`
+
+(though, they recommend installing pipenv, and using `pipenv install requests`)
+
+#### PyInstaller
+`pip install pyinstaller`
+
+To build exe file, invoke the `build-exe.ps1` script, from a command-line or PowerShell terminal window, from the source directory.  Note that on Windows 11, it might be necessary to add an exclusion to Windows security, for the `build` and `dist` directories.  For more information, see: [the Microsoft documentation](https://support.microsoft.com/en-us/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26#ID0EBF=Windows_11)
