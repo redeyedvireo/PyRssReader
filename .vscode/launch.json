@@ -6,9 +6,9 @@
   "configurations": [
     {
       "name": "PyRssReader",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "pyrssreader.py",
+      "program": "PyRssReader.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }
