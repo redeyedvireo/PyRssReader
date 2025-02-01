@@ -3,8 +3,10 @@ from urllib import request
 from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
 from PySide6 import QtGui, QtCore
 
+from proxy import Proxy
+
 class ResourceFetcher:
-    def __init__(self, url, proxy):
+    def __init__(self, url, proxy: Proxy):
         super(ResourceFetcher, self).__init__()
         self.proxy = proxy
 

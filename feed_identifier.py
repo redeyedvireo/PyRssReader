@@ -2,6 +2,7 @@ import logging
 import datetime
 import feedparser
 from lxml import etree
+from proxy import Proxy
 from resource_fetcher import ResourceFetcher
 from feed import Feed
 from feed_item_parser import getElementValue
@@ -10,7 +11,7 @@ from dateutil.relativedelta import *
 
 
 class FeedIdentifier:
-    def __init__(self, proxy):
+    def __init__(self, proxy: Proxy):
         super(FeedIdentifier, self).__init__()
         self.proxy = proxy
         self.feed = None
@@ -20,7 +21,15 @@ class FeedIdentifier:
         resourceFetcher = ResourceFetcher(feedUrl, self.proxy)
         feedText = resourceFetcher.getData()
 
-        parsedFeed = feedparser.parse(feedText)
+        if feedText is None:
+            return None
+
+        try:
+            parsedFeed = feedparser.parse(feedText)
+        except Exception as inst:
+            errMsg = f"parseFeed: Exception: {inst} when parsing feed item text:{feedText}"
+            logging.error(errMsg)
+            return None
 
         self.feed = Feed()
 
