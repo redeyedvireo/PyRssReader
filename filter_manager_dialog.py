@@ -1,6 +1,7 @@
 from PySide6 import QtCore, QtWidgets
 from filter_dialog import FilterDialog
 from feed_item_filter import FeedItemFilter
+from ui_filter_manager_dialog import Ui_FilterManagerDlg
 
 
 kGlobalFeedItemFilter = 0
@@ -8,7 +9,10 @@ kGlobalFeedItemFilter = 0
 class FilterManagerDialog(QtWidgets.QDialog):
     def __init__(self, parent, db):
         super(FilterManagerDialog, self).__init__(parent)
-        uic.loadUi('filter_manager_dialog.ui', self)
+
+        self.ui = Ui_FilterManagerDlg()
+        self.ui.setupUi(self)
+
         self.db = db
         self.itemFilterList = []
         self.itemFilterMap = {}
@@ -18,7 +22,7 @@ class FilterManagerDialog(QtWidgets.QDialog):
         self.addedFilterList = []           # List of filters that were added
         self.nextFilterId = -1              # Temporary values to use for the IDs of newly-created filters
 
-        self.buttonBox.accepted.connect(self.onAccepted)
+        self.ui.buttonBox.accepted.connect(self.onAccepted)
 
         QtCore.QTimer.singleShot(0, self.populateDialog)
 
@@ -32,8 +36,8 @@ class FilterManagerDialog(QtWidgets.QDialog):
         """ Adds a filter to the list widget. """
         filterStr = FeedItemFilter.StringifyFilter(filter)
         listWidgetItem = QtWidgets.QListWidgetItem(filterStr)
-        listWidgetItem.setData(QtCore.Qt.UserRole, filter.m_filterId)
-        self.filterList.addItem(listWidgetItem)
+        listWidgetItem.setData(QtCore.Qt.ItemDataRole.UserRole, filter.m_filterId)
+        self.ui.filterList.addItem(listWidgetItem)
 
     def getFiltersFromDatabase(self):
         self.itemFilterList = self.db.getFeedItemFilters()
@@ -43,12 +47,12 @@ class FilterManagerDialog(QtWidgets.QDialog):
             self.itemFilterMap[filter.m_filterId] = filter
 
     def getCurrentFilterId(self):
-        currentRow = self.filterList.currentRow()
+        currentRow = self.ui.filterList.currentRow()
         if currentRow < 0:
             currentRow = 0
 
-        pItem = self.filterList.item(currentRow)
-        return pItem.data(QtCore.Qt.UserRole)
+        pItem = self.ui.filterList.item(currentRow)
+        return pItem.data(QtCore.Qt.ItemDataRole.UserRole)
 
     def getFilter(self, filterId):
         """ Returns the filter with the given ID.  This is obtained from the itemFilterMap. """
@@ -114,7 +118,7 @@ class FilterManagerDialog(QtWidgets.QDialog):
             if filterId in self.editedFilterIdList:
                 self.editedFilterIdList.remove(filterId)
 
-        self.filterList.takeItem(self.filterList.currentRow())
+        self.ui.filterList.takeItem(self.ui.filterList.currentRow())
 
     @QtCore.Slot()
     def on_editButton_clicked(self):
@@ -132,7 +136,7 @@ class FilterManagerDialog(QtWidgets.QDialog):
 
             # Update item in the list widget
             filterStr = FeedItemFilter.StringifyFilter(newFilter)
-            item = self.filterList.currentItem()
+            item = self.ui.filterList.currentItem()
             item.setText(filterStr)
 
     def onAccepted(self):
