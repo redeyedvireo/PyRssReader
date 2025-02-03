@@ -58,7 +58,7 @@ class FeedTree(QtCore.QObject):
 
     def eventFilter(self, obj, event):
         if obj == self.feedTree:
-            if event.type() == QtCore.QEvent.KeyRelease:
+            if event.type() == QtCore.QEvent.Type.KeyRelease:
                 keyCode = event.key()
                 self.keyboardHandler.handleKey(keyCode)
                 return False
@@ -116,8 +116,8 @@ class FeedTree(QtCore.QObject):
 
         if feed.feedName():
             pNewItem.setText(0, feed.feedName())
-            pNewItem.setData(0, QtCore.Qt.UserRole, feed.m_feedId)
-            pNewItem.setData(0, QtCore.Qt.UserRole+1, feed.feedName())
+            pNewItem.setData(0, QtCore.Qt.ItemDataRole.UserRole, feed.m_feedId)
+            pNewItem.setData(0, QtCore.Qt.ItemDataRole.UserRole+1, feed.feedName())
 
             if not feedIcon.isNull():
                 pNewItem.setIcon(0, feedIcon)
@@ -198,14 +198,14 @@ class FeedTree(QtCore.QObject):
 
     def feedIdForItem(self, item):
         """ Returns the feed ID for the given item. """
-        return item.data(0, QtCore.Qt.UserRole)
+        return item.data(0, QtCore.Qt.ItemDataRole.UserRole)
 
     def feedNameForItem(self, item):
         """ Returns the feed name for the given item. """
-        return item.data(0, QtCore.Qt.UserRole+1)
+        return item.data(0, QtCore.Qt.ItemDataRole.UserRole+1)
 
     def onItemActivated(self, current, previous):
-        feedId = current.data(0, QtCore.Qt.UserRole)
+        feedId = current.data(0, QtCore.Qt.ItemDataRole.UserRole)
         self.lastClickedFeedId = feedId
         # logging.info(f"Item clicked: {current.text(0)}, feed ID: {feedId}")
         self.feedSelectedSignal.emit(feedId)

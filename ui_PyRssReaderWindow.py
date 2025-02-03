@@ -125,9 +125,10 @@ class Ui_RssReaderWindow(object):
         sizePolicy.setHeightForWidth(self.feedImageLabel.sizePolicy().hasHeightForWidth())
         self.feedImageLabel.setSizePolicy(sizePolicy)
         self.feedImageLabel.setMinimumSize(QSize(32, 32))
+        self.feedImageLabel.setMaximumSize(QSize(32, 32))
         self.feedImageLabel.setPixmap(QPixmap(u":/RssReader/Resources/RssReader.ico"))
         self.feedImageLabel.setScaledContents(False)
-        self.feedImageLabel.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+        self.feedImageLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.horizontalLayout.addWidget(self.feedImageLabel)
 

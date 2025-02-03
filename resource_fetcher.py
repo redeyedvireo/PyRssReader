@@ -1,6 +1,7 @@
 import logging
 from urllib import request
-from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen, HTTPError, URLError
+from urllib.request import Request, ProxyHandler, HTTPBasicAuthHandler, HTTPHandler, urlopen
+from urllib.error import HTTPError, URLError
 from PySide6 import QtGui, QtCore
 
 from proxy import Proxy
@@ -26,7 +27,7 @@ class ResourceFetcher:
             if hasattr(e, 'reason'):
                 errMsg = "Could not connect to server when fetching: {}: {}".format(url, e.reason)
             elif hasattr(e, 'code'):
-                errMsg = "Could not fulfill request when fetching: {}: {}".format(url, e.code)
+                errMsg = "Could not fulfill request when fetching: {}: {}".format(url, e.errno)
             else:
                 errMsg = "Unknown URL Exception."
 
@@ -58,6 +59,6 @@ class ResourceFetcher:
         nullImage = QtGui.QImage()
         byteArray = QtCore.QByteArray()
         buffer = QtCore.QBuffer(byteArray)
-        buffer.open(QtCore.QIODevice.WriteOnly)
+        buffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
         nullImage.save(buffer, "PNG")
         return byteArray

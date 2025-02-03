@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtGui
+import datetime
 
 kItemsOfInterestFeedId = 2147483647
 
@@ -11,9 +12,9 @@ class Feed(object):
         self.m_feedUrl = ""  # URL of the feed
 
         # Tracking info
-        self.m_feedDateAdded = None  # Date / time feed was added
-        self.m_feedLastUpdated = None  # Date / time feed was last updated
-        self.m_feedLastPurged = None  # Date / time feed was last purged
+        self.m_feedDateAdded = datetime.datetime(1990, 1, 1)  # Date / time feed was added (Indicate it has never been added)
+        self.m_feedLastUpdated = datetime.datetime(1990, 1, 1)  # Date / time feed was last updated (Indicate it has never been updated)
+        self.m_feedLastPurged = datetime.datetime(1990, 1, 1)  # Date / time feed was last purged (Indicate it has never been purged)
 
         # Data from feed XML
         self.m_feedTitle = ""  # Actual title, given by the feed data
@@ -32,29 +33,44 @@ class Feed(object):
         return len(self.m_feedUrl) > 0
 
     def getFeedIcon(self):
+        returnPixmap = QtGui.QPixmap()
+
         if not isinstance(self.m_feedImage, str) and not self.m_feedImage.isNull():
             if isinstance(self.m_feedImage, QtCore.QByteArray):
                 pixmap = QtGui.QPixmap()
                 pixmap.loadFromData(self.m_feedImage)
                 self.m_feedImage = pixmap
-            return self.m_feedImage
+            returnPixmap =  self.m_feedImage
         else:
             if isinstance(self.m_feedFavicon, QtCore.QByteArray):
                 pixmap = QtGui.QPixmap()
-                pixmap.loadFromData(self.m_feedImage)
+                pixmap.loadFromData(self.m_feedFavicon)
                 self.m_feedFavicon = pixmap
-            return self.m_feedFavicon
+            returnPixmap =  self.m_feedFavicon
+
+        # Scale it to 32x32
+        if not returnPixmap.isNull():
+            returnPixmap = returnPixmap.scaled(32, 32, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+        return returnPixmap
 
     def getFeedIconAsTextEncodedByteArray(self):
         """ Returns the feed icon as a base64-encoded string.  This is used when exporting a feed as XML. """
         pixmap = self.getFeedIcon()
         if pixmap is not None:
             buffer = QtCore.QBuffer()
-            buffer.open(QtCore.QIODevice.ReadWrite)
+            buffer.open(QtCore.QIODevice.OpenModeFlag.ReadWrite)
             pixmap.save(buffer, "PNG")
             base64ByteArray = buffer.data().toBase64()
-            testByteArray = bytearray(base64ByteArray)
-            base64ByteArrayStr = testByteArray.decode('utf-8')
+            testByteArray = base64ByteArray.data()
+
+            base64ByteArrayStr = ""
+            if type(testByteArray) is bytes:
+                base64ByteArrayStr = testByteArray.decode('utf-8')
+            else:
+                # This should not happen.
+                base64ByteArrayStr = str(base64ByteArray)
+
             return str(base64ByteArrayStr)
         else:
             return ""

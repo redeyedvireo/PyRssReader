@@ -295,7 +295,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if self.m_currentFeedId != kItemsOfInterestFeedId:
             feed = self.db.getFeed(feedId)
             self.ui.feedNameLabel.setText(feed.m_feedName)
-            self.ui.feedImageLabel.setPixmap(feed.m_feedFavicon)
+            self.ui.feedImageLabel.setPixmap(feed.getFeedIcon())
             self.populateFeedItemView(feedId)
         else:
             self.ui.feedNameLabel.setText("Items of Interest")

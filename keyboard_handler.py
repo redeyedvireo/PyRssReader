@@ -9,11 +9,11 @@ class KeyboardHandler(QtCore.QObject):
     minimizeApplicationSignal = QtCore.Signal()
 
     # The key table maps keypresses to signals
-    keyTable = [ { 'signal': 'nextFeedItemSignal', 'keys': [QtCore.Qt.Key_Plus, QtCore.Qt.Key_6] },
-                 { 'signal': 'previousFeedItemSignal', 'keys': [QtCore.Qt.Key_Minus, QtCore.Qt.Key_4] },
-                 { 'signal': 'previousFeedSignal', 'keys': [QtCore.Qt.Key_8] },
-                 { 'signal': 'nextFeedSignal', 'keys': [QtCore.Qt.Key_2] },
-                 { 'signal': 'minimizeApplicationSignal', 'keys': [QtCore.Qt.Key_5] }
+    keyTable = [ { 'signal': 'nextFeedItemSignal', 'keys': [QtCore.Qt.Key.Key_Plus, QtCore.Qt.Key.Key_6] },
+                 { 'signal': 'previousFeedItemSignal', 'keys': [QtCore.Qt.Key.Key_Minus, QtCore.Qt.Key.Key_4] },
+                 { 'signal': 'previousFeedSignal', 'keys': [QtCore.Qt.Key.Key_8] },
+                 { 'signal': 'nextFeedSignal', 'keys': [QtCore.Qt.Key.Key_2] },
+                 { 'signal': 'minimizeApplicationSignal', 'keys': [QtCore.Qt.Key.Key_5] }
                  ]
 
     def __init__(self, parent):

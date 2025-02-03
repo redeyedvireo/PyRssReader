@@ -63,8 +63,11 @@ class FeedIdentifier:
 
         self.feed = Feed()
 
+        if feedText is None:
+            return self.feed
+
         try:
-            root = etree.fromstring(feedText)
+            root = etree.fromstring(feedText, None)
         except Exception as inst:
             if len(feedText) > 50:
                 feedTextToDisplay = "<Feed text too large>"
@@ -112,6 +115,9 @@ class FeedIdentifier:
             return defaultValue
 
     def readFeedImage(self, parsedFeed):
+        if self.feed is None:
+            return
+
         if 'image' in parsedFeed.feed:
             imageRoot = parsedFeed.feed.image
             feedImageUrl = imageRoot.href if 'href' in imageRoot else ''
@@ -121,6 +127,9 @@ class FeedIdentifier:
                 self.feed.m_feedImage = resourceFetcher.getDataAsPixmap()
 
     def readFeedImageOLD(self, feedRoot):
+        if self.feed is None:
+            return
+
         imageRoot = feedRoot.find('image')
         if imageRoot is not None:
             feedImageUrlElement = imageRoot.find('url')
@@ -133,6 +142,9 @@ class FeedIdentifier:
 
     def getWebsiteFavicon(self):
         """ Attempts to retrieve the favicon from the feed's web site. """
+        if self.feed is None:
+            return
+
         if self.feed.m_feedWebPageLink:
             parsed_uri = urlparse(self.feed.m_feedWebPageLink)
             faviconUrl = '{uri.scheme}://{uri.netloc}/favicon.ico'.format(uri=parsed_uri)
