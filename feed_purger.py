@@ -22,8 +22,8 @@ class FeedPurger(QtCore.QObject):
         if numFeeds == 0:
             return
 
-        self.progressDialog = QtWidgets.QProgressDialog("Purging Feeds", "Abort", 0, numFeeds-1, self.parent)
-        self.progressDialog.setWindowModality(QtCore.Qt.WindowModal)
+        self.progressDialog = QtWidgets.QProgressDialog("Purging Feeds", "Abort", 0, numFeeds-1)
+        self.progressDialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         self.progressDialog.setWindowTitle("Purge Feeds")
 
         for index, feed in enumerate(feedList):

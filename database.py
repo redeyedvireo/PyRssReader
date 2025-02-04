@@ -576,13 +576,13 @@ class Database:
         # Write favicon to a buffer
         faviconBytes = QtCore.QByteArray()
         tempBuffer = QtCore.QBuffer(faviconBytes)
-        tempBuffer.open(QtCore.QIODevice.WriteOnly)
+        tempBuffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
         feed.m_feedFavicon.save(tempBuffer, "PNG")  # Write pixmap into bytes in PNG format
 
         # Write feed image to a buffer
         imageBytes = QtCore.QByteArray()
         tempImageBuffer = QtCore.QBuffer(imageBytes)
-        tempImageBuffer.open(QtCore.QIODevice.WriteOnly)
+        tempImageBuffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
         feed.m_feedImage.save(tempImageBuffer, "PNG")   # Write pixmap into bytes in PNG format
 
         queryObj = QtSql.QSqlQuery()
@@ -728,9 +728,10 @@ class Database:
         ioiList = self.getItemsOfInterest()
         unreadCount = 0
 
-        for ioiTuple in ioiList:
-            if not self.isFeedItemRead(ioiTuple[0], ioiTuple[1]):
-                unreadCount += 1
+        if ioiList is not None:
+            for ioiTuple in ioiList:
+                if not self.isFeedItemRead(ioiTuple[0], ioiTuple[1]):
+                    unreadCount += 1
 
         return unreadCount
 

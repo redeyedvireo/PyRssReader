@@ -1,3 +1,5 @@
+from PySide6 import QtCore
+import datetime
 
 class FeedItem:
     def __init__(self):
@@ -9,9 +11,9 @@ class FeedItem:
         self.m_description = ""
         self.m_encodedContent = ""  # < content: encoded > tag sometimes contains the article
         self.m_categories = []
-        self.m_publicationDatetime = None   # datetime (stored in database as a Julian Day, (eg, a Unix timestamp)
+        self.m_publicationDatetime = datetime.datetime(1990, 1, 1)   # datetime (stored in database as a Julian Day, (eg, a Unix timestamp)
         self.m_thumbnailLink = ""
-        self.m_thumbnailSize = None     # QSize
+        self.m_thumbnailSize = QtCore.QSize()     # QSize
         self.m_guid = ""
         self.m_feedburnerOrigLink = ""  # TODO: Is this a Digg thing?
 

@@ -18,7 +18,7 @@ def parseFeed(feedItemRawText):
     try:
         parsedFeed = feedparser.parse(feedItemRawText)
     except Exception as inst:
-        logging.error(f'Exception {inst} parsing raw feed text. (Feed: {feedTitle})')
+        logging.error(f'Exception {inst} parsing raw feed text.')
 
     feedTitle = parsedFeed.feed.title if 'title' in parsedFeed.feed else '<unknown feed title>'
 
@@ -122,7 +122,7 @@ def parseFeedOLD(feedItemRawText):
 
     # TODO: Need exception handling here.  If there is an error parsing the XML, just return an empty list
     try:
-        root = etree.fromstring(rawText)
+        root = etree.fromstring(rawText, None)
     except Exception as inst:
         if len(rawText) > 50:
             feedTextToDisplay = "<Feed text too large>"
