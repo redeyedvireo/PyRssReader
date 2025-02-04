@@ -203,7 +203,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         if settingsObj.contains(kColumnWidths):
             columnList = settingsObj.value(kColumnWidths)
             self.titleTreeObj.SetColumnWidths(columnList)
-        sortColumn = int(settingsObj.value(kSortColumn, kDateColumn))
+        sortColumn = settingsObj.value(kSortColumn, kDateColumn, type=int)
         self.titleTreeObj.setSortColumn(sortColumn)
         sortOrder = settingsObj.value(kColumnSortOrder, QtCore.Qt.SortOrder.DescendingOrder)
         self.titleTreeObj.setSortOrder(sortOrder)
@@ -211,22 +211,22 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         # Last-viewed feed
         settingsObj.beginGroup(kFeedSettingsGroup)
-        self.m_currentFeedId = int(settingsObj.value(kLastViewedFeedId, -1))
+        self.m_currentFeedId = settingsObj.value(kLastViewedFeedId, -1, type=int)
         settingsObj.endGroup()
 
         # HTML Proxy
         settingsObj.beginGroup(kProxySettingsGroup)
-        self.proxy.proxyUrl = settingsObj.value(kProxyHostname, "")
-        self.proxy.proxyPort = int(settingsObj.value(kProxyPort, 0))
+        self.proxy.proxyUrl = settingsObj.value(kProxyHostname, "", type=str)
+        self.proxy.proxyPort = settingsObj.value(kProxyPort, 0, type=int)
         self.proxy.proxyUser = settingsObj.value(kProxyUserId, "")
-        self.proxy.proxyPassword = settingsObj.value(kProxyPassword, "")
+        self.proxy.proxyPassword = settingsObj.value(kProxyPassword, "", type=str)
         settingsObj.endGroup()
 
         # General Preferences
         settingsObj.beginGroup(kGeneralPreferencesGroup)
-        self.preferences.feedUpdateInterval = int(settingsObj.value(kFeedUpdateInterval, 30))
+        self.preferences.feedUpdateInterval = settingsObj.value(kFeedUpdateInterval, 30, type=int)
         self.preferences.updateOnAppStart = settingsObj.value(kUpdateOnAppStart, False, type=bool)
-        self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, getDefaultEnclosureDirectory())
+        self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, getDefaultEnclosureDirectory(), type=str)
         settingsObj.endGroup()
 
     def saveSettings(self):
@@ -302,6 +302,9 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             starPixmap = getResourceFilePixmap(kStarIcon)
             self.ui.feedImageLabel.setPixmap(starPixmap)
             ioiList = self.db.getItemsOfInterest()
+
+            if ioiList is None:
+                return
 
             # Read the actual feed items
             feedItemList = []
@@ -385,7 +388,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Delete the feed updater to free its memory
             del self.feedUpdater
 
-    @QtCore.Slot(int, list)
     def onFeedItemUpdate(self, feedId, feedItemList):
         self.db.addFeedItems(feedItemList, feedId)
         self.feedItemFilterMatcher.filterFeedItems(feedId, feedItemList)
@@ -417,7 +419,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.onFeedSelected(self.m_currentFeedId)   # Force repopulation of title tree
 
 
-    @QtCore.Slot(int)
     def onPurgeSingleFeed(self, feedId):
         purgeDlg = PurgeDialog(self)
         if purgeDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
@@ -426,7 +427,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             self.feedPurger.purgeSingleFeed(feedId, priorDays, purgeUnreadItems)
 
-    @QtCore.Slot(int)
     def onFeedPurged(self, feedId):
         self.feedTreeObj.updateFeedCount(feedId)
 
@@ -443,18 +443,19 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             # Must add the feed to the database first, in order to have the feed ID set.
             feed = self.db.addFeed(feed)
-            feedId = feed.m_feedId
 
-            if feedId > 0:
-                # Update feed ID with the value from the database
-                self.feedTreeObj.addFeed(feed)
+            if feed is not None:
+                feedId = feed.m_feedId
 
-                # Switch to this feed
-                self.onFeedSelected(feedId)
-                # Fetch feed items
-                self.onFeedUpdateRequested(feedId)
+                if feedId > 0:
+                    # Update feed ID with the value from the database
+                    self.feedTreeObj.addFeed(feed)
 
-    @QtCore.Slot(int)
+                    # Switch to this feed
+                    self.onFeedSelected(feedId)
+                    # Fetch feed items
+                    self.onFeedUpdateRequested(feedId)
+
     def onDeleteFeed(self, feedId):
         self.db.deleteFeed(feedId)
 
@@ -478,18 +479,15 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             # Reselecting the feed will repopulate title tree and content view.
             self.onFeedSelected(self.m_currentFeedId)
 
-    @QtCore.Slot(int, bool)
     def onSetFeedReadState(self, feedId, readState):
         """ Marks all items in the given feed as read. """
         self.db.setFeedReadFlagAllItems(feedId, readState)
         self.titleTreeObj.setReadStateOfAllRows(readState)
 
-    @QtCore.Slot(str, int)
     def showStatusBarMessage(self, message, timeout=10000):
         """ Displays a message on the status bar. """
         self.ui.statusBar.showMessage(message, timeout)
 
-    @QtCore.Slot(str)
     def onDownloadEnclosure(self, enclosureUrl):
         # Don't clear message, until the enclosure has downloaded
         self.showStatusBarMessage("Downloading enclosure: {}".format(enclosureUrl), kDontClearMessage)
@@ -498,7 +496,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.enclosureDownloader.enclosureDownloadedSignal.connect(self.onEnclosureDownloaded)
         self.enclosureDownloader.start()
 
-    @QtCore.Slot(str)
     def onEnclosureDownloaded(self, filename):
         self.showStatusBarMessage("{} downloaded.".format(filename))
         self.enclosureDownloader = None
@@ -536,12 +533,14 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             for feed in feeds:
                 # Must add the feed to the database first, in order to have the feed ID set.
                 feed = self.db.addFeed(feed)
-                feedId = feed.m_feedId
 
-                if feedId > 0:
-                    # Update feed ID with the value from the database
-                    feedIds.append(feedId)
-                    self.feedTreeObj.addFeed(feed)
+                if feed is not None:
+                    feedId = feed.m_feedId
+
+                    if feedId > 0:
+                        # Update feed ID with the value from the database
+                        feedIds.append(feedId)
+                        self.feedTreeObj.addFeed(feed)
 
             # Switch to last feed
             self.onFeedSelected(feedId)
@@ -556,7 +555,12 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def on_actionAdd_to_Pocket_triggered(self):
+        if self.rssContentViewObj.currentFeedItem is None:
+            logging.error("self.rssContentViewObj.currentFeedItem is None.  (No feed item selected?)")
+            return
+
         logging.info("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
+
         if not self.db.isPocketInitialized():
             self.initializePocket()
 

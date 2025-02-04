@@ -1,6 +1,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineCore, QtWebEngineWidgets
 import logging
 from custom_web_engine_page import CustomWebEnginePage
+from keyboard_handler import KeyboardHandler
 from utility import getResourceFilePixmap, getResourceFileText
 
 WEBURLTAG = "http://"
@@ -12,11 +13,12 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
   reselectFeedItemSignal = QtCore.Signal()
   urlHovered = QtCore.Signal(str, int)
 
-  def __init__(self, parent, languageFilter, adFilter, imageCache, keyboardHandler, proxy) -> None:
+  def __init__(self, parent, languageFilter, adFilter, imageCache, keyboardHandler: KeyboardHandler, proxy) -> None:
     super(RssContentViewNew, self).__init__(parent)
 
     self.languageFilter = languageFilter
     self.adFilter = adFilter
+    self.keyboardHandler = keyboardHandler
     self.m_feedHeaderHtml = ""
     self.m_processedFeedContents = ""
     self.rawFeedContents = ""
@@ -26,6 +28,9 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     self.currentFeed = None
     self.webPage = None
     self.hoveredLink = ''
+
+    self.keyboardHandler.nextFeedSignal.connect(self.onNextFeed)
+    self.keyboardHandler.previousFeedSignal.connect(self.onPreviousFeed)
 
     QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -112,12 +117,10 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     # Set focus onto the content view, so that arrow keys will scroll the content view
     self.setFocus()
 
-  @QtCore.Slot(str)
   def onLinkHovered(self, url):
     self.hoveredLink = url
     self.urlHovered.emit(url, 0)
 
-  @QtCore.Slot(QtCore.QPoint)
   def onContextMenu(self, point):
     # menu = self.createStandardContextMenu()
     menu = QtWidgets.QMenu()
@@ -141,6 +144,9 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
     menu.exec(self.mapToGlobal(point))
 
   def onCopyWebSource(self):
+      if self.webPage is None:
+          return
+
       self.webPage.toHtml(self.toHtmlCallback)
 
   def toHtmlCallback(self, html):
@@ -180,3 +186,9 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
   def runLanguageFilter(self):
     self.reselectFeedItemSignal.emit()
+
+  def onNextFeed(self):
+    pass
+
+  def onPreviousFeed(self):
+    pass

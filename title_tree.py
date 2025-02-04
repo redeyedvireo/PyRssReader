@@ -1,5 +1,6 @@
 import logging
 from PySide6 import QtCore, QtGui, QtWidgets
+from keyboard_handler import KeyboardHandler
 from language_filter import LanguageFilter
 from prefetch_controller import PrefetchController
 from title_tree_view_item import TitleTreeViewItem, kEnclosureColumn, kTitleColumn, kDateColumn, kCreatorColumn, kTagsColumn, kNumColumns
@@ -26,9 +27,9 @@ class TitleTree(QtCore.QObject):
     # Signal emitted when an enclosure should be downloaded.
     downloadEnclosureSignal = QtCore.Signal(str)
 
-    movementKeys = [ QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown ]
+    movementKeys = [ QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown ]
 
-    def __init__(self, db, treeView, languageFilter, keyboardHandler, imagePrefetcher):
+    def __init__(self, db, treeView: QtWidgets.QTreeView, languageFilter, keyboardHandler: KeyboardHandler, imagePrefetcher):
         super(TitleTree, self).__init__()
 
         self.db = db
@@ -39,7 +40,7 @@ class TitleTree(QtCore.QObject):
         self.sortColumn = kDateColumn
         self.feedItemGuid = ""
         self.feed = None
-        self.sortOrder = QtCore.Qt.DescendingOrder
+        self.sortOrder = QtCore.Qt.SortOrder.DescendingOrder
         self.configureTree()
         self.titleTreeView.header().sortIndicatorChanged.connect(self.onSortIndicatorChanged)
         self.enableUserActions()
@@ -103,9 +104,8 @@ class TitleTree(QtCore.QObject):
 
     def eventFilter(self, obj, event):
         if obj == self.titleTreeView:
-            if event.type() == QtCore.QEvent.KeyRelease:
+            if event.type() == QtCore.QEvent.Type.KeyRelease:
                 keyCode = event.key()
-                print("key: {}".format(keyCode))
                 if not self.keyboardHandler.handleKey(keyCode):
                     self.handleKeyRelease(keyCode)
                 return False
@@ -137,18 +137,20 @@ class TitleTree(QtCore.QObject):
         row = self.findFeedItem(self.feedItemGuid)
         item = self.model.item(row, kTitleColumn)
         currentText = item.text()
-        item.setDisplayText(self.languageFilter.filterString(currentText))
+        item.setText(self.languageFilter.filterString(currentText))
 
     def onItemChanged(self, index):
         item = self.model.item(index.row(), kTitleColumn)
-        self.feedItemGuid = item.guid()
-        self.feedId = item.feedId()
-        # print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
-        self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
-        self.markRowAsRead(item.row())
-        self.prefetchController.rowSelected(item.row())
-        if (self.prefetchController.prefetchNeeded()):
-            self.prefetchImages()
+
+        if type(item) is TitleTreeTitleItem:
+            self.feedItemGuid = item.guid()
+            self.feedId = item.feedId()
+            # print("Row clicked: {}, Feed ID: {} GUID: {}".format(item.row(), self.feedId, self.feedItemGuid))
+            self.feedItemSelectedSignal.emit(self.feedId, self.feedItemGuid)
+            self.markRowAsRead(item.row())
+            self.prefetchController.rowSelected(item.row())
+            if (self.prefetchController.prefetchNeeded()):
+                self.prefetchImages()
 
     def onSortIndicatorChanged(self, logicalIndex, order):
         self.sortColumn = logicalIndex
@@ -157,14 +159,15 @@ class TitleTree(QtCore.QObject):
     def onContextMenu(self, pos):
         index = self.titleTreeView.indexAt(pos)
         item = self.model.item(index.row(), kTitleColumn)
-        self.rowClicked = item.row()
-        self.feedItemGuid = item.guid()
-        self.feedId = item.feedId()
-        print("Row right-clicked: {}".format(self.rowClicked))
 
-        globalPos = self.titleTreeView.mapToGlobal(pos)
+        if type(item) is TitleTreeTitleItem:
+            self.rowClicked = item.row()
+            self.feedItemGuid = item.guid()
+            self.feedId = item.feedId()
 
-        self.contextMenu.popup(globalPos)
+            globalPos = self.titleTreeView.mapToGlobal(pos)
+
+            self.contextMenu.popup(globalPos)
 
     def onMarkAsRead(self):
         self.markRowAsRead(self.rowClicked)
@@ -274,15 +277,16 @@ class TitleTree(QtCore.QObject):
 
     def getGuidForRow(self, row):
         item = self.model.item(row, kTitleColumn)
-        return item.guid()
+
+        return item.guid() if type(item) is TitleTreeTitleItem else ''
 
     def getFeedIdForRow(self, row):
         item = self.model.item(row, kTitleColumn)
-        return item.feedId()
+        return item.feedId() if type(item) is TitleTreeTitleItem else -1
 
     def getEnclosureUrlForRow(self, row):
         item = self.model.item(row, kEnclosureColumn)
-        return item.getEnclosureUrl()
+        return item.getEnclosureUrl() if type(item) is TitleTreeEnclosureItem else ''
 
     def selectRow(self, row):
         index = self.model.index(row, 0)
@@ -300,7 +304,9 @@ class TitleTree(QtCore.QObject):
     def setRowReadState(self, row, readState):
         for column in range(0, kNumColumns):
             item = self.model.item(row, column)
-            item.setReadState(readState)
+
+            if isinstance(item, TitleTreeViewItem):
+                item.setReadState(readState)
 
     def setReadStateOfAllRows(self, readState):
         """ Sets the read state of all rows to the given state. """

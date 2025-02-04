@@ -13,9 +13,9 @@ class TitleTreeEnclosureItem(TitleTreeViewItem):
         self.enclosureUrl = enclosureUrl
         self.enclosureIcon = getResourceFileIcon(kEnclosureIconName)
         self.updateEnclosureVisibility()
-        self.setTextAlignment(QtCore.Qt.AlignLeft)
-        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsUserCheckable)
-        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+        self.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemFlag.ItemIsUserCheckable)
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
     def setEnclosureUrl(self, enclosureUrl):
         self.enclosureUrl = enclosureUrl
