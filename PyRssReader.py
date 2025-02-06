@@ -211,7 +211,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         # Last-viewed feed
         settingsObj.beginGroup(kFeedSettingsGroup)
-        self.m_currentFeedId = settingsObj.value(kLastViewedFeedId, -1, type=int)
+        self.m_currentFeedId = int(settingsObj.value(kLastViewedFeedId, -1, type=int))
         settingsObj.endGroup()
 
         # HTML Proxy

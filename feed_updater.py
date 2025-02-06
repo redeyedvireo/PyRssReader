@@ -36,7 +36,6 @@ class FeedUpdater(QtCore.QObject):
         self.feedUpdateThread.feedUpdateDoneSignal.connect(self.onFeedUpdateDone)
         self.feedUpdateThread.start()
 
-    @QtCore.Slot(list)
     def onFeedUpdateDone(self, feedItemList):
         self.db.updateFeedLastUpdatedField(self.feedId, datetime.datetime.today())
 
