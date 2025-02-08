@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtGui, QtWidgets, QtWebEngineCore, QtWebEngineWidget
 import logging
 from custom_web_engine_page import CustomWebEnginePage
 from keyboard_handler import KeyboardHandler
-from utility import getResourceFilePixmap, getResourceFileText
+from utility import getResourceFilePixmap, getTextFileFromResource
 
 WEBURLTAG = "http://"
 WEBURLTAGS = "https://"
@@ -36,9 +36,9 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
 
   def initialize(self):
-    self.m_css = getResourceFileText("pagestyle.css")
-    self.m_feedHeaderHtml = getResourceFileText("feedHeader.html")
-    self.m_completeHtmlDocument = getResourceFileText("completeHtmlDocument.html")
+    self.m_css = getTextFileFromResource("pagestyle.css")
+    self.m_feedHeaderHtml = getTextFileFromResource("feedHeader.html")
+    self.m_completeHtmlDocument = getTextFileFromResource("completeHtmlDocument.html")
 
     # Replace carriage returns and line feeds with spaces
     self.m_css = self.m_css.replace("\r", "").replace("\n", "")

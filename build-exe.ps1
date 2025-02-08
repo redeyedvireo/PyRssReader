@@ -5,19 +5,20 @@
 #
 # In particular, if building fails, or if the resulting executable does not execute, ensure that PyInstaller is up to date:
 # pip install --upgrade PyInstaller pyinstaller-hooks-contrib
+#
+# If the application has strange problems, like the UI is empty, try adding the --console flag, which will show the console window,
+# which allows Python errors to be shown.
 
 $arguments = 'cli.py',
              '-w',
              '--noconfirm',
 						'--clean',
 						'--name',
-						'PyRSS',
+						'PyRSSReader',
 						'--icon',
 						'Resources/RssReader.ico',
 						'--add-data',
-						'./Resources/;Resources',
-						'--add-data',
-            './*.ui;.'
+						'./Resources/;Resources'
 
 
 pyinstaller $arguments 2>&1 > .\pyinstaller-build.log

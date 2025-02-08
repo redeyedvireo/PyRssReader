@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from PySide6 import QtCore, QtGui, QtWidgets
 from img_finder import ImgFinder
 from image_fetch_thread import ImageFetchThread
-from utility import getResourceFileText, getResourceFilePixmap
+from utility import getTextFileFromResource, getResourceFilePixmap
 
 
 WEBURLTAG = "http://"
@@ -43,15 +43,15 @@ class RssContentView(QtWidgets.QTextBrowser):
         self.installEventFilter(self)
         self.anchorClicked.connect(self.linkClicked)
 
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onContextMenu)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
-        self.m_css = getResourceFileText("pagestyle.css")
-        self.m_feedHeaderHtml = getResourceFileText("feedHeader.html")
-        self.m_completeHtmlDocument = getResourceFileText("completeHtmlDocument.html")
+        self.m_css = getTextFileFromResource("pagestyle.css")
+        self.m_feedHeaderHtml = getTextFileFromResource("feedHeader.html")
+        self.m_completeHtmlDocument = getTextFileFromResource("completeHtmlDocument.html")
 
         # Replace carriage returns and line feeds with spaces
         self.m_css = self.m_css.replace("\r", "").replace("\n", "")
@@ -66,7 +66,7 @@ class RssContentView(QtWidgets.QTextBrowser):
 
     def eventFilter(self, obj, event):
         if obj == self:
-            if event.type() == QtCore.QEvent.KeyRelease:
+            if event.type() == QtCore.QEvent.Type.KeyRelease:
                 keyCode = event.key()
                 self.keyboardHandler.handleKey(keyCode)
                 return False

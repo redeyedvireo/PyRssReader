@@ -182,6 +182,8 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         """ Loads application settings. """
         settingsObj = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, kAppName, kAppNameForSettings)
 
+        logging.info(f'Preferences path: {settingsObj.fileName()}')
+
         # Window size and position
         settingsObj.beginGroup(kWindowSettingsGroup)
         if settingsObj.contains(kSize):

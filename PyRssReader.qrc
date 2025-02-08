@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/RssReader">
+    <file>Resources/completeHtmlDocument.html</file>
     <file>Resources/RssReader.ico</file>
     <file>Resources/edit.png</file>
     <file>Resources/minus.png</file>

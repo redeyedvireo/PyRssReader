@@ -19,28 +19,19 @@ def dateToJulianDay(inDate):
     """ Returns a Julian day (ie, a 'timestamp') for the given date. """
     return int(time.mktime(inDate.timetuple()))
 
-def getResourceFileText(filename):
-    scriptDir = os.getcwd()
-    filePath = os.path.join(scriptDir, "Resources", filename)
-
-    file = open(filePath, 'r')
-    contents = file.read()
-    file.close()
-
-    return contents
+def getTextFileFromResource(filename):
+    file = QtCore.QFile(f":/RssReader/Resources/{filename}")
+    if file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly | QtCore.QIODevice.OpenModeFlag.Text):
+        stream = QtCore.QTextStream(file)
+        text = stream.readAll()
+        file.close()
+        return text
+    else:
+        logging.error(f'Could not open text file from resources: {filename}')
+        return ''
 
 def getResourceFilePixmap(filename):
-    scriptDir = os.getcwd()
-    filePath = os.path.join(scriptDir, "Resources", filename)
-
-    file = open(filePath, 'rb')
-    imageData = file.read()
-    file.close()
-
-    pixmap = QtGui.QPixmap()
-    pixmap.loadFromData(imageData)
-
-    return pixmap
+    return QtGui.QPixmap(f':/Resources/{filename}')
 
 def getResourceFileIcon(filename):
     return QtGui.QIcon(f':/Resources/{filename}')
