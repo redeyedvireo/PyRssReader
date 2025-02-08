@@ -29,7 +29,7 @@ class Ui_RssReaderWindow(object):
             RssReaderWindow.setObjectName(u"RssReaderWindow")
         RssReaderWindow.resize(915, 744)
         icon = QIcon()
-        icon.addFile(u"Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         RssReaderWindow.setWindowIcon(icon)
         self.actionExit = QAction(RssReaderWindow)
         self.actionExit.setObjectName(u"actionExit")

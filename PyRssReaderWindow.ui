@@ -14,8 +14,8 @@
    <string>RssReader</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>Resources/RssReader.ico</normaloff>Resources/RssReader.ico</iconset>
+   <iconset resource="PyRssReader.qrc">
+    <normaloff>:/RssReader/Resources/RssReader.ico</normaloff>:/RssReader/Resources/RssReader.ico</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">

@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 import sys, os, os.path
 from pathlib import Path
 import time
@@ -43,21 +43,31 @@ def getResourceFilePixmap(filename):
     return pixmap
 
 def getResourceFileIcon(filename):
-    return QtGui.QIcon(getResourceFilePixmap(filename))
+    return QtGui.QIcon(f':/Resources/{filename}')
+
+def textToDialog(title, text, parent = None):
+    msgBox = QtWidgets.QMessageBox(parent)
+    msgBox.setWindowTitle(title)
+    msgBox.setText(text)
+    msgBox.exec()
 
 def getScriptPath():
-  if getattr(sys, 'frozen', False):
-    # If the application is run as a bundle, the PyInstaller bootloader
-    # extends the sys module by a flag frozen=True and sets the app
-    # path into variable _MEIPASS'.
+  if runningFromBundle():
     application_path, executable = os.path.split(sys.executable)
   else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 
   return application_path
 
+def runningFromBundle():
+    # If the application is run as a bundle, the PyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app
+    # path into variable _MEIPASS'.
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
 def getLogfilePath(logFileName):
-    return os.path.join(getScriptPath(), logFileName)
+    logFilePath = os.path.join(getScriptPath(), logFileName)
+    return logFilePath
 
 def getDatabaseDirectory(appName: str):
     procEnv = QtCore.QProcessEnvironment.systemEnvironment()
@@ -85,7 +95,8 @@ def getDatabasePath(appName: str, databaseName: str) -> str | None:
     databaseDir = getDatabaseDirectory(appName)
     if databaseDir is None:
         return None
-    return os.path.join(databaseDir, databaseName)
+    databasePath = os.path.join(databaseDir, databaseName)
+    return databasePath
 
 def getDefaultEnclosureDirectory():
     """ Returns the default location for downloading enclosures.  This is the standard Downloads directory. """

@@ -1,4 +1,5 @@
 import sys
+import os.path
 import logging
 from logging.handlers import RotatingFileHandler
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -22,7 +23,7 @@ from feed_purger import FeedPurger
 from keyboard_handler import KeyboardHandler
 from proxy import Proxy
 from ui_PyRssReaderWindow import Ui_RssReaderWindow
-from utility import getDatabasePath, getDefaultEnclosureDirectory, getResourceFilePixmap, getLogfilePath
+from utility import getDatabasePath, getDefaultEnclosureDirectory, getResourceFilePixmap, getLogfilePath, getScriptPath, textToDialog, runningFromBundle
 from preferences import Preferences
 from filter_manager_dialog import FilterManagerDialog
 from language_filter_dialog import LanguageFilterDialog
@@ -144,7 +145,6 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         QtCore.QTimer.singleShot(0, self.initialize)
 
     def initialize(self):
-        logging.info("Starting application...")
         self.loadSettings()
 
         dbDir = getDatabasePath(kAppName, kDatabaseName)
@@ -610,14 +610,35 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.db.setFeedOrder(feedOrderList)
         self.db.close()
         self.saveSettings()
-        logging.info("Shutting down...")
-        logging.shutdown()
 
 def main():
-    console = logging.StreamHandler()
-    rotatingFileHandler = RotatingFileHandler(getLogfilePath(kLogFile), maxBytes=kMaxLogileSize, backupCount=9)
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',
-                            handlers=[ rotatingFileHandler, console ])
+    # NOTE: Calling a log function before logging.basicConfig() will cause the logging to fail.
+
+    handlers = [ ]
+    handlers.append(RotatingFileHandler(getLogfilePath(kLogFile), maxBytes=kMaxLogileSize, backupCount=9))
+
+    # Set log level based on whether we're running from a bundle or not
+    logLevel = logging.INFO
+    if runningFromBundle():
+        logLevel = logging.DEBUG        # TODO: Change this back to INFO
+    else:
+        handlers.append(logging.StreamHandler())
+        logLevel = logging.DEBUG
+
+    logging.basicConfig(level=logLevel, format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', handlers=handlers)
+
+    # Simple logging - keep this here in case regular logging fails
+    # logging.basicConfig(filename='myapp.log', level=logging.DEBUG)            Works in PyInstaller bundle
+    # logging.basicConfig(filename='myapp.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')        # Works in PyInstaller bundle
+
+    logging.info("Starting application...")
+    logging.debug(f'Script path: {getScriptPath()}')
+    logging.debug(f'Logfile: {getLogfilePath(kLogFile)}')
+
+    if runningFromBundle():
+        logging.debug("Running from within a PyInstaller bundle.")
+    else:
+        logging.debug("Running directly from source code.")
 
     wind = None
     returnVal = 0
@@ -636,6 +657,9 @@ def main():
 
         if wind is not None:
             wind.shutdownApp()
+
+    logging.info("Shutting down...")
+    logging.shutdown()
 
     return returnVal
 
