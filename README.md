@@ -9,7 +9,13 @@ To run:
 
 First, create a virtual environment:
 
-`py -m venv venv\`
+`py -m venv venv`
+
+Then, activate it:
+
+`.\venv\Scripts\activate`
+
+Then install dependencies.
 
 #### Pyside6
 `pip install Pyside6`
