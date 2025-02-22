@@ -18,6 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
     QFormLayout, QFrame, QHBoxLayout, QLabel,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+import PyRssReader_rc
 
 class Ui_FeedPropertiesDlg(object):
     def setupUi(self, FeedPropertiesDlg):
@@ -25,7 +26,7 @@ class Ui_FeedPropertiesDlg(object):
             FeedPropertiesDlg.setObjectName(u"FeedPropertiesDlg")
         FeedPropertiesDlg.resize(359, 183)
         icon = QIcon()
-        icon.addFile(u"Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         FeedPropertiesDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(FeedPropertiesDlg)
         self.verticalLayout.setSpacing(1)

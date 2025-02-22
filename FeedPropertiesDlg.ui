@@ -14,8 +14,8 @@
    <string>Feed Properties</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>Resources/RssReader.ico</normaloff>Resources/RssReader.ico</iconset>
+   <iconset resource="PyRssReader.qrc">
+    <normaloff>:/RssReader/Resources/RssReader.ico</normaloff>:/RssReader/Resources/RssReader.ico</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -194,7 +194,9 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="PyRssReader.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

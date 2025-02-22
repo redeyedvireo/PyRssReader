@@ -18,6 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
+import PyRssReader_rc
 
 class Ui_NewFeedDlg(object):
     def setupUi(self, NewFeedDlg):
@@ -25,7 +26,7 @@ class Ui_NewFeedDlg(object):
             NewFeedDlg.setObjectName(u"NewFeedDlg")
         NewFeedDlg.resize(611, 221)
         icon = QIcon()
-        icon.addFile(u"Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         NewFeedDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(NewFeedDlg)
         self.verticalLayout.setSpacing(2)
@@ -45,7 +46,7 @@ class Ui_NewFeedDlg(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.label_2 = QLabel(self.page)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.horizontalLayout.addWidget(self.label_2)
 
@@ -89,7 +90,7 @@ class Ui_NewFeedDlg(object):
         self.descriptionLabel = QLabel(self.page_2)
         self.descriptionLabel.setObjectName(u"descriptionLabel")
         self.descriptionLabel.setWordWrap(True)
-        self.descriptionLabel.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.descriptionLabel.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
         self.verticalLayout_3.addWidget(self.descriptionLabel)
 

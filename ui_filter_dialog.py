@@ -18,12 +18,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
     QDialogButtonBox, QHBoxLayout, QLabel, QLineEdit,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+import PyRssReader_rc
 
 class Ui_FilterDialog(object):
     def setupUi(self, FilterDialog):
         if not FilterDialog.objectName():
             FilterDialog.setObjectName(u"FilterDialog")
         FilterDialog.resize(480, 152)
+        icon = QIcon()
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        FilterDialog.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(FilterDialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.label = QLabel(FilterDialog)
@@ -78,8 +82,8 @@ class Ui_FilterDialog(object):
 
         self.buttonBox = QDialogButtonBox(FilterDialog)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.verticalLayout.addWidget(self.buttonBox)
 

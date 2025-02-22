@@ -19,12 +19,16 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogBu
     QHBoxLayout, QLineEdit, QListWidget, QListWidgetItem,
     QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout,
     QWidget)
+import PyRssReader_rc
 
 class Ui_EditAdFilterDlg(object):
     def setupUi(self, EditAdFilterDlg):
         if not EditAdFilterDlg.objectName():
             EditAdFilterDlg.setObjectName(u"EditAdFilterDlg")
         EditAdFilterDlg.resize(435, 395)
+        icon = QIcon()
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        EditAdFilterDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(EditAdFilterDlg)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.listWidget = QListWidget(EditAdFilterDlg)
@@ -71,8 +75,8 @@ class Ui_EditAdFilterDlg(object):
 
         self.buttonBox = QDialogButtonBox(EditAdFilterDlg)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.verticalLayout.addWidget(self.buttonBox)
 

@@ -18,6 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
     QHBoxLayout, QLabel, QRadioButton, QSizePolicy,
     QSpacerItem, QSpinBox, QVBoxLayout, QWidget)
+import PyRssReader_rc
 
 class Ui_PurgeDlg(object):
     def setupUi(self, PurgeDlg):
@@ -25,7 +26,7 @@ class Ui_PurgeDlg(object):
             PurgeDlg.setObjectName(u"PurgeDlg")
         PurgeDlg.resize(237, 138)
         icon = QIcon()
-        icon.addFile(u"Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         PurgeDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(PurgeDlg)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -73,8 +74,8 @@ class Ui_PurgeDlg(object):
 
         self.buttonBox = QDialogButtonBox(PurgeDlg)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.verticalLayout.addWidget(self.buttonBox)
 

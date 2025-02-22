@@ -55,8 +55,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>Resources/plus.png</normaloff>Resources/plus.png</iconset>
+          <iconset resource="PyRssReader.qrc">
+           <normaloff>:/RssReader/Resources/plus.png</normaloff>:/RssReader/Resources/plus.png</iconset>
          </property>
         </widget>
        </item>
@@ -66,8 +66,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>Resources/minus.png</normaloff>Resources/minus.png</iconset>
+          <iconset resource="PyRssReader.qrc">
+           <normaloff>:/RssReader/Resources/minus.png</normaloff>:/RssReader/Resources/minus.png</iconset>
          </property>
         </widget>
        </item>
@@ -77,15 +77,15 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>Resources/edit.png</normaloff>Resources/edit.png</iconset>
+          <iconset resource="PyRssReader.qrc">
+           <normaloff>:/RssReader/Resources/edit.png</normaloff>:/RssReader/Resources/edit.png</iconset>
          </property>
         </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -102,14 +102,16 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="PyRssReader.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

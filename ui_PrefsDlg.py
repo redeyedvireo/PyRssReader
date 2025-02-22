@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QComboB
     QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QSpinBox, QVBoxLayout,
     QWidget)
+import PyRssReader_rc
 
 class Ui_PrefsDlg(object):
     def setupUi(self, PrefsDlg):
@@ -27,7 +28,7 @@ class Ui_PrefsDlg(object):
             PrefsDlg.setObjectName(u"PrefsDlg")
         PrefsDlg.resize(395, 492)
         icon = QIcon()
-        icon.addFile(u"Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         PrefsDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(PrefsDlg)
         self.verticalLayout.setSpacing(3)

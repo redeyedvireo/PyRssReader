@@ -19,12 +19,16 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogBu
     QFrame, QHBoxLayout, QLineEdit, QListWidget,
     QListWidgetItem, QPushButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWidget)
+import PyRssReader_rc
 
 class Ui_LanguageFilterDlg(object):
     def setupUi(self, LanguageFilterDlg):
         if not LanguageFilterDlg.objectName():
             LanguageFilterDlg.setObjectName(u"LanguageFilterDlg")
         LanguageFilterDlg.resize(433, 395)
+        icon = QIcon()
+        icon.addFile(u":/RssReader/Resources/RssReader.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        LanguageFilterDlg.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(LanguageFilterDlg)
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setContentsMargins(11, 11, 11, 11)
@@ -82,7 +86,7 @@ class Ui_LanguageFilterDlg(object):
 
         self.buttonBox = QDialogButtonBox(LanguageFilterDlg)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.verticalLayout.addWidget(self.buttonBox)
 

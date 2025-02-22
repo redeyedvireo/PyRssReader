@@ -358,8 +358,8 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb
   </action>
   <action name="actionAdd_to_Pocket">
    <property name="icon">
-    <iconset>
-     <normaloff>Resources/pocket.png</normaloff>Resources/pocket.png</iconset>
+    <iconset resource="PyRssReader.qrc">
+     <normaloff>:/RssReader/Resources/pocket.png</normaloff>:/RssReader/Resources/pocket.png</iconset>
    </property>
    <property name="text">
     <string>Add to Pocket</string>

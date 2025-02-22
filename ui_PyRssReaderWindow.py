@@ -67,7 +67,7 @@ class Ui_RssReaderWindow(object):
         self.actionAdd_to_Pocket = QAction(RssReaderWindow)
         self.actionAdd_to_Pocket.setObjectName(u"actionAdd_to_Pocket")
         icon1 = QIcon()
-        icon1.addFile(u"Resources/pocket.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1.addFile(u":/RssReader/Resources/pocket.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionAdd_to_Pocket.setIcon(icon1)
         self.centralWidget = QWidget(RssReaderWindow)
         self.centralWidget.setObjectName(u"centralWidget")

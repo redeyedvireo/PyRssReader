@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogBu
     QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
     QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout,
     QWidget)
+import PyRssReader_rc
 
 class Ui_FilterManagerDlg(object):
     def setupUi(self, FilterManagerDlg):
@@ -49,7 +50,7 @@ class Ui_FilterManagerDlg(object):
         self.addButton = QPushButton(FilterManagerDlg)
         self.addButton.setObjectName(u"addButton")
         icon = QIcon()
-        icon.addFile(u"Resources/plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/RssReader/Resources/plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.addButton.setIcon(icon)
 
         self.verticalLayout.addWidget(self.addButton)
@@ -57,7 +58,7 @@ class Ui_FilterManagerDlg(object):
         self.deleteButton = QPushButton(FilterManagerDlg)
         self.deleteButton.setObjectName(u"deleteButton")
         icon1 = QIcon()
-        icon1.addFile(u"Resources/minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1.addFile(u":/RssReader/Resources/minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.deleteButton.setIcon(icon1)
 
         self.verticalLayout.addWidget(self.deleteButton)
@@ -65,7 +66,7 @@ class Ui_FilterManagerDlg(object):
         self.editButton = QPushButton(FilterManagerDlg)
         self.editButton.setObjectName(u"editButton")
         icon2 = QIcon()
-        icon2.addFile(u"Resources/edit.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon2.addFile(u":/RssReader/Resources/edit.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.editButton.setIcon(icon2)
 
         self.verticalLayout.addWidget(self.editButton)
@@ -82,7 +83,7 @@ class Ui_FilterManagerDlg(object):
 
         self.buttonBox = QDialogButtonBox(FilterManagerDlg)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.verticalLayout_2.addWidget(self.buttonBox)
 
