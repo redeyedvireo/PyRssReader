@@ -72,6 +72,10 @@ class RssContentViewNew(QtWebEngineWidgets.QWebEngineView):
 
   def setContents(self, feedItem, feed):
     """ Sets a feed item's HTML into the text browser. """
+    # Check if the feed item is already selected.  If so, then don't do anything.
+    if self.currentFeedItem is not None and self.currentFeedItem.m_guid == feedItem.m_guid:
+      return
+
     self.currentFeedItem = feedItem
     self.currentFeed = feed
 
