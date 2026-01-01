@@ -8,3 +8,4 @@ pyside6-uic .\filter_dialog.ui -o .\ui_filter_dialog.py
 pyside6-uic .\ad_filter_dialog.ui -o .\ui_ad_filter_dialog.py
 pyside6-uic .\filter_manager_dialog.ui -o .\ui_filter_manager_dialog.py
 pyside6-uic .\language_filter_dialog.ui -o .\ui_language_filter_dialog.py
+pyside6-uic .\instapaper_credentials_dialog.ui -o .\ui_instapaper_credentials_dialog.py

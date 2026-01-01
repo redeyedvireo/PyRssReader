@@ -31,7 +31,8 @@ from ad_filter_dialog import AdFilterDialog
 from opml_exporter import OpmlExporter
 from opml_importer import OpmlImporter
 from enclosure_downloader import EnclosureDownloader
-from pocket_support import PocketSupport
+from instapaper_support import InstapaperSupport
+from instapaper_credentials_dialog import InstapaperCredentialsDialog
 
 from feed import kItemsOfInterestFeedId
 
@@ -64,6 +65,11 @@ kGeneralPreferencesGroup = "preferences"
 kFeedUpdateInterval = "feedupdateinterval"
 kUpdateOnAppStart = "updateonappstart"
 kEnclosureDirectory = "enclosuredirectory"
+kInstapaperPreferencesGroup = "instapaper"
+kEncryptedInstapaperUsername = "username"
+kEncryptedInstapaperPassword = "password"
+kEncrypterPasswordPreferencesGroup = "encrypter"
+kHashedEncrypterPassword = "hashedencrypterpassword"
 
 # Image cache size (number of cache entries)
 kMaxCacheSize = 100
@@ -140,7 +146,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
         self.enclosureDownloader = None
 
-        self.pocketSupport = PocketSupport(self.db, self.proxy)
+        self.instapaperSupport = InstapaperSupport(self.proxy)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -170,7 +176,7 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
             self.onFeedSelected(self.m_currentFeedId)
             self.feedTreeObj.setCurrentFeed(self.m_currentFeedId)
 
-        self.pocketSupport.initialize()
+        self.instapaperSupport.initialize()
 
         self.resetFeedUpdateMinuteCount()
         self.startFeedUpdateTimer()
@@ -231,6 +237,20 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         self.preferences.enclosureDirectory = settingsObj.value(kEnclosureDirectory, getDefaultEnclosureDirectory(), type=str)
         settingsObj.endGroup()
 
+        # Encrypter password.  This is a hashed version of the encrypter password that is used to encrypt/decrypt
+        # sensitive data, such as Instapaper credentials.
+        settingsObj.beginGroup(kEncrypterPasswordPreferencesGroup)
+        self.preferences.hashedEncrypterPassword = settingsObj.value(kHashedEncrypterPassword, "", type=str)
+        settingsObj.endGroup()
+
+        # Instapaper credentials (these are encrypted, and stored as bytes)
+        settingsObj.beginGroup(kInstapaperPreferencesGroup)
+        encryptedUsername = settingsObj.value(kEncryptedInstapaperUsername, QtCore.QByteArray(), type=QtCore.QByteArray)
+        self.preferences.encryptedInstapaperUsername = bytes(encryptedUsername)
+        encryptedPassword = settingsObj.value(kEncryptedInstapaperPassword, QtCore.QByteArray(), type=QtCore.QByteArray)
+        self.preferences.encryptedInstapaperPassword = bytes(encryptedPassword)
+        settingsObj.endGroup()
+
     def saveSettings(self):
         """ Saves application settings. """
         settingsObj = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, kAppName, kAppNameForSettings)
@@ -269,6 +289,18 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
         settingsObj.setValue(kFeedUpdateInterval, self.preferences.feedUpdateInterval)
         settingsObj.setValue(kUpdateOnAppStart, self.preferences.updateOnAppStart)
         settingsObj.setValue(kEnclosureDirectory, self.preferences.enclosureDirectory)
+        settingsObj.endGroup()
+
+        # Encrypter password.  This is a hashed version of the encrypter password that is used to encrypt/decrypt
+        # sensitive data, such as Instapaper credentials.
+        settingsObj.beginGroup(kEncrypterPasswordPreferencesGroup)
+        settingsObj.setValue(kHashedEncrypterPassword, self.preferences.hashedEncrypterPassword)
+        settingsObj.endGroup()
+
+        # Instapaper credentials (these are encrypted, and stored as bytes)
+        settingsObj.beginGroup(kInstapaperPreferencesGroup)
+        settingsObj.setValue(kEncryptedInstapaperUsername, QtCore.QByteArray(self.preferences.encryptedInstapaperUsername))
+        settingsObj.setValue(kEncryptedInstapaperPassword, QtCore.QByteArray(self.preferences.encryptedInstapaperPassword))
         settingsObj.endGroup()
 
     def addRssContentViewToLayout(self):
@@ -554,43 +586,84 @@ class PyRssReaderWindow(QtWidgets.QMainWindow):
 
             self.updateNextFeed()
 
-
     @QtCore.Slot()
-    def on_actionAdd_to_Pocket_triggered(self):
+    def on_actionAdd_to_Instapaper_triggered(self):
         if self.rssContentViewObj.currentFeedItem is None:
-            logging.error("self.rssContentViewObj.currentFeedItem is None.  (No feed item selected?)")
+            logging.error("[on_actionAdd_to_Instapaper_triggered] self.rssContentViewObj.currentFeedItem is None.  (No feed item selected?)")
             return
 
-        logging.info("Add to Pocket action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
+        logging.info("Add to Instapaper action triggered.  Title: {}, URL: {}".format(self.rssContentViewObj.filteredTitle, self.rssContentViewObj.currentFeedItem.m_link))
 
-        if not self.db.isPocketInitialized():
-            self.initializePocket()
+        needToSaveSettings = False
 
-        if not self.db.isPocketInitialized():
-            errMsg = "Could not obtain Pocket authorization:"
-            QtWidgets.QMessageBox.critical(self, kAppName, errMsg)
-        else:
-            result = self.pocketSupport.addArticleToPocket(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
+        if not self.instapaperSupport.isAuthorized:
+            if not self.preferences.hasEncrypterPassword:
+                encrypterPassword = self.getEncrypterPassword()
 
-            if result is True:
-                QtWidgets.QMessageBox.information(self, "Add to Pocket", "The article was successfully added to Pocket.", QtWidgets.QMessageBox.StandardButton.Ok)
+                if encrypterPassword is None:
+                    return
+
+                # If the encrypter password has been set from a previous run, verify that it is correct.
+                if self.preferences.hasValidEncrypterPassword:
+                    if not self.preferences.verifyEncrypterPassword(encrypterPassword):
+                        QtWidgets.QMessageBox.critical(self, "Add to Instapaper", "The encryption password you entered is incorrect.")
+                        return
+                else:
+                    needToSaveSettings = True
+
+                self.preferences.setEncrypterPassword(encrypterPassword)
+
+            if not self.preferences.hasInstapaperCredentials:
+                accepted, username, password = self.getInstapaperCredentials()
+
+                if not accepted:
+                    return
+
+                self.preferences.setEncryptedInstapaperUsername(username)
+                self.preferences.setEncryptedInstapaperPassword(password)
+                needToSaveSettings = True
             else:
-                QtWidgets.QMessageBox.critical(self, "Add to Pocket", "Could not add the article to Pocket.")
+                username = self.preferences.getInstapaperUsername()
+                password = self.preferences.getInstapaperPassword()
+                needToSaveSettings = False
 
-    def initializePocket(self):
-        """ Initializes Pocket (ie, obtains the Pocket access token.)  This must be done from the UI, because a
-            dialog box will need to be presented asking the user if the access was authorized.  This will be
-            indicated by the appearance of the Google search page. """
-        if self.pocketSupport.doStepOneOfAuthorization():
-            # At this point, Pocket should have redirected the user to the redirect page, which is the Google search page.
-            # Need to ask the user if this has happened.
+            self.instapaperSupport.instapaperUsername = username
+            self.instapaperSupport.instapaperPassword = password
 
-            message = "When the Google search site appears, click Yes.  If it does not appear, click No."
-            button = QtWidgets.QMessageBox.question(self, kAppName, message)
+        if needToSaveSettings:
+            self.saveSettings()
 
-            if button == QtWidgets.QMessageBox.StandardButton.Yes:
-                self.pocketSupport.doStepTwoOfAuthorization()
+        result = self.instapaperSupport.addArticleToInstapaper(self.rssContentViewObj.currentFeedItem.m_link, self.rssContentViewObj.filteredTitle)
 
+        if result is True:
+            QtWidgets.QMessageBox.information(self, "Add to Instapaper", "The article was successfully added to Instapaper.", QtWidgets.QMessageBox.StandardButton.Ok)
+        else:
+            QtWidgets.QMessageBox.critical(self, "Add to Instapaper", "Could not add the article to Instapaper.")
+
+    def getEncrypterPassword(self):
+        """ Prompts the user for the encrypter password.  Returns the password as a string.  The encrypter password is used to
+            read sensitive data from the INI file.
+        """
+        password, okPressed = QtWidgets.QInputDialog.getText(self, "Encryption Password", "Enter encryption password:", QtWidgets.QLineEdit.EchoMode.Password)
+
+        if okPressed:
+            return password
+        else:
+            return None
+
+    def getInstapaperCredentials(self):
+        """ Prompts the user for the Instapaper credentials.  Returns a tuple of (accepted, username, password). """
+        instapaperCredDlg = InstapaperCredentialsDialog(self)
+
+        username = ""
+        password = ""
+        accepted = False
+
+        if instapaperCredDlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            username, password = instapaperCredDlg.getCredentials()
+            accepted = True
+
+        return accepted, username, password
 
     def event(self, event: QtCore.QEvent):
         if event.type() == QtCore.QEvent.Type.WindowDeactivate:

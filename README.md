@@ -29,7 +29,7 @@ Then install dependencies.
 #### Cachetools
 `pip install cachetools`
 
-#### Requests  (used in Pocket access):
+#### Requests  (used in Instapaper access):
 `pip install requests`
 
 #### Beautiful Soup 4
@@ -37,6 +37,9 @@ Then install dependencies.
 
 #### Feedparser
 `pip install feedparser`
+
+### cryptography
+`pip install cryptography`
 
 #### PyInstaller
 `pip install pyinstaller`

@@ -16,10 +16,14 @@ Cachetools:
 To install:
 pip3 install cachetools
 
-Requests:  (used in Pocket access):
+Requests:  (used in Instapaper access):
 To install:
 pip3 install requests
 (though, they recommend installing pipenv, and using pipenv install requests)
+
+cryptography
+To install:
+pip3 install cryptography
 
 PyInstaller:
 To install:
